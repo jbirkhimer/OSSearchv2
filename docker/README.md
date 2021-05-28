@@ -5,10 +5,16 @@
 
 Start Nutch, Hadoop, Solr
 ```
-docker-compse -d up
+docker-compse up -d --build nutch-hadoop
 ```
 
 # Running a crawl:
+
+From docker host jump into the running docker container
+
+```
+docker exec -it ossearch-nutch-hadoop bash
+```
 
 First we need to give a crawler somewhere to start.
 
