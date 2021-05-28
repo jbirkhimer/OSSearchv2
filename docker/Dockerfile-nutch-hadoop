@@ -14,8 +14,10 @@ ENV HADOOP_HOME=/opt/hadoop
 #RUN mkdir -p $HADOOP_HOME \
 #    && wget -qO- "https://downloads.apache.org/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz" | tar -zx --strip-components=1
 
+### LOCAL-TESTING ###
 ADD hadoop-${HADOOP_VERSION}.tar.gz /opt
 RUN mv /opt/hadoop-${HADOOP_VERSION} $HADOOP_HOME
+### LOCAL-TESTING ###
 
 # pseudo distributed
 COPY hadoop/etc/hadoop $HADOOP_HOME/etc/hadoop
@@ -48,8 +50,10 @@ ENV PATH $HADOOP_HOME/bin/:$PATH
 #RUN mkdir -p $NUTCH_HOME\
 #    && wget -qO- "https://archive.apache.org/dist/nutch/${NUTCH_VERSION}/apache-nutch-${NUTCH_VERSION}-src.tar.gz" | tar -zx --strip-components=1
 
+### LOCAL-TESTING ###
 ADD apache-nutch-${NUTCH_VERSION}-src.tar.gz /opt
 RUN mv /opt/apache-nutch-${NUTCH_VERSION} $NUTCH_HOME
+### LOCAL-TESTING ###
 
 COPY nutch/conf $NUTCH_HOME/conf
 

@@ -1,5 +1,8 @@
 # Nutch Hadoop on Docker:
 
+> NOTE: For faster testing the docker builds without downloading Nutch and Hadoop during each build you will need to download Nutch 1.18 and Hadoop 3.2.2 to `docker/` before trying to build/deploy, otherwise comment out lines between `### LOCAL-TESTING ###` and uncomment the `RUN mkdir... wget...` in `docker/Dockerfile-nutch-hadoop` file to enable automatically downloading Nutch and Hadoop at build time.
+
+
 Start Nutch, Hadoop, Solr
 ```
 docker-compse -d up
