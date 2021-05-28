@@ -20,7 +20,16 @@ ADD hadoop-${HADOOP_VERSION}.tar.gz /opt
 RUN mv /opt/hadoop-${HADOOP_VERSION} $HADOOP_HOME
 ### LOCAL-TESTING ###
 
-# pseudo distributed
+#RUN mkdir -p $NUTCH_HOME \
+#    && cd $NUTCH_HOME \
+#    && wget -qO- "https://archive.apache.org/dist/nutch/${NUTCH_VERSION}/apache-nutch-${NUTCH_VERSION}-src.tar.gz" | tar -zx --strip-components=1
+
+### LOCAL-TESTING ###
+ADD apache-nutch-${NUTCH_VERSION}-src.tar.gz /opt
+RUN mv /opt/apache-nutch-${NUTCH_VERSION} $NUTCH_HOME
+### LOCAL-TESTING ###
+
+# Hadoop install (pseudo distributed)
 COPY hadoop/etc/hadoop $HADOOP_HOME/etc/hadoop
 RUN sed s/HOSTNAME/localhost/ $HADOOP_HOME/etc/hadoop/core-site.xml.template > $HADOOP_HOME/etc/hadoop/core-site.xml \
     && sed -i 's@^export JAVA_HOME=\${JAVA_HOME}@export JAVA_HOME=${JAVA_HOME:-'"$JAVA_HOME"'}@' $HADOOP_HOME/etc/hadoop/hadoop-env.sh \
@@ -48,18 +57,11 @@ ENV PATH $HADOOP_HOME/bin/:$PATH
 
 
 ## Nutch 1.x install
-#RUN mkdir -p $NUTCH_HOME \
-#    && cd $NUTCH_HOME \
-#    && wget -qO- "https://archive.apache.org/dist/nutch/${NUTCH_VERSION}/apache-nutch-${NUTCH_VERSION}-src.tar.gz" | tar -zx --strip-components=1
 
-### LOCAL-TESTING ###
-ADD apache-nutch-${NUTCH_VERSION}-src.tar.gz /opt
-RUN mv /opt/apache-nutch-${NUTCH_VERSION} $NUTCH_HOME
-### LOCAL-TESTING ###
 
 COPY nutch/conf $NUTCH_HOME/conf
 
-RUN cd /opt/nutch \
+RUN cd $NUTCH_HOME \
     && ant runtime
 
 RUN mkdir $NUTCH_HOME/logs \
@@ -72,17 +74,7 @@ RUN mkdir $NUTCH_HOME/logs \
 
 ENV PATH $NUTCH_HOME/runtime/deploy/bin/:$PATH
 
-# urls folder we will use in crawling $NUTCH_HOME/bin/crawl urls crawlId(test01) elasticsearch_node_name(iData) iteration(1)
-#RUN mkdir $NUTCH_HOME/urls
-
-# Adding test urls to use in crawling
-#CMD mkdir -p $NUTCH_HOME/testUrls
-#ADD testUrls $NUTCH_HOME/testUrls
-
-
-#CMD tail -f /var/log/dpkg.log
-
-WORKDIR /opt/nutch
+WORKDIR $NUTCH_HOME/runtime/deploy
 
 ADD entry-point.sh /
 RUN chmod +x /entry-point.sh
