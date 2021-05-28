@@ -1,0 +1,43 @@
+FROM openjdk:8-jdk-buster
+
+RUN apt-get update; \
+	apt-get install -y --no-install-recommends ant vim openssh-server vim rsync curl build-essential maven \
+	rm -rf /var/lib/apt/lists/*;
+
+ARG NUTCH_VERSION
+ARG HADOOP_VERSION
+ENV HADOOP_VERSION=$HADOOP_VERSION
+ENV NUTCH_HOME=/opt/nutch
+ENV HADOOP_HOME=/opt/hadoop
+
+# Hadoop install
+#RUN wget -qO- "https://downloads.apache.org/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz" | tar -zx --strip-components=1
+ADD docker/hadoop/hadoop-${HADOOP_VERSION}.tar.gz $HADOOP_HOME
+
+# pseudo distributed
+COPY docker/hadoop/etc/hadoop $HADOOP_HOME/etc/hadoop
+RUN sed s/HOSTNAME/localhost/ $HADOOP_HOME/etc/hadoop/core-site.xml.template > $HADOOP_HOME/etc/hadoop/core-site.xml
+
+#RUN $HADOOP_HOME/bin/hdfs namenode -format
+
+#RUN sed -i 's@^export JAVA_HOME=\${JAVA_HOME}@export JAVA_HOME=${JAVA_HOME:-'"$JAVA_HOME"'}@' $HADOOP_HOME/etc/hadoop/hadoop-env.sh \
+#    && sed -i 's@^# export JAVA_HOME=@export JAVA_HOME=${JAVA_HOME:-'"$JAVA_HOME"'}@' $HADOOP_HOME/etc/hadoop/hadoop-env.sh \
+#    && grep JAVA_HOME $HADOOP_HOME/etc/hadoop/hadoop-env.sh \
+#    && mkdir $HADOOP_HOME/logs \
+#    && chmod a+rxwt $HADOOP_HOME/logs \
+#    && chown -R root:root $HADOOP_HOME \
+#    && find $HADOOP_HOME/ -type d -exec chmod a+rx '{}' \; \
+#    && find $HADOOP_HOME/ -type f -exec chmod a+r '{}' \; \
+#    && chmod a+x $HADOOP_HOME/sbin/*.sh \
+#    && chmod a+x $HADOOP_HOME/bin/* \
+
+
+## Nutch 1.x install
+#RUN wget -qO- "https://archive.apache.org/dist/nutch/${NUTCH_VERSION}/apache-nutch-${NUTCH_VERSION}-src.tar.gz" | tar -zx --strip-components=1
+ADD docker/nutch/apache-nutch-1.18-src.zip $NUTCH_HOME
+
+COPY docker/nutch $NUTCH_HOME
+
+#WORKDIR /opt/nutch
+
+CMD tail -f /var/log/dpkg.log
