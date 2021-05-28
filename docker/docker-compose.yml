@@ -12,9 +12,8 @@ services:
         NUTCH_VERSION: 1.18
         HADOOP_VERSION: 3.2.2
     restart: always
-#    depends_on:
-#      - solr
-#      - solr-slave
+    depends_on:
+      - solr
     ports:
       - 8088:8088
       - 9870:9870
@@ -30,29 +29,13 @@ services:
   solr:
     container_name: ossearch-solr-hadoop
     image: ossearch-solr-hadoop
-    command: bash -c "precreate-core internal /ossearch-config; precreate-core external /ossearch-config; exec solr -f"
+    command: bash -c "precreate-core external-v1 /ossearch-config; exec solr -f"
     build:
-      context: .
+      context: ./solr
       dockerfile: ./Dockerfile-solr
-      args:
-        GITHUB_AUTH_TOKEN: ${GITHUB_AUTH_TOKEN}
-        GSA_REPLACEMENT_GIT_BRANCH: ${GSA_REPLACEMENT_GIT_BRANCH}
-        OSS_CONFIG_GIT_BRANCH: ${OSS_CONFIG_GIT_BRANCH}
     restart: always
     ports:
       - 8984:8983
-    networks:
-      - ossearch
-
-  solr-slave:
-    container_name: ossearch-solr-salve-hadoop
-    image: ossearch-solr
-    command: bash -c "precreate-core internal /ossearch-config-slave; precreate-core external /ossearch-config-slave; exec solr -f"
-    restart: always
-    depends_on:
-      - solr
-    ports:
-      - 8985:8983
     networks:
       - ossearch
 
