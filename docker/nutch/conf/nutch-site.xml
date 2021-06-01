@@ -23,7 +23,7 @@
   <property>
       <name>db.ignore.external.links</name>
       <value>true</value>
-      <description>If true, outlinks leading from a page to external hosts or domain
+      <description>If true,meta_ outlinks leading from a page to external hosts or domain
           will be ignored. This is an effective way to limit the crawl to include
           only initially injected hosts or domains, without creating complex URLFilters.
           See 'db.ignore.external.links.mode'.
@@ -99,11 +99,11 @@
   <property>
     <name>metatags.names</name>
     <value>*</value>
-      <description> Names of the metatags to extract, separated by ','.
-          Use '*' to extract all metatags. Prefixes the names with 'metatag.'
+      <description> Names of the metatags to extract, separated by ',meta_'.
+          Use '*' to extract all metatags. Prefixes the names with 'meta_'
           in the parse-metadata. For instance to index description and keywords,
           you need to activate the plugin index-metadata and set the value of the
-          parameter 'index.parse.md' to 'metatag.description,metatag.keywords'.
+          parameter 'index.parse.md' to 'meta_description,meta_metatag.keywords'.
       </description>
   </property>
   <property>
@@ -168,13 +168,32 @@
         </description>
     </property>
 
-<!-- Not in Nutch 1.x nutch-default.xml-->
-  <property id="index-metadata">
-      <name>index.metadata</name>
-      <value>AlbumTitle,Artist,CatalogNumber,Category,ContentType,Content-Type,Country,Culture,Decade,Format,Genre,HandheldFriendly,ImageURL,InfoText,Instrument,Isrc,Keywords,Label,Language,MobileOptimized,PriceTrackDownload,Program,Region,SampleAudio,SortDate,Source,Subject,SubRegion,Theme,Title,X-UA-Compatible,Year,gEra,inLanguage,useRightsURL,alt_title,author,buylinkalbumdownload,buylinkpre-6cd-book-set,category-site-sections,cleartype,created,cttype,description,generator,keywords,modified,name,physical_description,pricealbumdownload,pricepre-6cd-book-set,record_number,topicids,unit_code,viewport,article:published_time,article:modified_time,dc.author,dc.contributor,dc.creator,dc.date,dc.date.created,dc.format,dc.identifier,dc.publisher,dc.subject,dc.title,dc.type,dcterms.creator,dcterms.date,dcterms.description,dcterms.format,dcterms.identifier,dcterms.ispartof,dcterms.language,dcterms.spatial,dcterms.subject,dcterms.temporal,dcterms.title,dcterms.type,fb:admins,fb:app_id,fb:page_id,og:description,og:image,og:image:url,og:locale,og:site_name,og:title,og:type,og:updated_time,og:url,twitter:card,twitter:creator,twitter:description,twitter:image,twitter:site,twitter:title,twitter:url,Content Type,fid,ftype,Era,Label,Release Decade,sort-lastmodified,sort-title</value>
+<!-- index.metadata is not in Nutch 1.x nutch-default.xml, In Nutch 1.x its index.parse.md and each item in the list needs prefixed with 'meta_' -->
+  <property>
+      <name>index.parse.md</name>
+      <value>meta_AlbumTitle,meta_Artist,meta_CatalogNumber,meta_Category,meta_ContentType,meta_Content-Type,meta_Country,meta_Culture,meta_Decade,meta_Format,meta_Genre,meta_HandheldFriendly,meta_ImageURL,meta_InfoText,meta_Instrument,meta_Isrc,meta_Keywords,meta_Label,meta_Language,meta_MobileOptimized,meta_PriceTrackDownload,meta_Program,meta_Region,meta_SampleAudio,meta_SortDate,meta_Source,meta_Subject,meta_SubRegion,meta_Theme,meta_Title,meta_X-UA-Compatible,meta_Year,meta_gEra,meta_inLanguage,meta_useRightsURL,meta_alt_title,meta_author,meta_buylinkalbumdownload,meta_buylinkpre-6cd-book-set,meta_category-site-sections,meta_cleartype,meta_created,meta_cttype,meta_description,meta_generator,meta_keywords,meta_modified,meta_name,meta_physical_description,meta_pricealbumdownload,meta_pricepre-6cd-book-set,meta_record_number,meta_topicids,meta_unit_code,meta_viewport,meta_article:published_time,meta_article:modified_time,meta_dc.author,meta_dc.contributor,meta_dc.creator,meta_dc.date,meta_dc.date.created,meta_dc.format,meta_dc.identifier,meta_dc.publisher,meta_dc.subject,meta_dc.title,meta_dc.type,meta_dcterms.creator,meta_dcterms.date,meta_dcterms.description,meta_dcterms.format,meta_dcterms.identifier,meta_dcterms.ispartof,meta_dcterms.language,meta_dcterms.spatial,meta_dcterms.subject,meta_dcterms.temporal,meta_dcterms.title,meta_dcterms.type,meta_fb:admins,meta_fb:app_id,meta_fb:page_id,meta_og:description,meta_og:image,meta_og:image:url,meta_og:locale,meta_og:site_name,meta_og:title,meta_og:type,meta_og:updated_time,meta_og:url,meta_twitter:card,meta_twitter:creator,meta_twitter:description,meta_twitter:image,meta_twitter:site,meta_twitter:title,meta_twitter:url,meta_Content Type,meta_fid,meta_ftype,meta_Era,meta_Label,meta_Release Decade,meta_sort-lastmodified,meta_sort-title,meta_og:image:alt</value>
       <description>
-        Will included metadatas existing in a doc into solr core
+          Comma-separated list of keys to be taken from the parse metadata to generate fields.
+          Can be used e.g. for 'description' or 'keywords' provided that these values are generated
+          by a parser (see parse-metatags plugin)
       </description>
+    </property>
+
+    <property>
+        <name>index.metadata.separator</name>
+        <value>\t|\||;</value> <!-- Nutch 1.x code modifications to do regex split -->
+        <description>
+            Separator to use if you want to index multiple values for a given field. Leave empty to
+            treat each value as a single value.
+        </description>
+    </property>
+
+    <property>
+        <name>index.metadata.multivalued.fields</name>
+        <value>meta_topicids,meta_Artist,meta_Genre,meta_SubRegion,meta_dc.subject,meta_dcterms.subject,meta_dcterms.spatial,meta_dcterms.temporal,meta_dcterms.creator,meta_Country,meta_Culture,meta_Instrument,meta_Language,meta_Decade,meta_Region,meta_ContentType,meta_Theme,meta_Year,meta_Program,meta_gEra,meta_Format,meta_Content Type,meta_Source,meta_Era,meta_Label,meta_Release Decade</value>
+        <description>
+            Comma-separated list of dynamic-navigations-multivalue-fields to be taken from the parse metadata to generate fields.
+        </description>
     </property>
 
 <!-- Not in Nutch 1.x nutch-default.xml-->
@@ -208,15 +227,20 @@
 
 
 
-    <!-- Additional diffs between OSSearch Nutch 2.x nutch-default.xml -->
+    <!-- Additional diffs between OSSearch Nutch 2.x nutch-default.xml and Nutch 1.x nutch-default.xml -->
     <property>
         <name>db.ignore.internal.links</name>
-        <!--<value>false</value>--> <!-- Nutch 1.x default -->
-        <value>true</value>
+        <value>false</value> <!-- Nutch 1.x default -->
+        <!--<value>true</value>--> <!-- OSSearch Nutch 2.x setting -->
         <description>If true, outlinks leading from a page to internal hosts or domain
             will be ignored. This is an effective way to limit the crawl to include
             only initially injected hosts or domains, without creating complex URLFilters.
             See 'db.ignore.external.links.mode'.
+
+            *************************************************** NOTE ***************************************************
+            Using OSSearch Nutch 2.x setting while testing Nutch 1.x this prevented nutch from crawling anything other then urls in seed file.
+            i.e. one url in seed file after 50 rounds only one url was indexed to solr!!!!
+            So use the Nutch 1.x default value!
         </description>
     </property>
     <property>

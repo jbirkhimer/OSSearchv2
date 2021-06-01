@@ -37,8 +37,9 @@
         <!-- <field source="title" dest="title,search"/> -->
       </copy>
       <rename>
-        <field source="metatag.description" dest="description"/>
-        <field source="metatag.keywords" dest="keywords"/>
+        <!--<field source="meta_topicids" dest="topicids"/>-->
+        <!--<field source="metatag.description" dest="description"/>-->
+        <!--<field source="metatag.keywords" dest="keywords"/>-->
       </rename>
       <remove>
         <field source="segment"/>
