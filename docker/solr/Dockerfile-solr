@@ -14,3 +14,8 @@ USER solr
 COPY conf /ossearch-config/conf
 COPY conf /ossearch-config-slave/conf
 
+# Uncomment to use nutch default solr schema.xml
+#RUN cd /ossearch-config/conf \
+#    && wget -O- "https://archive.apache.org/dist/nutch/1.18/apache-nutch-1.18-src.tar.gz" | tar -zx --strip-components=4 apache-nutch-1.18/src/plugin/indexer-solr/schema.xml \
+#    && ls -la \
+#    && cp /ossearch-config/conf/schema.xml  /ossearch-config-slave/conf/schema.xml
