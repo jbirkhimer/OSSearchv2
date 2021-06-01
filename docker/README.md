@@ -69,3 +69,11 @@ mkdir -p /opt/nutch/seeds/siarchives \
 ```
 
 The console will display various logs as the crawl progresses, but you should now be able to see the job information on http://localhost:8088/
+
+
+---
+
+
+NOTES:
+
+The nutch subcollection plugin might be useful: https://nutch.apache.org/apidocs/apidocs-2.0/org/apache/nutch/collection/package-summary.html
