@@ -1,7 +1,7 @@
 FROM openjdk:8-jdk-buster
 
 RUN apt-get update; \
-	apt-get install -y --no-install-recommends ant vim ssh vim rsync curl build-essential maven; \
+	apt-get install -y --no-install-recommends ant vim ssh rsync curl build-essential maven; \
 	rm -rf /var/lib/apt/lists/*;
 
 ARG NUTCH_VERSION
@@ -10,7 +10,6 @@ ENV HADOOP_VERSION=$HADOOP_VERSION
 ENV NUTCH_HOME=/opt/nutch
 ENV HADOOP_HOME=/opt/hadoop
 
-# Hadoop install
 #RUN mkdir -p $HADOOP_HOME \
 #    && cd $HADOOP_HOME \
 #    && wget -qO- "https://downloads.apache.org/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz" | tar -zx --strip-components=1
@@ -20,13 +19,13 @@ ADD hadoop-${HADOOP_VERSION}.tar.gz /opt
 RUN mv /opt/hadoop-${HADOOP_VERSION} $HADOOP_HOME
 ### LOCAL-TESTING ###
 
-#RUN mkdir -p $NUTCH_HOME \
-#    && cd $NUTCH_HOME \
-#    && wget -qO- "https://archive.apache.org/dist/nutch/${NUTCH_VERSION}/apache-nutch-${NUTCH_VERSION}-src.tar.gz" | tar -zx --strip-components=1
+RUN mkdir -p $NUTCH_HOME \
+    && cd $NUTCH_HOME \
+    && wget -qO- "https://archive.apache.org/dist/nutch/${NUTCH_VERSION}/apache-nutch-${NUTCH_VERSION}-src.tar.gz" | tar -zx --strip-components=1
 
 ### LOCAL-TESTING ###
-ADD apache-nutch-${NUTCH_VERSION}-src.tar.gz /opt
-RUN mv /opt/apache-nutch-${NUTCH_VERSION} $NUTCH_HOME
+#ADD apache-nutch-${NUTCH_VERSION}-src.tar.gz /opt
+#RUN mv /opt/apache-nutch-${NUTCH_VERSION} $NUTCH_HOME
 ### LOCAL-TESTING ###
 
 # Hadoop install (pseudo distributed)
@@ -57,9 +56,13 @@ ENV PATH $HADOOP_HOME/bin/:$PATH
 
 
 ## Nutch 1.x install
-
-
 COPY nutch/conf $NUTCH_HOME/conf
+COPY nutch/src/plugin/index-metadata $NUTCH_HOME/src/plugin/index-metadata
+COPY nutch/src/plugin/parse-metatags $NUTCH_HOME/src/plugin/parse-metatags
+COPY nutch/src/plugin/scoring-similarity $NUTCH_HOME/src/plugin/scoring-similarity
+
+#COPY nutch/conf/index-writers.xml $NUTCH_HOME/conf/index-writers.xml
+#RUN sed -i '6 a <property><name>http.agent.name</name><value>Nutch Spider 1.18</value></property>' /opt/nutch/conf/nutch-site.xml
 
 RUN cd $NUTCH_HOME \
     && ant runtime
@@ -74,9 +77,10 @@ RUN mkdir $NUTCH_HOME/logs \
 
 ENV PATH $NUTCH_HOME/runtime/deploy/bin/:$PATH
 
-WORKDIR $NUTCH_HOME/runtime/deploy
+WORKDIR $NUTCH_HOME
 
 ADD entry-point.sh /
 RUN chmod +x /entry-point.sh
 
 ENTRYPOINT ["/entry-point.sh", "-d"]
+#CMD tail -f /var/log/dpkg.log
