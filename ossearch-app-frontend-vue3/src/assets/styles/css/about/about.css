@@ -1,0 +1,19 @@
+#administration_schema img{
+	width: 100%;
+}
+
+td ul li{
+	list-style: square;
+	list-style-position: inside;
+}
+td{
+	word-wrap: break-word;
+	
+}
+.list-in-container li{
+	list-style: square;
+	list-style-position: inside;
+}
+table{
+	table-layout:fixed;
+}

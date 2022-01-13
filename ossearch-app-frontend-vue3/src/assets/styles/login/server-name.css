@@ -1,0 +1,29 @@
+.server-nicename {
+    padding: 2px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+.server-nicename.green {
+    background-color: green;
+    color: black;
+}
+.server-nicename.red {
+    background-color: red;
+    color: black;
+}
+.server-nicename.blue {
+    background-color: blue;
+    color: white;
+}
+.server-nicename.purple {
+    background-color: white;
+    color: purple;
+}
+.server-nicename.yellow {
+    background-color: yellow;
+    color: black;
+}
+.server-nicename.orange {
+    background-color: orange;
+    color: black;
+}

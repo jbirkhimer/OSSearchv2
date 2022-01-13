@@ -1,0 +1,8 @@
+@media only screen and (max-width: 600px) {
+	.box{
+		width: 330px !important;
+	}
+	.login-header img{
+		width: 100%;
+	}
+}
