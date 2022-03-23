@@ -1,0 +1,363 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+<configuration>
+  <property>
+       <name>http.agent.name</name>
+       <value>Nutch</value>
+      <description>HTTP 'User-Agent' request header. MUST NOT be empty -
+          please set this to a single word uniquely related to your organization.
+
+          NOTE: You should also check other related properties:
+
+          http.robots.agents
+          http.agent.description
+          http.agent.url
+          http.agent.email
+          http.agent.version
+
+          and set their values appropriately.
+
+      </description>
+   </property>
+  <property>
+      <name>db.ignore.external.links</name>
+      <!--<value>false</value>--> <!-- Nutch 1.18 default -->
+      <value>true</value> <!-- OSSearch nutch 2.x setting-->
+      <description>If true,meta_ outlinks leading from a page to external hosts or domain
+          will be ignored. This is an effective way to limit the crawl to include
+          only initially injected hosts or domains, without creating complex URLFilters.
+          See 'db.ignore.external.links.mode'.
+      </description>
+  </property>
+  <property>
+      <name>plugin.includes</name>
+      <!--<value>protocol-httpclient|urlfilter-regex|index-(basic|more)|query-(basic|site|url|lang)|indexer-solr|nutch-extensionpoints|protocol-httpclient|urlfilter-regex|parse-(text|html|msexcel|msword|mspowerpoint|pdf)|summary-basic|scoring-opic|urlnormalizer-(pass|regex|basic)|urlfilter-regex|parse-(html|tika|metatags)|index-(basic|anchor|more|metadata)</value>-->
+      <value>protocol-httpclient|urlfilter-(regex|validator)|parse-(html|tika|metatags)|index-(basic|anchor|more|metadata|static)|indexer-solr|scoring-opic|urlnormalizer-(pass|regex|basic)|index-blacklist-whitelist</value>
+      <description>Regular expression naming plugin directory names to
+          include.  Any plugin not matching this expression is excluded.
+          By default Nutch includes plugins to crawl HTML and various other
+          document formats via HTTP/HTTPS and indexing the crawled content
+          into Solr.  More plugins are available to support more indexing
+          backends, to fetch ftp:// and file:// URLs, for focused crawling,
+          and many other use cases.
+      </description>
+  </property>
+  <property>
+      <name>anchorIndexingFilter.deduplicate</name>
+      <!--<value>false</value>--> <!-- Nutch 1.18 default -->
+      <value>true</value> <!-- OSSearch nutch 2.x setting-->
+      <description>With this enabled the indexer will case-insensitive deduplicate anchors
+          before indexing. This prevents possible hundreds or thousands of identical anchors for
+          a given page to be indexed but will affect the search scoring (i.e. tf=1.0f).
+      </description>
+  </property>
+  <property>
+       <name>file.content.limit</name>
+      <!--<value>1048576</value>--> <!-- Nutch 1.18 default -->
+      <!--<value>16000000</value>--> <!-- OSSearch nutch 2.x setting-->
+      <value>100000000</value> <!-- 100MB -->
+      <description>The length limit for downloaded content using the file://
+          protocol, in bytes. If this value is non-negative (>=0), content longer
+          than it will be truncated; otherwise, no truncation at all. Do not
+          confuse this setting with the http.content.limit setting.
+      </description>
+  </property>
+  <property>
+       <name>parser.skip.truncated</name>
+      <!--<value>true</value>--> <!-- Nutch 1.18 default -->
+      <value>false</value> <!-- OSSearch nutch 2.x setting-->
+      <description>Boolean value for whether we should skip parsing for truncated documents. By default this
+          property is activated due to extremely high levels of CPU which parsing can sometimes take.
+      </description>
+  </property>
+
+  <property>
+    <name>db.fetch.interval.default</name>
+    <value>2592000</value>
+    <description>The default number of seconds between re-fetches of a page (30 days).
+    </description>
+  </property>
+  <property>
+    <name>db.max.outlinks.per.page</name>
+    <!--<value>100</value>--> <!-- Nutch 1.18 default -->
+    <value>-1</value> <!-- OSSearch nutch 2.x setting-->
+      <description>The maximum number of outlinks that we'll process for a page.
+          If this value is nonnegative (>=0), at most db.max.outlinks.per.page outlinks
+          will be processed for a page; otherwise, all outlinks will be processed.
+      </description>
+  </property>
+  <property>
+    <name>http.content.limit</name>
+      <!--<value>1048576</value>--> <!-- Nutch 1.18 default -->
+      <!--<value>16000000</value>--> <!-- OSSearch nutch 2.x setting-->
+      <value>100000000</value> <!-- 100MB -->
+      <description>The length limit for downloaded content using the http/https
+          protocols, in bytes. If this value is non-negative (>=0), content longer
+          than it will be truncated; otherwise, no truncation at all. Do not
+          confuse this setting with the file.content.limit setting.
+      </description>
+  </property>
+
+  <!-- parse-metatags plugin properties -->
+  <property>
+    <name>metatags.names</name>
+    <value>*</value>
+      <description> Names of the metatags to extract, separated by ',meta_'.
+          Use '*' to extract all metatags. Prefixes the names with 'meta_'
+          in the parse-metadata. For instance to index description and keywords,
+          you need to activate the plugin index-metadata and set the value of the
+          parameter 'index.parse.md' to 'meta_description,meta_metatag.keywords'.
+      </description>
+  </property>
+  <property>
+    <name>db.update.max.inlinks</name>
+    <value>10000</value> <!-- Nutch 1.x default -->
+    <!--<value>100</value>--> <!-- OSSearch nutch 2.x setting-->
+      <description>Maximum number of inlinks to take into account when updating
+          a URL score in the crawlDB. Only the best scoring inlinks are kept.
+      </description>
+  </property>
+  <property>
+    <name>generate.max.count</name>
+    <value>-1</value> <!-- Nutch 1.x default -->
+    <!--<value>1000</value>--> <!-- OSSearch nutch 2.x setting-->
+      <description>The maximum number of URLs in a single
+          fetchlist.  -1 if unlimited. The URLs are counted according
+          to the value of the parameter generate.count.mode.
+      </description>
+  </property>
+  <property>
+    <name>fetcher.server.delay</name>
+      <value>5.0</value> <!-- Nutch 1.x default -->
+      <!--<value>2</value>--> <!-- OSSearch nutch 2.x setting-->
+      <!--<value>1</value>--> <!-- Testing -->
+      <description>The number of seconds the fetcher will delay between
+          successive requests to the same server. Note that this might get
+          overridden by a Crawl-Delay from a robots.txt and is used ONLY if
+          fetcher.threads.per.queue is set to 1.
+      </description>
+  </property>
+  <property>
+    <name>fetcher.threads.fetch</name>
+      <value>10</value> <!-- Nutch 1.x default -->
+      <!--<value>128</value>--> <!-- OSSearch nutch 2.x setting-->
+      <!--<value>250</value>--> <!-- Testing -->
+      <description>The number of FetcherThreads the fetcher should use.
+          This is also determines the maximum number of requests that are
+          made at once (each FetcherThread handles one connection). The total
+          number of threads running in distributed mode will be the number of
+          fetcher threads * number of nodes as fetcher has one map task per node.
+      </description>
+  </property>
+  <property>
+    <name>fetcher.threads.per.queue</name>
+      <value>1</value> <!-- Nutch 1.x default -->
+      <!--<value>2</value>--> <!-- OSSearch nutch 2.x setting-->
+      <!--<value>10</value>--> <!-- Testing -->
+      <description>This number is the maximum number of threads that
+          should be allowed to access a queue at one time. Setting it to
+          a value > 1 will cause the Crawl-Delay value from robots.txt to
+          be ignored and the value of fetcher.server.min.delay to be used
+          as a delay between successive requests to the same server instead
+          of fetcher.server.delay.
+      </description>
+  </property>
+  <property>
+    <name>fetcher.timelimit.mins</name>
+    <value>-1</value> <!-- Nutch 1.x default -->
+    <!--<value>45</value>--> <!-- OSSearch nutch 2.x setting-->
+      <description>This is the number of minutes allocated to the fetching.
+          Once this value is reached, any remaining entry from the input URL list is skipped
+          and all active queues are emptied. The default value of -1 deactivates the time limit.
+      </description>
+  </property>
+  <property>
+      <name>fetcher.maxNum.threads</name>
+      <value>25</value> <!-- Nutch 1.x default -->
+      <!--<value>250</value>--> <!-- Testing -->
+      <description>Max number of fetch threads allowed when using fetcher.bandwidth.target. Defaults to fetcher.threads.fetch if unspecified or
+          set to a value lower than it. </description>
+  </property>
+
+    <!--Not in Nutch 1.18 nutch-default.xml -->
+    <property>
+        <name>db.max.anchor.length</name>
+        <value>3000</value>
+        <description>The maximum number of characters permitted in an anchor.
+        </description>
+    </property>
+
+<!-- index.metadata is not in Nutch 1.x nutch-default.xml, In Nutch 1.x its index.parse.md and each item in the list needs prefixed with 'meta_'. NOTE: values should be lowercase -->
+  <property>
+      <name>index.parse.md</name>
+      <value>meta_AlbumTitle,meta_Artist,meta_CatalogNumber,meta_Category,meta_ContentType,meta_Content-Type,meta_Country,meta_Culture,meta_Decade,meta_Format,meta_Genre,meta_HandheldFriendly,meta_ImageURL,meta_InfoText,meta_Instrument,meta_Isrc,meta_Keywords,meta_Label,meta_Language,meta_MobileOptimized,meta_PriceTrackDownload,meta_Program,meta_Region,meta_SampleAudio,meta_SortDate,meta_Source,meta_Subject,meta_SubRegion,meta_Theme,meta_Title,meta_X-UA-Compatible,meta_Year,meta_gEra,meta_inLanguage,meta_useRightsURL,meta_alt_title,meta_author,meta_buylinkalbumdownload,meta_buylinkpre-6cd-book-set,meta_category-site-sections,meta_cleartype,meta_created,meta_cttype,meta_description,meta_generator,meta_keywords,meta_modified,meta_name,meta_physical_description,meta_pricealbumdownload,meta_pricepre-6cd-book-set,meta_record_number,meta_topicids,meta_unit_code,meta_viewport,meta_article:published_time,meta_article:modified_time,meta_dc.author,meta_dc.contributor,meta_dc.creator,meta_dc.date,meta_dc.date.created,meta_dc.format,meta_dc.identifier,meta_dc.publisher,meta_dc.subject,meta_dc.title,meta_dc.type,meta_dcterms.creator,meta_dcterms.date,meta_dcterms.description,meta_dcterms.format,meta_dcterms.identifier,meta_dcterms.ispartof,meta_dcterms.language,meta_dcterms.spatial,meta_dcterms.subject,meta_dcterms.temporal,meta_dcterms.title,meta_dcterms.type,meta_fb:admins,meta_fb:app_id,meta_fb:page_id,meta_og:description,meta_og:image,meta_og:image:url,meta_og:locale,meta_og:site_name,meta_og:title,meta_og:type,meta_og:updated_time,meta_og:url,meta_twitter:card,meta_twitter:creator,meta_twitter:description,meta_twitter:image,meta_twitter:site,meta_twitter:title,meta_twitter:url,meta_Content Type,meta_fid,meta_ftype,meta_Era,meta_Label,meta_Release Decade,meta_sort-lastmodified,meta_sort-title,meta_og:image:alt</value>
+      <!--<value>meta_albumtitle,meta_artist,meta_catalognumber,meta_category,meta_contenttype,meta_content-type,meta_country,meta_culture,meta_decade,meta_format,meta_genre,meta_handheldfriendly,meta_imageurl,meta_infotext,meta_instrument,meta_isrc,meta_keywords,meta_label,meta_language,meta_mobileoptimized,meta_pricetrackdownload,meta_program,meta_region,meta_sampleaudio,meta_sortdate,meta_source,meta_subject,meta_subregion,meta_theme,meta_title,meta_x-ua-compatible,meta_year,meta_gera,meta_inlanguage,meta_userightsurl,meta_alt_title,meta_author,meta_buylinkalbumdownload,meta_buylinkpre-6cd-book-set,meta_category-site-sections,meta_cleartype,meta_created,meta_cttype,meta_description,meta_generator,meta_keywords,meta_modified,meta_name,meta_physical_description,meta_pricealbumdownload,meta_pricepre-6cd-book-set,meta_record_number,meta_topicids,meta_unit_code,meta_viewport,meta_article:published_time,meta_article:modified_time,meta_dc.author,meta_dc.contributor,meta_dc.creator,meta_dc.date,meta_dc.date.created,meta_dc.format,meta_dc.identifier,meta_dc.publisher,meta_dc.subject,meta_dc.title,meta_dc.type,meta_dcterms.creator,meta_dcterms.date,meta_dcterms.description,meta_dcterms.format,meta_dcterms.identifier,meta_dcterms.ispartof,meta_dcterms.language,meta_dcterms.spatial,meta_dcterms.subject,meta_dcterms.temporal,meta_dcterms.title,meta_dcterms.type,meta_fb:admins,meta_fb:app_id,meta_fb:page_id,meta_og:description,meta_og:image,meta_og:image:url,meta_og:locale,meta_og:site_name,meta_og:title,meta_og:type,meta_og:updated_time,meta_og:url,meta_twitter:card,meta_twitter:creator,meta_twitter:description,meta_twitter:image,meta_twitter:site,meta_twitter:title,meta_twitter:url,meta_content type,meta_fid,meta_ftype,meta_era,meta_label,meta_release decade,meta_sort-lastmodified,meta_sort-title,meta_og:image:alt</value>-->
+      <description>
+          Comma-separated list of keys to be taken from the parse metadata to generate fields.
+          Can be used e.g. for 'description' or 'keywords' provided that these values are generated
+          by a parser (see parse-metatags plugin)
+      </description>
+    </property>
+
+    <property>
+        <name>index.metadata.separator</name>
+        <value>\t|\||;|,</value> <!-- Nutch 1.x code modifications to do regex split -->
+        <description>
+            Separator to use if you want to index multiple values for a given field. Leave empty to
+            treat each value as a single value.
+        </description>
+    </property>
+
+    <property>
+        <name>index.metadata.multivalued.fields</name>
+        <value>meta_topicids,meta_Artist,meta_Genre,meta_SubRegion,meta_dc.subject,meta_dcterms.subject,meta_dcterms.spatial,meta_dcterms.temporal,meta_dcterms.creator,meta_Country,meta_Culture,meta_Instrument,meta_Language,meta_Decade,meta_Region,meta_ContentType,meta_Theme,meta_Year,meta_Program,meta_gEra,meta_Format,meta_Content Type,meta_Source,meta_Era,meta_Label,meta_Release Decade</value>
+        <!--<value>meta_topicids,meta_artist,meta_genre,meta_subregion,meta_dc.subject,meta_dcterms.subject,meta_dcterms.spatial,meta_dcterms.temporal,meta_dcterms.creator,meta_country,meta_culture,meta_instrument,meta_language,meta_decade,meta_region,meta_contenttype,meta_theme,meta_year,meta_program,meta_gera,meta_format,meta_content type,meta_source,meta_era,meta_label,meta_release decade</value>-->
+        <description>
+            Comma-separated list of dynamic-navigations-multivalue-fields to be taken from the parse metadata to generate fields.
+        </description>
+    </property>
+
+<!-- Not in Nutch 1.x nutch-default.xml-->
+    <property id="fetcher_threads_per_host">
+        <name>fetcher.threads.per.host</name>
+        <value>10</value>
+        <!--<value>4</value>--> <!-- OSSearch nutch 2.x setting-->
+        <description>Does not apply to nutch v1.x </description>
+    </property>
+
+
+    <!-- N/A for Nutch 1.x-->
+    <!--<property>
+        <name>gora.buffer.read.limit</name>
+        <value>200000</value>
+        <description>The maximum number of buffered Records we wish to
+            read in one batch. @see org.apache.gora.mapreduce.GoraRecordReader
+        </description>
+    </property>
+    <property>
+        <name>gora.buffer.write.limit</name>
+        <value>200000</value>
+        <description>Configures (for the Hadoop record writer) the maximum number of
+            buffered Records we wish to regularly flush to the Gora datastore.
+            @see org.apache.gora.mapreduce.GoraRecordWriter.
+        </description>
+    </property>
+    <property>
+        <name>storage.data.store.class</name>
+        <value>org.apache.gora.mongodb.store.MongoStore</value>
+        <description>Default class for storing data</description>
+    </property>-->
+
+
+
+    <!-- Additional diffs between OSSearch Nutch 2.x nutch-default.xml and Nutch 1.x nutch-default.xml -->
+    <property>
+        <name>db.ignore.internal.links</name>
+        <value>false</value> <!-- Nutch 1.x default -->
+        <!--<value>true</value>--> <!-- OSSearch Nutch 2.x setting -->
+        <description>If true, outlinks leading from a page to internal hosts or domain
+            will be ignored. This is an effective way to limit the crawl to include
+            only initially injected hosts or domains, without creating complex URLFilters.
+            See 'db.ignore.external.links.mode'.
+
+            *************************************************** NOTE ***************************************************
+            Using OSSearch Nutch 2.x setting while testing Nutch 1.x this prevented nutch from crawling anything other then urls in seed file.
+            i.e. one url in seed file after 50 rounds only one url was indexed to solr!!!!
+            So use the Nutch 1.x default value!
+        </description>
+    </property>
+    <property>
+        <name>db.max.outlink.length</name>
+        <value>4096</value> <!-- Nutch 1.x default -->
+        <!--<value>100</value>--> <!-- OSSearch Nutch 2.x setting -->
+        <description>
+            The maximum length in characters accepted for outlinks before
+            applying URL normalizers and filters.  If this value is
+            nonnegative (>=0), only URLs with a length in characters less or
+            equal than db.max.outlink.length are accepted and then passed to
+            URL normalizers and filters. Doing the length check beforehand
+            avoids that normalizers or filters hang up on overlong URLs.
+            Note: this property is only used to check URLs found as outlinks
+            and redirects, but not for injected URLs.
+        </description>
+    </property>
+
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>hadoop_tmp</value>
+        <description>
+            To configure Hadoop to use a different place than /tmp
+            for temporary files, a place where you have enough disk space to fit all
+            downloaded and temporary data. You can configure this by adding
+            this to conf/hadoop-site.xml when running a Hadoop cluster (non-local mode).
+            (if you run Hadoop in non-local mode, you need to restart the cluster)
+            For "local" crawls:
+            - do not share this folder for two simultaneously running Nutch jobs
+            - you have to clean-up the temp folder, esp. after failed jobs
+            (if no job is currently running with this folder defined as hadoop.tmp.dir
+            a clean-up is save)
+            Successful jobs do not leave any data in temp except for empty directories.
+        </description>
+    </property>
+
+    <!-- Additional Changes to Nutch 1.x defaults during Testing -->
+    <!--<property>
+        <name>db.fetch.retry.max</name>
+        <value>300000000</value>
+        <description>The maximum number of times a URL that has encountered
+            recoverable errors is generated for fetch.</description>
+    </property>-->
+
+    <property>
+        <name>parser.html.blacklist</name>
+        <!--<value>div.site-toggle robots-noindex,a.skip-main robots-noindex,div.header-nav  robots-noindex,div.browsenav robots-noindex,div.browsenav browsenav-stuck robots-noindex,div.row robots-noindex,div.footer robots-noindex</value>-->
+        <value></value>
+        <description>
+            A comma-delimited list of css like tags to identify the elements which should
+            NOT be parsed. Use this to tell the HTML parser to ignore the given elements, e.g. site navigation.
+            It is allowed to only specify the element type (required), and optional its class name ('.')
+            or ID ('#'). More complex expressions will not be parsed.
+            Valid examples: div.header,span,p#test,div#main,ul,div.footercol
+            Invalid expressions: div#head#part1,#footer,.inner#post
+            Note that the elements and their children will be silently ignored by the parser,
+            so verify the indexed content with Luke to confirm results.
+            Use either 'parser.html.blacklist' or 'parser.html.whitelist', but not both of them at once. If so,
+            only the whitelist is used.
+        </description>
+    </property>
+
+    <property>
+        <name>parser.html.whitelist</name>
+        <value></value>
+        <description>
+            A comma-delimited list of css like tags to identify the elements which should
+            be parsed. Use this to tell the HTML parser to only use the given elements, e.g. content.
+            It is allowed to only specify the element type (required), and optional its class name ('.')
+            or ID ('#'). More complex expressions will not be parsed.
+            Valid examples: div.header,span,p#test
+            Invalid expressions: div#head#part1,#footer,.inner#post
+            Note that the elements and their children will be silently ignored by the parser,
+            so verify the indexed content with Luke to confirm results.
+            Use either 'parser.html.blacklist' or 'parser.html.whitelist', but not both of them at once. If so,
+            only the whitelist is used.
+        </description>
+    </property>
+
+    <property>
+        <name>parser.html.text.blacklist</name>
+        <value>class(robots-noindex,element-invisible,browsenav,header-nav)|type(header,title,nav,footer)|id(robots-noindex,chat-notification,skip-main,skip-link)</value>
+        <description>
+            A piped-delimited list type,id,class prefix and comma-delimated list of values in parenthesis to identify
+            the elements which should NOT be parsed.
+            Use this to tell the HTML parser to ignore the given elements, e.g. site navigation.
+            Valid examples: type(div,span,p,ul)|id(test,main)|class(header,footercol)
+            Note that the elements and their children will be silently ignored by the parser,
+            so verify the indexed content with Luke to confirm results.
+            Use either 'parser.html.blacklist' or 'parser.html.whitelist', but not both of them at once. If so,
+            only the whitelist is used.
+        </description>
+    </property>
+
+</configuration>

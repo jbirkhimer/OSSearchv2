@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>nutch-plugins</artifactId>
+        <groupId>edu.si.ossearch</groupId>
+        <version>1.18-patched</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.apache.nutch</groupId>
+    <artifactId>index-blacklist-whitelist</artifactId>
+    <!--<version>1.18-patched</version>-->
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.nutch</groupId>
+            <artifactId>nutch</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}</finalName>
+
+        <resources>
+            <resource>
+                <directory>${project.basedir}</directory>
+                <targetPath>${project.basedir}/../target/plugins/${project.artifactId}</targetPath>
+                <includes>
+                    <include>plugin.xml</include>
+                </includes>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <outputDirectory>${project.basedir}/../target/plugins/${project.artifactId}</outputDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
+
+
+</project>

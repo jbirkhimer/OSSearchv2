@@ -1,28 +1,29 @@
 <template>
   <div class="col-md-12">
     <div class="card card-container">
-      <img
-        id="profile-img"
-        src="//ssl.gstatic.com/accounts/ui/avatar_2x.png"
-        class="profile-img-card"
-      />
+<!--      <img
+          id="profile-img"
+          src="//ssl.gstatic.com/accounts/ui/avatar_2x.png"
+          class="profile-img-card"
+      />-->
+      <img id="profile-img" href="#" class="mb-3" height="200" src="@/assets/Smithsonian_logo_color.svg">
       <Form @submit="handleLogin" :validation-schema="schema">
         <div class="form-group">
           <label for="username">Username</label>
-          <Field name="username" type="text" class="form-control" />
-          <ErrorMessage name="username" class="error-feedback" />
+          <Field id="username" name="username" type="text" class="form-control"/>
+          <ErrorMessage name="username" class="error-feedback"/>
         </div>
-        <div class="form-group">
+        <div class="form-group mb-3">
           <label for="password">Password</label>
-          <Field name="password" type="password" class="form-control" />
-          <ErrorMessage name="password" class="error-feedback" />
+          <Field id="password" name="password" type="password" class="form-control"/>
+          <ErrorMessage name="password" class="error-feedback"/>
         </div>
 
         <div class="form-group">
           <button class="btn btn-primary btn-block" :disabled="loading">
             <span
-              v-show="loading"
-              class="spinner-border spinner-border-sm"
+                v-show="loading"
+                class="spinner-border spinner-border-sm"
             ></span>
             <span>Login</span>
           </button>
@@ -39,7 +40,7 @@
 </template>
 
 <script>
-import { Form, Field, ErrorMessage } from "vee-validate";
+import {Form, Field, ErrorMessage} from "vee-validate";
 import * as yup from "yup";
 
 export default {
@@ -68,27 +69,23 @@ export default {
   },
   created() {
     if (this.loggedIn) {
-      this.$router.push("/profile");
+      this.$router.push("/dashboard");
     }
   },
   methods: {
     handleLogin(user) {
       this.loading = true;
 
-      this.$store.dispatch("auth/login", user).then(
-        () => {
-          this.$router.push("/profile");
-        },
-        (error) => {
-          this.loading = false;
-          this.message =
-            (error.response &&
-              error.response.data &&
-              error.response.data.message) ||
-            error.message ||
-            error.toString();
-        }
-      );
+      this.$store.dispatch("auth/login", user)
+          .then(
+              () => {
+                this.$router.push("/dashboard");
+              },
+              (error) => {
+                this.loading = false;
+                this.message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
+              }
+          );
     },
   },
 };
@@ -119,13 +116,13 @@ label {
 }
 
 .profile-img-card {
-  width: 96px;
-  height: 96px;
-  margin: 0 auto 10px;
-  display: block;
-  -moz-border-radius: 50%;
-  -webkit-border-radius: 50%;
-  border-radius: 50%;
+  /*width: 96px;*/
+  /*height: 96px;*/
+  /*margin: 0 auto 10px;*/
+  /*display: block;*/
+  /*-moz-border-radius: 50%;*/
+  /*-webkit-border-radius: 50%;*/
+  /*border-radius: 50%;*/
 }
 
 .error-feedback {

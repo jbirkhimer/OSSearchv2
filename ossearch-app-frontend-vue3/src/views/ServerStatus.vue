@@ -23,6 +23,13 @@
         <ServiceStatus serviceName="Solr Master"
                        v-bind:serviceStatus="solr_master"/>
 
+        <div :class="scheduler_status.started ? 'alert-success' : 'alert-danger'"  class="alert d-flex align-items-center" role="alert">
+          <i :class="scheduler_status.started ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"  style="font-size: x-large" class="bi bi-check-circle-fill flex-shrink-0 me-2" aria-label="Success:"></i>
+          <div>
+            Quartz Scheduler running since {{ scheduler_status.runningSince }}
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -42,27 +49,44 @@ export default {
       schedulerStatus: '',
       ldap: '',
       solr_master: '',
-      solrSlave: ''
+      solrSlave: '',
+      scheduler_status: '',
     }
   },
   components: {
     ServiceStatus
   },
   mounted() {
-    ServerStatusService.getServerStatus().then(
-        response => {
-          //this.json = JSON.stringify(response.data, null, 2)
-          //console.log(this.json)
-          this.json = response.data
-          // this.backend_status = this.json.status
-          this.db_status = this.json.components.db.status
-          this.ldap = this.json.components.ldap.status
-          this.solr_master = this.json.components.solr.status
-          // console.log("db:" + this.db_status)
-          // console.log("ldap: "+this.ldap)
-          // console.log("solr: "+this.solr_master)
-        }
-    )
+    this.getServerStatus()
+    this.getSchedulerStatus()
+
+  },
+  methods: {
+    async getServerStatus() {
+      await ServerStatusService.getServerStatus().then(
+          response => {
+            //this.json = JSON.stringify(response.data, null, 2)
+            this.json = response.data
+            // console.log(JSON.stringify(this.json, null, 2))
+            // this.backend_status = this.json.status
+            this.db_status = this.json.components?.db?.status
+            this.ldap = this.json.components?.ldap?.status
+            this.solr_master = this.json.components?.solr?.status
+            // console.log("db:" + this.db_status)
+            // console.log("ldap: "+this.ldap)
+            // console.log("solr: "+this.solr_master)
+          }
+      )
+    },
+    async getSchedulerStatus() {
+      await ServerStatusService.getSchedulerStatus().then(
+          response => {
+            this.scheduler_status = response.data
+            console.log(this.scheduler_status)
+
+          }
+      )
+    }
   }
 }
 </script>

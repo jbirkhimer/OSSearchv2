@@ -1,0 +1,149 @@
+spring:
+  application:
+    name: ossearch-crawler
+  profiles:
+    active: test
+
+  data:
+    solr:
+      host: xxxxxxxxx
+      slave: xxxxxxxxx
+      collection: xxxxxxxxx
+      # Max number of Row's to return per solr query
+      max-rows:  1000
+      # Max number of Docs's per solr add
+      max-docs: 100000
+      commit-within: 300000
+      upload-enabled: false
+      repositories:
+        enabled: true
+
+    rest:
+      default-page-size: 10
+      enable-enum-translation: true
+      base-path: api
+
+  datasource:
+    jpa:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://xxxxxxxxx:xxxxxxxxx/si_search_db_v2?createDatabaseIfNotExist=true
+      username: root
+      password: root
+
+    quartz:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://xxxxxxxxx:xxxxxxxxx/si_search_db_quartz?createDatabaseIfNotExist=true
+#      jdbc-url: jdbc:mysql://localhost:3309/QUARTZ_SCHEMA?createDatabaseIfNotExist=true
+      username: root
+      password: root
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+        format_sql: false
+    open-in-view: false
+
+  quartz:
+    auto-startup: true
+    startup-delay: 30
+    job-store-type: jdbc
+    wait-for-jobs-to-complete-on-shutdown: true
+    jdbc:
+      platform: mysql
+      initialize-schema: never
+
+  jackson:
+    serialization:
+      indent_output: true
+      fail-on-empty-beans: false
+
+  ldap:
+    urls: ldap://xxxxxxxxx
+    port: 389
+    base: xxxxxxxxx
+    username: xxxxxxxxx
+    password: xxxxxxxxx
+    embedded:
+      enabled: false
+
+  mail:
+    host: smtp.si.edu
+    test-connection: false
+
+  output:
+    ansi:
+      enabled: always
+
+  main:
+    allow-bean-definition-overriding: true
+
+  boot:
+    admin:
+      client:
+        enabled: true
+        url: http://localhost:8484
+        username: ${spring.security.user.name}
+        password: ${spring.security.user.password}
+        instance:
+          name: ${spring.application.name}
+          metadata:
+            user.name: ${spring.security.user.name}
+            user.password: ${spring.security.user.password}
+
+  security:
+    user:
+      name: xxxxxxxxx
+      password: xxxxxxxxx
+
+management:
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      show-details: always
+    logfile:
+      external-file: logs/${spring.application.name}.log
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+server:
+  port: 8484
+
+springdoc:
+  swagger-ui:
+    doc-expansion: none
+
+ossearch:
+  embedded-vuejs: true
+  allowedOrigins: "http://0.0.0.0:3000,http://localhost:3000,http://127.0.0.1:3000,http://192.168.1.128:3000,http://jbirkhimer.myquotient.net:3000"
+  jwt:
+    # key used to sign JWT tokens (should be secure and long)
+    secret: xxxxxxxxx
+    # 3600000 ms = 60 min
+    expirationMs: 3600000
+    # 86400000 ms = 24 hrs
+    refreshExpirationMs: 86400000
+    # Purge tokens at 5am every day
+    token-purge-task:
+      cron:
+        expression: 0 0 5 * * ?
+  nutch:
+    pluginsDir: plugins
+    confDir: conf
+    crawlDir: crawls
+
+logging:
+  #  config: config/logback.xml
+  file:
+    name: ./logs/${spring.application.name}.log
+  logback:
+    rollingpolicy:
+      max-history: 100
+      total-size-cap: 4GB
+

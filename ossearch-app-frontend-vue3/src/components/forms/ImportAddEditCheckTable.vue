@@ -1,4 +1,5 @@
 <template>
+  <slot name="caption"></slot>
   <!-- Check/Select All/None -->
   <div class="btn-toolbar" role="toolbar">
     <div class="btn-group btn-group-sm align-items-center me-2" role="group">
@@ -23,7 +24,7 @@
       <ImportCsvList @load="importTableData"/>
     </div>
     <div v-if="tableOptions.enableAddRow" class="btn-group btn-group-sm align-items-center" role="group">
-      <button type="button" class="btn btn-sm btn-primary" @click="addRow">
+      <button type="button" class="btn btn-sm btn-primary" @click.prevent="addRow">
         Add
       </button>
     </div>
@@ -32,92 +33,92 @@
   <div class="tableFixHead">
     <table class="table table-sm table-bordered">
       <thead class="table-primary">
-      <!-- Column Headers -->
-      <tr class="text-center">
-        <th style="width: 5%">Select</th>
-        <th v-for="(col, i) in tableOptions.columns" :key="i" :style="{width: col.width}">{{ col.label }}</th>
-        <th v-if="tableOptions.enableActions" style="width: 5%">Action</th>
-      </tr>
+        <!-- Column Headers -->
+        <tr class="text-center">
+          <th style="width: 5%">Select</th>
+          <th v-for="(col, i) in tableOptions.columns" :key="i" :style="{width: col.width}">{{ col.label }}</th>
+          <th v-if="tableOptions.enableActions" style="width: 5%">Action</th>
+        </tr>
       </thead>
 
       <tbody v-if="tableData.length > 0">
-      <!-- Loop Over Row Entries  -->
-      <tr v-for="(entry, i) in tableData" :key="i">
+        <!-- Loop Over Row Entries  -->
+        <tr v-for="(entry, i) in tableData" :key="i">
 
-        <!-- Select Row -->
-        <td class="text-center" style="width: 5%">
-          <input type="checkbox" :checked="isChecked(entry)" @change="addSelected(entry, $event)">
-        </td>
+          <!-- Select Row -->
+          <td class="text-center" style="width: 5%">
+            <input type="checkbox" :checked="isChecked(entry)" @change="addSelected(entry, $event)">
+          </td>
 
-        <!-- Loop Row Cells -->
-        <template v-for="(key, j) in tableOptions.columns" :key="j">
-          <!-- Checkbox -->
-          <template v-if="key.type == 'checkbox'">
-            <td class="text-center" :class="key.class" :style="{width: key.width}">
-              <input v-if="tableOptions.columns.length > 1" v-model="entry[key.name]" type="checkbox"
-                     :checked="entry[key.name]" :disabled="!isEditMode(i)">
-              <input v-else :value="entry" @change="updateSingleValue($event.target.value, i)" type="checkbox"
-                     :checked="entry" :disabled="!isEditMode(i)">
-            </td>
-          </template>
-
-          <!-- Select -->
-          <template v-if="key.type === 'select'">
-            <td :class="key.class" :style="{width: key.width}">
-              <template v-if="isEditMode(i)">
-                <select v-model="entry[key.name]" class="form-control-sm">
-                  <option v-for="(option, i) in key.options" :key="i" :value="option.value">{{ option.label }}
-                  </option>
-                </select>
-              </template>
-              <template v-if="!isEditMode(i)">
-                <span v-if="tableOptions.columns.length > 1">{{ entry[key.name] }}</span>
-                <span v-else>{{ entry }}</span>
-              </template>
-            </td>
-          </template>
-
-          <template v-if="key.type === 'slot'">
-            <td :class="key.class" :style="{width: key.width}">
-              <slot :name="key.name" :entry="entry[key.name]"/>
-            </td>
-          </template>
-
-          <!-- Text -->
-          <template v-else-if="!['checkbox', 'select'].includes(key.type)">
-            <td :class="key.class" :style="{width: key.width}">
-              <template v-if="isEditMode(i)">
-                <input v-if="tableOptions.columns.length > 1" v-model="entry[key.name]" type="text"
-                       class="form-control form-control-sm" :id="entry[key.name]" :disabled="isDisabled(entry, key)">
-                <input v-else :value="entry" @input="updateSingleValue($event.target.value, i)" type="text"
-                       class="form-control form-control-sm" :id="entry" :disabled="isDisabled(entry, key)">
-              </template>
-              <template v-if="!isEditMode(i)">
-                <span v-if="tableOptions.columns.length > 1">{{ entry[key.name] }}</span>
-                <span v-else>{{ entry }}</span>
-              </template>
-            </td>
-          </template>
-        </template>
-
-        <!-- Row Edit/Delete Actions -->
-        <template v-if="tableOptions.enableActions">
-        <td v-if="tableOptions.actionDisabledDefaultValues ? !tableOptions.actionDisabledDefaultValues.includes(entry) : true" class="justify-content-evenly text-center" style="width: 5%">
-          <div class="btn-group btn-group-sm align-items-center">
-            <template v-if="!isEditMode(i)">
-              <a href="#" class="edit link-primary m-1" title="Edit" @click="editRow(entry, i)"><i
-                  class="bi-pencil-fill text-primary"></i></a>
+          <!-- Loop Row Cells -->
+          <template v-for="(key, j) in tableOptions.columns" :key="j">
+            <!-- Checkbox -->
+            <template v-if="key.type == 'checkbox'">
+              <td class="text-center" :class="key.class" :style="{width: key.width}">
+                <input v-if="tableOptions.columns.length > 1" v-model="entry[key.name]" type="checkbox"
+                       :checked="entry[key.name]" :disabled="!isEditMode(i)">
+                <input v-else :value="entry" @change="updateSingleValue($event.target.value, i)" type="checkbox"
+                       :checked="entry" :disabled="!isEditMode(i)">
+              </td>
             </template>
-            <template v-else>
-              <a href="#" class="save link-success m-1" title="Save" @click="saveRow(entry, i)"><i
-                  class="bi-check-lg text-success"></i></a>
+
+            <!-- Select -->
+            <template v-if="key.type === 'select'">
+              <td :class="key.class" :style="{width: key.width}">
+                <template v-if="isEditMode(i)">
+                  <select v-model="entry[key.name]" class="form-control-sm">
+                    <option v-for="(option, i) in key.options" :key="i" :value="option.value">{{ option.label }}
+                    </option>
+                  </select>
+                </template>
+                <template v-if="!isEditMode(i)">
+                  <span v-if="tableOptions.columns.length > 1">{{ entry[key.name] }}</span>
+                  <span v-else>{{ entry }}</span>
+                </template>
+              </td>
             </template>
-            <a href="#" class="delete link-danger" title="Delete" @click="deleteRow(entry, i)"><i
-                class="bi-x-circle-fill text-danger"></i></a>
-          </div>
-        </td>
-        </template>
-      </tr>
+
+            <template v-if="key.type === 'slot'">
+              <td :class="key.class" :style="{width: key.width}">
+                <slot :name="key.name" :entry="entry[key.name]"/>
+              </td>
+            </template>
+
+            <!-- Text -->
+            <template v-else-if="!['checkbox', 'select'].includes(key.type)">
+              <td :class="key.class" :style="{width: key.width}">
+                <template v-if="isEditMode(i)">
+                  <input v-if="tableOptions.columns.length > 1" v-model="entry[key.name]" type="text"
+                         class="form-control form-control-sm" :id="entry[key.name]" :disabled="isDisabled(entry, key)">
+                  <input v-else :value="entry" @input="updateSingleValue($event.target.value, i)" type="text"
+                         class="form-control form-control-sm" :id="entry" :disabled="isDisabled(entry, key)">
+                </template>
+                <template v-if="!isEditMode(i)">
+                  <span v-if="tableOptions.columns.length > 1">{{ entry[key.name] }}</span>
+                  <span v-else>{{ entry }}</span>
+                </template>
+              </td>
+            </template>
+          </template>
+
+          <!-- Row Edit/Delete Actions -->
+          <template v-if="tableOptions.enableActions">
+          <td v-if="tableOptions.actionDisabledDefaultValues ? !tableOptions.actionDisabledDefaultValues.includes(entry) : true" class="justify-content-evenly text-center" style="width: 5%">
+            <div class="btn-group btn-group-sm align-items-center">
+              <template v-if="!isEditMode(i)">
+                <a href="#" class="btn link-primary p-0 m-1" title="Edit" @click.prevent="editRow(entry, i)"><i
+                    class="fas fa-edit text-primary"></i></a>
+              </template>
+              <template v-else>
+                <a href="#" class="btn link-success p-0 m-1" title="Save" @click.prevent="saveRow(entry, i)"><i
+                    class="fas fa-check text-success"></i></a>
+              </template>
+              <a class="btn link-danger p-0" title="Delete" @click.prevent="deleteRow(entry, i)"><i
+                  class="fas fa-times-circle text-danger"></i></a>
+            </div>
+          </td>
+          </template>
+        </tr>
       </tbody>
       <tbody v-else>
       <tr>
@@ -174,7 +175,12 @@ export default {
       // console.log("uniqueCheckField", this.uniqueCheckField, "selectedLocal", this.selectedLocal, "entry", entry)
       let isChecked = false
       if (this.uniqueCheckField) {
-        isChecked = this.selectedLocal.some(x => this.resolve(this.uniqueCheckField, x) === this.resolve(this.uniqueCheckField, entry))
+        isChecked = this.selectedLocal.some(x => {
+          // let resolvedX = this.resolve(this.uniqueCheckField, x);
+          // let resolvedEntry = this.resolve(this.uniqueCheckField, entry)
+          // console.log(">>>>> resolvedX", resolvedX, "resolvedEntry", resolvedEntry)
+          return this.resolve(this.uniqueCheckField, x) === this.resolve(this.uniqueCheckField, entry)
+        })
       } else {
         isChecked = this.selectedLocal.some(x => JSON.stringify(x) === JSON.stringify(entry))
       }
@@ -247,7 +253,9 @@ export default {
       this.$emit('updateTableData', merged)
     },
     deleteRow(entry, i) {
-      this.editList[i].editMode = false
+      if (this.editList[i]) {
+        this.editList[i].editMode = false
+      }
       this.deleteSelected([entry])
     },
     addRow() {
@@ -271,7 +279,7 @@ export default {
     },
     deleteSelected(event) {
       event = JSON.parse(JSON.stringify(event))
-      console.log("deleteselected event:", event)
+      //console.log("deleteselected event:", event)
       //remove any default values that are not to be deleted
       if (this.tableOptions.actionDisabledDefaultValues) {
         event = event.filter(i => !this.tableOptions.actionDisabledDefaultValues.filter(f => JSON.stringify(f) === JSON.stringify(i)).length)
@@ -289,7 +297,7 @@ export default {
       for (let row in rows) {
         let rowObject = {}
         let rowValues = rows[row].split(/,/)
-        console.log('rowValues.length: ' + rowValues.length)
+        //console.log('rowValues.length: ' + rowValues.length)
 
         if (rowValues.length > 1) {
           for (let i = 0; i < rowValues.length; i++) {

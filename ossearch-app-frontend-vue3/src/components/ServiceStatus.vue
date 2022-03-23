@@ -15,7 +15,7 @@ export default {
     serviceStatus: String
   },
   mounted() {
-    console.log(this.serviceName +": "+this.serviceStatus)
+    //console.log(this.serviceName +": "+this.serviceStatus)
   }
 }
 </script>

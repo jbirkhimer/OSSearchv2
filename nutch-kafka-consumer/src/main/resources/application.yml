@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: ossearch-kafka-consumer
+
+  profiles:
+    # Use the Camel Kafka Consumer
+    active: kafka,camel
+    # Use the Generic Kafka Consumer batch size 5000 not consistent
+#    active: kafka,kafkaListener
+
+  jackson:
+    serialization:
+      indent_output: true
+      fail-on-empty-beans: false
+
+  security:
+    user:
+      name: admin
+      password: admin
+
+#  boot:
+#    admin:
+#      client:
+#        enabled: true
+#        url: http://localhost:8484
+#        username: ${spring.security.user.name}
+#        password: ${spring.security.user.password}
+#        instance:
+#          name: ${spring.application.name}
+#          metadata:
+#            user.name: ${spring.security.user.name}
+#            user.password: ${spring.security.user.password}
+
+server:
+  port: 8989
+
+management:
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      show-details: always
+    logfile:
+      external-file: logs/${spring.application.name}.log
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  #  config: config/logback.xml
+  file:
+    name: logs/${spring.application.name}.log
+
+# To keep the main thread blocked so that Camel stays up
+camel:
+  springboot:
+    main-run-controller: true
+

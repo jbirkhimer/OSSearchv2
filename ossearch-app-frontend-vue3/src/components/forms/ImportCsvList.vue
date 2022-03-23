@@ -15,7 +15,7 @@ export default {
   },
   methods: {
     loadTextFromFile(ev) {
-      console.log(ev)
+      //console.log(ev)
       const file = ev.target.files[0];
       const reader = new FileReader();
 

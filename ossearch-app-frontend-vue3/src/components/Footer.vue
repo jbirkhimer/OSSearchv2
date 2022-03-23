@@ -1,24 +1,29 @@
 <template>
-  <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top fixed-bottom">
-    <div class="col-md-4 d-flex align-items-center justify-content-center">
-      <span class="text-muted text-center">
-        Office of The Chief Information Officer <br>
-        System Architecture & Product Assurance <br>
-        Web Services Division.
-      </span>
+  <footer class="footer navbar-static-bottom mt-auto py-3 bg-light">
+    <div class="container-fluid px-4">
+      <div class="d-flex align-items-center justify-content-between small">
+        <div class="text-muted"><a href="#">Contact</a></div>
+        <div class="text-muted text-wrap">Office of The Chief Information Officer System Architecture & Product Assurance Web
+          Services Division.
+        </div>
+        <div class="text-muted"><a href="#">Version: {{ app_version }} | Release Date: {{ app_date }}</a></div>
+      </div>
     </div>
-    <ul class="nav col-md-4 justify-content-end list-unstyled d-flex">
-      <p>Version {{ app_version }} | {{ app_date }}</p>
-    </ul>
   </footer>
 </template>
 
 <script>
 export default {
-  name: "Footer"
+  name: 'Footer2',
+  data() {
+    return {
+      app_version: process.env.VUE_APP_VERSION,
+      app_date: process.env.VUE_APP_BUILD_DATE
+    }
+  }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 
 </style>

@@ -1,7 +1,8 @@
 <template>
-<div class="div container">
-  <h2>Search Manager</h2>
-</div>
+  <div class="container-fluid px-4">
+    <Breadcrumb/>
+    <h1 class="mt-4">Search</h1>
+  </div>
 </template>
 
 <script>

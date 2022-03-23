@@ -1,0 +1,13 @@
+# By default, Vue CLI assumes your app will be deployed at the root of a domain, e.g. https://www.my-app.com/.
+# If your app is deployed at a sub-path, you will need to specify that sub-path using this option.
+# For example, if your app is deployed at https://www.foobar.com/my-app/, set publicPath to '/my-app/'
+# see https://cli.vuejs.org/config/#publicpath
+# see https://router.vuejs.org/guide/essentials/history-mode.html#apache
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    RewriteRule ^index\.html$ - [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . /index.html [L]
+</IfModule>

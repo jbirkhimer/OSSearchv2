@@ -1,0 +1,89 @@
+spring:
+  data:
+    solr:
+#      host: http://si-wsdsolr01.si.edu:8983/solr
+#      slave: http://si-wsdsolr02.si.edu:8983/solr
+#      collection: external-v1
+      host: http://localhost:8984/solr
+      slave: http://localhost:8984/solr
+      collection: external-v1_FULL
+
+  datasource:
+    jpa:
+      jdbc-url: jdbc:mysql://localhost:3309/si_search_db_test?createDatabaseIfNotExist=true
+      username: root
+      password: root
+
+    quartz:
+      jdbc-url: jdbc:mysql://localhost:3309/si_search_db_test?createDatabaseIfNotExist=true
+      username: root
+      password: root
+
+  # JPA drop and recreate tables, show sql in logs
+  jpa:
+    show-sql: false
+#    hibernate:
+#      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+
+  quartz:
+    wait-for-jobs-to-complete-on-shutdown: false
+    jdbc:
+      initialize-schema: never
+
+  security:
+    enabled: false
+    user:
+      name: admin
+      password: admin
+
+  boot:
+    admin:
+      client:
+        enabled: true
+
+  ldap:
+    embedded:
+      enabled: true
+      ldif: classpath:config/test-server.ldif
+      base-dn: dc=springframework,dc=org
+      port: 8389
+
+  jmx:
+    enabled: false
+
+  devtools:
+    restart:
+      additional-exclude: conf/**
+      enabled: false
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+#Disable Health Checks while testing
+management:
+  health:
+    ldap:
+      enabled: false
+    mail:
+      enabled: false
+
+ossearch:
+  embedded-vuejs: true
+  allowedOrigins: "http://0.0.0.0:3000,http://localhost:3000,http://127.0.0.1:3000,http://192.168.1.128:3000,http://jbirkhimer.myquotient.net:3000,http://ossearchv2:8080,http://0.0.0.0:8484,http://localhost:8484,http://127.0.0.1:8484,http://192.168.1.128:8484,http://jbirkhimer.myquotient.net:8484,http://ossearchv2:8080"
+#  jwt:
+#    #For Testing Refresh tokens
+#    expirationMs: 60000
+#    refreshExpirationMs: 120000
+  nutch:
+    pluginsDir: /home/jbirkhimer/IdeaProjects/OSSearchv2/nutch-plugins/target/plugins
+    confDir: conf
+    crawlDir: crawls
+
+logging:
+  level:
+    root: info
+  file:
+    name: logs/${spring.application.name}.log
