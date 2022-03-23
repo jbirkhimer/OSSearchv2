@@ -130,9 +130,9 @@
   </property>
   <property>
     <name>fetcher.server.delay</name>
-      <value>5.0</value> <!-- Nutch 1.x default -->
+      <!--<value>5.0</value>--> <!-- Nutch 1.x default -->
       <!--<value>2</value>--> <!-- OSSearch nutch 2.x setting-->
-      <!--<value>1</value>--> <!-- Testing -->
+      <value>1</value> <!-- Testing -->
       <description>The number of seconds the fetcher will delay between
           successive requests to the same server. Note that this might get
           overridden by a Crawl-Delay from a robots.txt and is used ONLY if
@@ -141,9 +141,9 @@
   </property>
   <property>
     <name>fetcher.threads.fetch</name>
-      <value>10</value> <!-- Nutch 1.x default -->
+      <!--<value>10</value>--> <!-- Nutch 1.x default -->
       <!--<value>128</value>--> <!-- OSSearch nutch 2.x setting-->
-      <!--<value>250</value>--> <!-- Testing -->
+      <value>250</value> <!-- Testing -->
       <description>The number of FetcherThreads the fetcher should use.
           This is also determines the maximum number of requests that are
           made at once (each FetcherThread handles one connection). The total
