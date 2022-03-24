@@ -113,8 +113,8 @@
   </property>
   <property>
     <name>db.update.max.inlinks</name>
-    <value>10000</value> <!-- Nutch 1.x default -->
-    <!--<value>100</value>--> <!-- OSSearch nutch 2.x setting-->
+    <!--<value>10000</value>--> <!-- Nutch 1.x default -->
+    <value>100</value> <!-- OSSearch nutch 2.x setting-->
       <description>Maximum number of inlinks to take into account when updating
           a URL score in the crawlDB. Only the best scoring inlinks are kept.
       </description>
@@ -153,9 +153,9 @@
   </property>
   <property>
     <name>fetcher.threads.per.queue</name>
-      <value>1</value> <!-- Nutch 1.x default -->
+      <!--<value>1</value>--> <!-- Nutch 1.x default -->
       <!--<value>2</value>--> <!-- OSSearch nutch 2.x setting-->
-      <!--<value>10</value>--> <!-- Testing -->
+      <value>10</value> <!-- Testing -->
       <description>This number is the maximum number of threads that
           should be allowed to access a queue at one time. Setting it to
           a value > 1 will cause the Crawl-Delay value from robots.txt to
@@ -175,8 +175,8 @@
   </property>
   <property>
       <name>fetcher.maxNum.threads</name>
-      <value>25</value> <!-- Nutch 1.x default -->
-      <!--<value>250</value>--> <!-- Testing -->
+      <!--<value>25</value>--> <!-- Nutch 1.x default -->
+      <value>250</value> <!-- Testing -->
       <description>Max number of fetch threads allowed when using fetcher.bandwidth.target. Defaults to fetcher.threads.fetch if unspecified or
           set to a value lower than it. </description>
   </property>
