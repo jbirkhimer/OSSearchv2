@@ -56,10 +56,11 @@
             :isEditing="!isEditing"
             @updateTableData="$emit('update:urlExclusionPatterns', $event)"
         >
-          <template v-slot:caption>
+<!--          <template v-slot:caption>
             <caption>For regex URL exclusion patterns the first matching pattern determines whether a URL is included or ignored during indexing. <b class="text-danger">NOTE: Order matters drag rows to achive desired order</b></caption>
-          </template>
+          </template>-->
         </ImportAddEditCheckSortableTable>
+        <p class="mt-1">For regex URL exclusion patterns the first matching pattern determines whether a URL is included or ignored during indexing. <b class="text-danger">NOTE: Order matters drag rows to achive desired order</b></p>
       </div>
     </div>
 

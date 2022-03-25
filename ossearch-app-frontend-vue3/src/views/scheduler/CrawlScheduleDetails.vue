@@ -41,12 +41,13 @@
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Reindex</h5>
+            <h5 class="modal-title">Reindex <b>{{ jobData.collectionName }}</b> collection?</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <h5>Reindex <b>{{ jobData.collectionName }}</b> collection?</h5>
+<!--            <h5>Reindex <b>{{ jobData.collectionName }}</b> collection?</h5>-->
             <p class="text-danger"><b>WARNING: This will delete all solr data for this collection!</b></p>
+            <p class="text-danger"><b>WARNING: This may also delete records that this collection is a part of!</b></p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -60,12 +61,13 @@
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Recrawl</h5>
+            <h5 class="modal-title">Recrawl <b>{{ jobData.collectionName }}</b> collection?</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <h5>Recrawl <b>{{ jobData.collectionName }}</b> collection?</h5>
+<!--            <h5>Recrawl <b>{{ jobData.collectionName }}</b> collection?</h5>-->
             <p class="text-danger"><b>WARNING: This will delete all crawl data and solr data for this collection!</b></p>
+            <p class="text-danger"><b>WARNING: This may also delete solr records that this collection is a part of!</b></p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
