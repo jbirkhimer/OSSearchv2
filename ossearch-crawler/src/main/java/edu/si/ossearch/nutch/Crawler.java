@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import edu.si.ossearch.OSSearchException;
+import edu.si.ossearch.dao.entity.Collection;
 import edu.si.ossearch.dao.entity.CrawlConfig;
 import edu.si.ossearch.dao.entity.UrlExclusionPattern;
+import edu.si.ossearch.dao.repository.CollectionRepository;
 import edu.si.ossearch.dao.repository.CrawlConfigRepository;
 import edu.si.ossearch.scheduler.entity.CrawlLog;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
@@ -15,6 +17,7 @@ import edu.si.ossearch.scheduler.repository.CrawlSchedulerJobInfoRepository;
 import edu.si.ossearch.scheduler.repository.CrawlStepLogRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.nutch.crawl.*;
@@ -27,7 +30,6 @@ import org.apache.nutch.util.NutchConfiguration;
 import org.apache.nutch.util.SitemapProcessor;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -93,6 +95,9 @@ public class Crawler {
 
     @Autowired
     private CrawlStepLogRepository crawlStepLogRepository;
+
+    @Autowired
+    private CollectionRepository collectionRepository;
 
     @Autowired
     private SolrClient solrClient;
@@ -850,6 +855,18 @@ public class Crawler {
                 log.info(">>>>> index using urlfilter.regex.file: {}", indexConf.get("urlfilter.regex.file"));
 
                 sj.add("filter: " + filter);
+
+                List<Collection> partOfCollections = collectionRepository.getPartOfCollectionsByCollectionId(Long.parseLong(jobInfo.getCollectionId()));
+
+                if (partOfCollections.size() > 0) {
+                    //List<String> collectionIds = partOfCollections.stream().map(Collection::getId).map(String::valueOf).collect(Collectors.toList());
+                    List<Long> collectionIds = partOfCollections.stream().map(Collection::getId).collect(Collectors.toList());
+                    collectionIds.add(Long.parseLong(jobInfo.getCollectionId()));
+                    Collections.sort(collectionIds);
+
+                    //Set the collecitionIds for indexing
+                    indexConf.set("moreIndexingFilter.collectionIDs", StringUtils.join(collectionIds, ","));
+                }
 
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);

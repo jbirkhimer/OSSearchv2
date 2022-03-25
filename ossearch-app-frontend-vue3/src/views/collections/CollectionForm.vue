@@ -83,9 +83,24 @@
         Search Include Other Collections
       </div>
       <div class="card-body">
+        <p class="text-danger"><b>Note: This may require the included collection(s) to be re-indexed to take effect</b></p>
         <IncludeCollectionsTable
             :isEditing="isEditIncludeCollections"
             v-model:includedCollections="collection.includedCollections"
+        />
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <i class="fas fa-search me-1"></i>
+        Search Part Of Other Collections
+      </div>
+      <div class="card-body">
+        <p class="text-danger"><b>Note: This may require this collection to be re-indexed to take effect</b></p>
+        <IncludeCollectionsTable
+            :isEditing="isEditPartOfCollections"
+            v-model:partOfCollections="collection.partOfCollections"
         />
       </div>
     </div>
@@ -238,6 +253,7 @@ export default {
         dynamicNavigations: [],
         keymatches: [],
         includedCollections: [],
+        partOfCollections: [],
         users: [],
         owner: {},
       },
@@ -246,6 +262,7 @@ export default {
       isEditDynamicNav: true,
       isEditKeymatch: true,
       isEditIncludeCollections: true,
+      isEditPartOfCollections: true,
       isEditCrawlConfig: true,
       isEditCrawlSchedule: true,
       isEditManagers: true,

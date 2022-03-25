@@ -38,6 +38,16 @@ class CollectionService {
     return api.put(url, body, {headers: {"Content-Type": "text/uri-list"}});
   }
 
+  addPartOfCollections(url, body) {
+    //console.log('[collectionService] PUT url: '+url+',\nbody: ' + JSON.stringify(body, null, 2))
+    // let config = {
+    //   headers: {
+    //     "Content-Type": "text/uri-list"
+    //   }
+    // }
+    return api.put(url, body, {headers: {"Content-Type": "text/uri-list"}});
+  }
+
   deleteCollection(url) {
     //console.log('[collectionService] DELETE url: '+url)
     return api.delete(url);

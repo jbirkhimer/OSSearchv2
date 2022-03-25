@@ -45,6 +45,8 @@ public interface CollectionFormData {
 
     Set<CollectionIdNameInfo> getIncludedCollections();
 
+    Set<CollectionIdNameInfo> getPartOfCollections();
+
     /*String getCrawlDbPath();
 
     String getCrawlSeedPath();

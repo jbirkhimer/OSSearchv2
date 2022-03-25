@@ -265,10 +265,31 @@
         </div>
       </div>
       <div class="card-body">
+        <p class="text-danger"><b>Note: This may require the included collection(s) to be re-indexed to take effect</b></p>
         <IncludeCollectionsTable
             :isEditing="isEditIncludeCollections"
             :collectionId="collection.id"
             v-model:includedCollections="collection.includedCollections"
+        />
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <i class="fas fa-search me-1"></i>
+        Search Part Of Other Collections
+        <div class="float-end">
+          <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEditPartOfCollections = JSON.parse(JSON.stringify(collection)); isEditPartOfCollections = !isEditPartOfCollections" v-if="!isEditPartOfCollections">Edit</button>
+          <button v-if="isEditPartOfCollections" class="btn btn-sm btn-success me-md-2" type="button" @click="savePartOfCollections()">Save</button>
+          <button v-if="isEditPartOfCollections" class="btn btn-sm btn-danger float-end" type="button" @click="collection = beforeEditPartOfCollections; isEditPartOfCollections = false">Cancel</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="text-danger"><b>Note: This may require this collection to be re-indexed to take effect</b></p>
+        <IncludeCollectionsTable
+            :isEditing="isEditPartOfCollections"
+            :collectionId="collection.id"
+            v-model:includedCollections="collection.partOfCollections"
         />
       </div>
     </div>
@@ -401,6 +422,7 @@ export default {
       isEditDynamicNav: false,
       isEditKeymatch: false,
       isEditIncludeCollections: false,
+      isEditPartOfCollections: false,
       isEditCrawlConfig: false,
       isSavingCrawlConfig: false,
       isEditCrawlSchedule: false,
@@ -411,6 +433,7 @@ export default {
       beforeEditDynamicNav: null,
       beforeEditKeymatch: null,
       beforeEditIncludeCollections: null,
+      beforeEditPartOfCollections: null,
       beforeEditCrawlConfig: null,
       beforeEditCrawlSchedule: null,
       beforeEditManagers: null,
@@ -737,6 +760,28 @@ export default {
       })
 
       await CollectionService.addIncludedCollections(url, body.join("\n"))
+          .then(response => {
+            let data = response.data;
+            // this.collection = data;
+            console.log("data", data)
+          })
+          .catch(errors => {
+            //console.log(errors);
+            this.error = errors
+          });
+      await this.getCollection()
+      this.isEditIncludeCollections = false
+    },
+
+    async savePartOfCollections() {
+      let url = '/collection/'+this.collection.id+'/partOfCollections'
+      let body = []
+
+      this.collection.partOfCollections.forEach(collection => {
+        body.push(collection._links.self.href.replace('{?projection}',''))
+      })
+
+      await CollectionService.addPartOfCollections(url, body.join("\n"))
           .then(response => {
             let data = response.data;
             // this.collection = data;

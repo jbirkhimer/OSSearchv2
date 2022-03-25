@@ -48,7 +48,7 @@ export default {
     }
   },
   methods: {
-    getCollections(url = '/collection', params = {projection: 'collectionIdNameInfo'}) {
+    getCollections(url = '/collection', params = {projection: 'collectionIdNameInfo', size: 1000}) {
 
       //console.log("[getCollections] url: " + url + ", prams: " + JSON.stringify(params), null, 2)
 
