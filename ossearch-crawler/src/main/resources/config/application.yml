@@ -36,6 +36,8 @@ spring:
 #      jdbc-url: jdbc:mysql://localhost:3309/QUARTZ_SCHEMA?createDatabaseIfNotExist=true
       username: root
       password: root
+    hikari:
+      max-lifetime: 600000
 
   jpa:
     show-sql: false
@@ -55,7 +57,6 @@ spring:
     jdbc:
       platform: mysql
       initialize-schema: never
-
   jackson:
     serialization:
       indent_output: true
