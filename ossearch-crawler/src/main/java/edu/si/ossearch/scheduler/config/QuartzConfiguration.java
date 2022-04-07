@@ -12,14 +12,14 @@ import javax.sql.DataSource;
 /**
  * @author jbirkhimer
  */
-@Configuration
-public class QuartzConfiguration {
-
-    @Bean
-    @QuartzDataSource
-    @ConfigurationProperties(prefix = "spring.datasource.quartz")
-    public DataSource quartzDataSource() {
-        return DataSourceBuilder.create().build();
-    }
-
-}
+//@Configuration
+//public class QuartzConfiguration {
+//
+//    @Bean
+//    @QuartzDataSource
+//    @ConfigurationProperties(prefix = "spring.datasource.quartz")
+//    public DataSource quartzDataSource() {
+//        return DataSourceBuilder.create().build();
+//    }
+//
+//}

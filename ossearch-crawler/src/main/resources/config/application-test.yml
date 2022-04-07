@@ -9,15 +9,13 @@ spring:
       collection: external-v1_FULL
 
   datasource:
-    jpa:
-      jdbc-url: jdbc:mysql://localhost:3309/si_search_db_test?createDatabaseIfNotExist=true
-      username: root
-      password: root
-
-    quartz:
-      jdbc-url: jdbc:mysql://localhost:3309/si_search_db_test?createDatabaseIfNotExist=true
-      username: root
-      password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3309/si_search_db_test?createDatabaseIfNotExist=true
+    username: root
+    password: root
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
 
   # JPA drop and recreate tables, show sql in logs
   jpa:

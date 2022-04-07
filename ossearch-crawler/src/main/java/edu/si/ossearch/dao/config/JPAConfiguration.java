@@ -12,15 +12,15 @@ import javax.sql.DataSource;
 /**
  * @author jbirkhimer
  */
-@Configuration
-public class JPAConfiguration {
-
-    @Bean
-    @Primary
-    @ConfigurationProperties(prefix="spring.datasource.jpa")
-    public DataSource mysqlDataSource(){
-        return DataSourceBuilder
-                .create()
-                .build();
-    }
-}
+//@Configuration
+//public class JPAConfiguration {
+//
+//    @Bean
+//    @Primary
+//    @ConfigurationProperties(prefix="spring.datasource.jpa")
+//    public DataSource mysqlDataSource(){
+//        return DataSourceBuilder
+//                .create()
+//                .build();
+//    }
+//}

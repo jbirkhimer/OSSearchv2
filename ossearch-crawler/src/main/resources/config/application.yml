@@ -24,20 +24,13 @@ spring:
       base-path: api
 
   datasource:
-    jpa:
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      jdbc-url: jdbc:mysql://xxxxxxxxx:xxxxxxxxx/si_search_db_v2?createDatabaseIfNotExist=true
-      username: root
-      password: root
-
-    quartz:
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      jdbc-url: jdbc:mysql://xxxxxxxxx:xxxxxxxxx/si_search_db_quartz?createDatabaseIfNotExist=true
-#      jdbc-url: jdbc:mysql://localhost:3309/QUARTZ_SCHEMA?createDatabaseIfNotExist=true
-      username: root
-      password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://xxxxxxxxx:xxxxxxxxx/si_search_db_v2?createDatabaseIfNotExist=true
+    username: root
+    password: root
     hikari:
-      max-lifetime: 600000
+      maximum-pool-size: 10
+      minimum-idle: 5
 
   jpa:
     show-sql: false

@@ -10,6 +10,8 @@ const setup = (store) => {
         config.headers["Authorization"] = 'Bearer ' + token;  // for Spring Boot back-end
         // config.headers["x-access-token"] = token; // for Node.js Express back-end
       }
+      // change the url scheme from http to https
+      config.url = config.url.replace('http://127.0.0.1:8484', process.env.VUE_APP_API_BASE_URL)
       return config;
     },
     (error) => {

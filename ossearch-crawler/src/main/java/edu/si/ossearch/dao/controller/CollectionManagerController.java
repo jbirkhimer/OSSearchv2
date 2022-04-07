@@ -1,6 +1,5 @@
 package edu.si.ossearch.dao.controller;
 
-import edu.si.ossearch.dao.dto.CollectionDtoFlat;
 import edu.si.ossearch.dao.entity.Collection;
 import edu.si.ossearch.dao.entity.projections.CollectionFormData;
 import edu.si.ossearch.dao.service.CollectionService;
