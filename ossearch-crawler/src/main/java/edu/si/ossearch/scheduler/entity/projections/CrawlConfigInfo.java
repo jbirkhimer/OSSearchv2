@@ -1,8 +1,8 @@
 package edu.si.ossearch.scheduler.entity.projections;
 
-import edu.si.ossearch.dao.entity.Collection;
-import edu.si.ossearch.dao.entity.RegexUrlFilters;
-import edu.si.ossearch.dao.entity.UrlExclusionPattern;
+import edu.si.ossearch.collection.entity.Collection;
+import edu.si.ossearch.collection.entity.RegexUrlFilters;
+import edu.si.ossearch.collection.entity.UrlExclusionPattern;
 import org.springframework.data.rest.core.config.Projection;
 
 import java.util.Date;
@@ -35,7 +35,7 @@ public interface CrawlConfigInfo {
 
     String getCronEditorData();
 
-    Set<RegexUrlFilters> getRegexUrlFilters();
+//    Set<RegexUrlFilters> getRegexUrlFilters();
 
     Set<UrlExclusionPatternInfo> getUrlExclusionPatterns();
 

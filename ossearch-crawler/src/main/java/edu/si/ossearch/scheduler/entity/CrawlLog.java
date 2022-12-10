@@ -2,6 +2,8 @@ package edu.si.ossearch.scheduler.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType;
+import edu.si.ossearch.scheduler.entity.converter.JobTypeConverter;
 import edu.si.ossearch.scheduler.entity.converter.StateConverter;
 import edu.si.ossearch.scheduler.entity.converter.StepTypeConverter;
 import lombok.AccessLevel;
@@ -17,6 +19,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import static edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType.SCHEDULED_CRAWL;
+
 @Getter
 @Setter
 @ToString(onlyExplicitlyIncluded = true)
@@ -27,7 +31,7 @@ public class CrawlLog implements Serializable {
     public static final String TABLE_NAME = "crawl_log";
 
     public enum StepType {
-        INJECT, SITEMAP, HOSTDB_UPDATE, GENERATE, FETCH, PARSE, CRAWLDB_UPDATE, LINKDB_UPDATE, DEDUP, INDEX, REINDEX, RECRAWL, READDB, SITEMAPS_FROM_HOSTDB, CLEANUP, INITIALIZE
+        INJECT, SITEMAP, HOSTDB_UPDATE, GENERATE, FETCH, PARSE, CRAWLDB_UPDATE, LINKDB_UPDATE, DEDUP, INDEX, REINDEX, RECRAWL, READDB, SITEMAPS_FROM_HOSTDB, CLEANUP, INITIALIZE, REPORTS
     }
 
     public enum State {
@@ -39,6 +43,10 @@ public class CrawlLog implements Serializable {
     private Long id;
     private String jobKey;
     private String jobId;
+
+    //@JsonSerialize(converter = JobTypeConverter.class)
+    @Enumerated(EnumType.STRING)
+    private JobType jobType = SCHEDULED_CRAWL;
 
     @JsonSerialize(converter = StateConverter.class)
     @Enumerated(EnumType.STRING)

@@ -18,13 +18,13 @@ module.exports = {
         port: 3000,
         proxy: {
             '/api': {
-                // target: 'http://192.168.1.128:8484', // this configuration needs to correspond to the Spring Boot backends' application.properties server.port
+                // target: 'http://10.0.0.95:8484', // this configuration needs to correspond to the Spring Boot backends' application.properties server.port
                 target: process.env.VUE_APP_API_BASE_URL, // this configuration needs to correspond to the Spring Boot backends' application.properties server.port
                 ws: true,
                 changeOrigin: true
             }
         },
-        disableHostCheck: true,
+        // disableHostCheck: true,
         allowedHosts: ['all'],
     },
 

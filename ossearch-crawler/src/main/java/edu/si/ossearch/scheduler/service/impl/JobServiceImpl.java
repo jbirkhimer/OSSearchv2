@@ -1,24 +1,35 @@
 package edu.si.ossearch.scheduler.service.impl;
 
-import edu.si.ossearch.dao.entity.CrawlConfig;
-import edu.si.ossearch.dao.repository.CrawlConfigRepository;
+import edu.si.ossearch.collection.entity.Collection;
+import edu.si.ossearch.collection.repository.CollectionRepository;
+import edu.si.ossearch.scheduler.entity.CrawlLog;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
 import edu.si.ossearch.scheduler.entity.JobState;
 import edu.si.ossearch.scheduler.job.CrawlCollectionJob;
+import edu.si.ossearch.scheduler.repository.CrawlLogRepository;
 import edu.si.ossearch.scheduler.repository.CrawlSchedulerJobInfoRepository;
 import edu.si.ossearch.scheduler.service.JobService;
 import edu.si.ossearch.scheduler.service.JobUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.quartz.*;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.text.DateFormat;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType.ADD_URLS;
 import static org.quartz.Trigger.TriggerState.PAUSED;
 
 /**
@@ -32,7 +43,13 @@ public class JobServiceImpl implements JobService {
     private Scheduler scheduler;
 
     @Autowired
-    private CrawlSchedulerJobInfoRepository schedulerRepository;
+    private CrawlSchedulerJobInfoRepository crawlSchedulerJobInfoRepository;
+
+    @Autowired
+    private CollectionRepository collectionRepository;
+
+    @Autowired
+    private CrawlLogRepository crawlLogRepository;
 
     @Autowired
     private JobUtil jobUtil;
@@ -61,7 +78,7 @@ public class JobServiceImpl implements JobService {
     public boolean scheduleNewJob(CrawlSchedulerJobInfo jobInfo) {
 
         JobDetail jobDetail = null;
-        if (jobInfo.getJobGroup().equals("addUrls")) {
+        if (jobInfo.getJobGroup().equals("addUrls") || jobInfo.getJobType() == ADD_URLS) {
             jobDetail = jobUtil.createJob(CrawlCollectionJob.class, false, jobInfo);
         } else {
             jobDetail = jobUtil.createJob(CrawlCollectionJob.class, true, jobInfo);
@@ -84,7 +101,7 @@ public class JobServiceImpl implements JobService {
             jobInfo.setNextFireTime(trigger.getNextFireTime());
             jobInfo.setPreviousFireTime(trigger.getPreviousFireTime());
             jobInfo.setFinalFireTime(trigger.getFinalFireTime());
-            schedulerRepository.saveAndFlush(jobInfo);
+            crawlSchedulerJobInfoRepository.saveAndFlush(jobInfo);
             log.info("Job with key jobKey: {} and group: {} scheduled successfully for date: {}", jobDetail.getKey().getName(), jobDetail.getKey().getGroup(), dt);
             return true;
         } catch (SchedulerException e) {
@@ -135,7 +152,7 @@ public class JobServiceImpl implements JobService {
                 jobInfo.setJobStatus("EDITED & PAUSED");
             }
 
-            schedulerRepository.save(jobInfo);
+            crawlSchedulerJobInfoRepository.save(jobInfo);
             log.info("Trigger associated with jobKey: {}, rescheduled successfully for date: {}", jobDetail.getKey(), dt);
             return true;
         } catch (Exception e) {
@@ -149,7 +166,7 @@ public class JobServiceImpl implements JobService {
     @Override
     public boolean unScheduleJob(String jobName, String jobGroup) {
 
-        CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(jobName, jobGroup);
+        CrawlSchedulerJobInfo jobInfo = crawlSchedulerJobInfoRepository.findByJobNameAndJobGroup(jobName, jobGroup);
 
         TriggerKey triggerKey = new TriggerKey(jobInfo.getJobName(), jobInfo.getJobGroup());
         log.info("Parameters received for un-Scheduling job : jobKey: {}", triggerKey);
@@ -160,7 +177,7 @@ public class JobServiceImpl implements JobService {
             jobInfo.setNextFireTime(null);
             jobInfo.setPreviousFireTime(null);
             jobInfo.setFinalFireTime(null);
-            schedulerRepository.save(jobInfo);
+            crawlSchedulerJobInfoRepository.save(jobInfo);
             log.info("Trigger associated with jobKey: {}, unscheduled with status: {}", triggerKey, status);
             return status;
         } catch (SchedulerException e) {
@@ -173,14 +190,14 @@ public class JobServiceImpl implements JobService {
     @Override
     public boolean deleteJob(String jobName, String jobGroup) {
 
-        CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(jobName, jobGroup);
+        CrawlSchedulerJobInfo jobInfo = crawlSchedulerJobInfoRepository.findByJobNameAndJobGroup(jobName, jobGroup);
 
         JobKey jobKey = new JobKey(jobInfo.getJobName(), jobInfo.getJobGroup());
         log.info("Parameters received for deleting job with jobKey: {}", jobKey);
 
         try {
             boolean status = scheduler.deleteJob(jobKey);
-            schedulerRepository.delete(jobInfo);
+            crawlSchedulerJobInfoRepository.delete(jobInfo);
             log.info("Job with jobKey: {}, deleted with status: {}",jobKey, status);
             return status;
         } catch (SchedulerException e) {
@@ -193,7 +210,7 @@ public class JobServiceImpl implements JobService {
     @Override
     public boolean pauseJob(String jobName, String jobGroup) {
 
-        CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(jobName, jobGroup);
+        CrawlSchedulerJobInfo jobInfo = crawlSchedulerJobInfoRepository.findByJobNameAndJobGroup(jobName, jobGroup);
 
         JobKey jobKey = new JobKey(jobInfo.getJobName(), jobInfo.getJobGroup());
         log.info("Parameters received for pausing job with jobKey: {},", jobKey);
@@ -201,7 +218,7 @@ public class JobServiceImpl implements JobService {
         try {
             scheduler.pauseJob(jobKey);
             jobInfo.setJobStatus("PAUSED");
-            schedulerRepository.save(jobInfo);
+            crawlSchedulerJobInfoRepository.save(jobInfo);
             log.info("Job with jobKey: {} paused successfully.", jobKey);
             return true;
         } catch (SchedulerException e) {
@@ -214,7 +231,7 @@ public class JobServiceImpl implements JobService {
     @Override
     public boolean resumeJob(String jobName, String jobGroup) {
 
-        CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(jobName, jobGroup);
+        CrawlSchedulerJobInfo jobInfo = crawlSchedulerJobInfoRepository.findByJobNameAndJobGroup(jobName, jobGroup);
 
         JobKey jobKey = new JobKey(jobInfo.getJobName(), jobInfo.getJobGroup());
         log.info("Parameters received for resuming job - jobKey :"+jobKey);
@@ -222,7 +239,7 @@ public class JobServiceImpl implements JobService {
         try {
             scheduler.resumeJob(jobKey);
             jobInfo.setJobStatus("RESUMED");
-            schedulerRepository.save(jobInfo);
+            crawlSchedulerJobInfoRepository.save(jobInfo);
             log.info("Job with jobKey: {}, resumed successfully.", jobKey);
             return true;
         } catch (SchedulerException e) {
@@ -236,7 +253,7 @@ public class JobServiceImpl implements JobService {
     public boolean stopJob(String jobName, String jobGroup) {
         log.info("JobServiceImpl.stopJob()");
 
-        CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(jobName, jobGroup);
+        CrawlSchedulerJobInfo jobInfo = crawlSchedulerJobInfoRepository.findByJobNameAndJobGroup(jobName, jobGroup);
 
         JobKey jobKey = new JobKey(jobInfo.getJobName(), jobInfo.getJobGroup());
         log.info("Parameters received for stopping job - jobKey :" + jobKey);
@@ -244,7 +261,7 @@ public class JobServiceImpl implements JobService {
         try{
             boolean status = scheduler.interrupt(jobKey);
             jobInfo.setJobStatus("STOPPED & SCHEDULED");
-            schedulerRepository.save(jobInfo);
+            crawlSchedulerJobInfoRepository.save(jobInfo);
             log.info("Job with jobKey: {}, stopped with status: {}", jobKey, status);
             return status;
         } catch (SchedulerException e) {
@@ -258,7 +275,7 @@ public class JobServiceImpl implements JobService {
     public boolean startJobNow(String jobName, String jobGroup) {
         log.info("JobServiceImpl.stopJob()");
 
-        CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(jobName, jobGroup);
+        CrawlSchedulerJobInfo jobInfo = crawlSchedulerJobInfoRepository.findByJobNameAndJobGroup(jobName, jobGroup);
 
         JobKey jobKey = new JobKey(jobInfo.getJobName(), jobInfo.getJobGroup());
         log.info("Parameters received for starting job now - jobKey: {}", jobKey);
@@ -266,7 +283,7 @@ public class JobServiceImpl implements JobService {
         try {
             scheduler.triggerJob(jobKey);
             jobInfo.setJobStatus("SCHEDULED & STARTED");
-            schedulerRepository.save(jobInfo);
+            crawlSchedulerJobInfoRepository.save(jobInfo);
             log.info("Job with jobKey: {}, started now successfully.", jobKey);
             return true;
         } catch (SchedulerException e) {
@@ -343,7 +360,7 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public List<CrawlSchedulerJobInfo> getAllJobList() {
-        return schedulerRepository.findAll();
+        return crawlSchedulerJobInfoRepository.findAll();
     }
 
     @Override
@@ -351,54 +368,81 @@ public class JobServiceImpl implements JobService {
         List<Map<String, Object>> list = new ArrayList<>();
         try {
 
+//            List<Collection> userCollections = collectionRepository.findAll();
+            List<CollectionRepository.CollectionIdNameInfoTest> userCollections = collectionRepository.findAllCollectionsByOwnerAndUsers();
+            List<String> collectionNames = new ArrayList<>();
+            userCollections.forEach(collection -> {
+                collectionNames.add(collection.getName());
+            });
+
+
             for (String groupName : scheduler.getJobGroupNames()) {
 
                 for (JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(groupName))) {
 
-                    String jobName = jobKey.getName();
-                    String jobGroup = jobKey.getGroup();
+                    if (collectionNames.contains(jobKey.getName())) {
 
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("jobName", jobName);
-                    map.put("groupName", jobGroup);
+                        String jobName = jobKey.getName();
+                        String jobGroup = jobKey.getGroup();
 
-                    //get job's trigger
-                    List<Trigger> triggers = (List<Trigger>) scheduler.getTriggersOfJob(jobKey);
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("jobName", jobName);
+                        map.put("groupName", jobGroup);
 
-                    String startTime = "None";
-                    String nextFireTime = "None";
-                    String lastFiredTime = "None";
-                    String finalFiredTime = "None";
-                    String cronExpression = "None";
+                        //get job's trigger
+                        List<Trigger> triggers = (List<Trigger>) scheduler.getTriggersOfJob(jobKey);
 
-                    SimpleDateFormat df = new SimpleDateFormat("MM/dd/yy hh:mm a");
+                        String startTime = "None";
+                        String nextFireTime = "None";
+                        String lastFiredTime = "None";
+                        String finalFiredTime = "None";
+                        String cronExpression = "None";
 
-                    if (triggers.size() > 0) {
-                        startTime = triggers.get(0).getStartTime() !=null ? df.format(triggers.get(0).getStartTime()) : "None";
-                        nextFireTime = triggers.get(0).getNextFireTime() != null ? df.format(triggers.get(0).getNextFireTime()) : "None";
-                        lastFiredTime = triggers.get(0).getPreviousFireTime() != null ? df.format(triggers.get(0).getPreviousFireTime()) : "None";
-                        finalFiredTime = triggers.get(0).getFinalFireTime() != null ? df.format(triggers.get(0).getFinalFireTime()) : "None";
+                        SimpleDateFormat df = new SimpleDateFormat("MM/dd/yy hh:mm a");
 
-                        if (triggers.get(0) instanceof CronTrigger) {
-                            CronTrigger cronTrigger = (CronTrigger) triggers.get(0);
-                            cronExpression = cronTrigger.getCronExpression();
+                        /*if (triggers.size() > 0) {
+                            startTime = triggers.get(0).getStartTime() != null ? df.format(triggers.get(0).getStartTime()) : "None";
+                            nextFireTime = triggers.get(0).getNextFireTime() != null ? df.format(triggers.get(0).getNextFireTime()) : "None";
+                            lastFiredTime = triggers.get(0).getPreviousFireTime() != null ? df.format(triggers.get(0).getPreviousFireTime()) : "None";
+                            finalFiredTime = triggers.get(0).getFinalFireTime() != null ? df.format(triggers.get(0).getFinalFireTime()) : "None";
+
+                            if (triggers.get(0) instanceof CronTrigger) {
+                                CronTrigger cronTrigger = (CronTrigger) triggers.get(0);
+                                cronExpression = cronTrigger.getCronExpression();
+                            }
+                        }*/
+
+                        if (triggers.size() > 0) {
+                            for (Trigger trigger : triggers) {
+                                startTime = trigger.getStartTime() != null ? df.format(trigger.getStartTime()) : "None";
+                                nextFireTime = trigger.getNextFireTime() != null ? df.format(trigger.getNextFireTime()) : "None";
+                                lastFiredTime = trigger.getPreviousFireTime() != null ? df.format(trigger.getPreviousFireTime()) : "None";
+                                finalFiredTime = trigger.getFinalFireTime() != null ? df.format(trigger.getFinalFireTime()) : "None";
+
+                                if (trigger instanceof CronTrigger) {
+                                    CronTrigger cronTrigger = (CronTrigger) trigger;
+                                    cronExpression = cronTrigger.getCronExpression();
+                                }
+
+                                log.info("key: {}, startTime: {}, nextFireTime: {}, lastFiredTime: {}, finalFiredTime: {}, cronExpression: {}", trigger.getKey(), startTime, nextFireTime, lastFiredTime, finalFiredTime, cronExpression);
+                            }
                         }
+
+                        map.put("startTime", startTime);
+                        map.put("lastFiredTime", lastFiredTime);
+                        map.put("nextFireTime", nextFireTime);
+                        map.put("finalFiredTime", finalFiredTime);
+                        map.put("cronExpression", cronExpression);
+
+                        if (this.isJobRunning(jobName, jobGroup)) {
+                            map.put("jobStatus", "RUNNING");
+                        } else {
+                            JobState jobState = this.getJobState(jobName, jobGroup);
+                            map.put("jobStatus", jobState.toString());
+                        }
+
+                        list.add(map);
                     }
-
-                    map.put("startTime", startTime);
-                    map.put("lastFiredTime", lastFiredTime);
-                    map.put("nextFireTime", nextFireTime);
-                    map.put("finalFiredTime", finalFiredTime);
-                    map.put("cronExpression", cronExpression);
-
-                    if (this.isJobRunning(jobName, jobGroup)) {
-                        map.put("jobStatus", "RUNNING");
-                    } else {
-                        JobState jobState = this.getJobState(jobName, jobGroup);
-                        map.put("jobStatus", jobState.toString());
-                    }
-
-                    list.add(map);
                 }
 
             }
@@ -412,6 +456,32 @@ public class JobServiceImpl implements JobService {
     @Override
     public SchedulerMetaData getMetaData() throws SchedulerException {
         return scheduler.getMetaData();
+    }
+
+    public JSONArray getCrawlLogHistoryByUser() throws IOException, SolrServerException {
+
+//        List<Collection> userCollections = collectionRepository.findAll();
+        List<CollectionRepository.CollectionIdNameInfoTest> userCollections = collectionRepository.findAllCollectionsByOwnerAndUsers();
+
+        List<String> collectionNames = new ArrayList<>();
+        userCollections.forEach(collection -> {
+            collectionNames.add(String.valueOf(collection.getName()));
+        });
+
+        Sort sort = Sort.by(Sort.Direction.DESC, "updatedDate");
+        Pageable pageableRequest = PageRequest.of(0, 100, sort);
+
+        Page<CrawlLog> crawlLogs = crawlLogRepository.findAll(pageableRequest);
+
+        JSONArray answer = new JSONArray();
+
+        crawlLogs.getContent().forEach(crawlLog -> {
+            String[] jobkeyArry = crawlLog.getJobKey().split("\\.");
+            if (collectionNames.contains(jobkeyArry[1])) {
+                answer.put(new JSONObject(crawlLog));
+            }
+        });
+        return answer;
     }
 
 }

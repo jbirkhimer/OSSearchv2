@@ -63,6 +63,7 @@
       v-model:tableOptions="tableOptions"
       :tableData="urlExclusionPatterns"
       @updateTableData="$emit('update:urlExclusionPatterns', $event)"
+      :isEditing="isEditing"
   />
 
 </template>

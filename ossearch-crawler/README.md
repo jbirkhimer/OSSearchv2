@@ -1,0 +1,1 @@
+[SortTranslator ignores snake-cased properties [DATAREST-1276] #1638](https://github.com/spring-projects/spring-data-rest/issues/1638)

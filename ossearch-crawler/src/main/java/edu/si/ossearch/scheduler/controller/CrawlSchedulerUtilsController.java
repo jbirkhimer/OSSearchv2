@@ -1,16 +1,12 @@
 package edu.si.ossearch.scheduler.controller;
 
-//import io.swagger.annotations.Api;
-//import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.nutch.util.NutchConfiguration;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.XML;
@@ -26,8 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.apache.commons.io.FileUtils.readFileToString;
 
@@ -38,7 +32,6 @@ import static org.apache.commons.io.FileUtils.readFileToString;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/scheduler/utils")
-//@Api(value = "Crawl Scheduler Utils", tags = "Crawl Scheduler Utils")
 @Tag(description = "Crawl Scheduler Utils", name = "Crawl Scheduler Utils")
 @SecurityRequirement(name = "bearerAuth")
 public class CrawlSchedulerUtilsController {
@@ -47,7 +40,6 @@ public class CrawlSchedulerUtilsController {
     @NonNull
     File nutchConfDir;
 
-//    @ApiOperation(value = "Validate Quarts Cron expression", tags = "Crawl Scheduler Utils", response = String.class)
     @Operation(summary = "Validate Quarts Cron expression", tags = "Crawl Scheduler Utils", responses = {@ApiResponse(content = @Content(mediaType = "application/json"))})
     @GetMapping(value = "/validate", params = {"expr"})
     public String validateCronExpression(@RequestParam(name = "expr") String expression) {

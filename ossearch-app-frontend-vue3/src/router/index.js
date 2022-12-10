@@ -6,21 +6,47 @@ import Login from '../views/Login';
 // const BoardAdmin = () => import('../views/other/BoardAdmin.vue')
 // const BoardModerator = () => import('../views/other/BoardModerator.vue')
 // const BoardUser = () => import('../views/other/BoardUser.vue')
-const Collections = () => import('../views/collections/Collections')
-import CollectionDetails from "../views/collections/CollectionDetails";
+import Collections from '../views/collections/Collections';
+import Collection from "../views/collections/Collection";
 import Dashboard from "../views/Dashboard";
-import CollectionForm from "../views/collections/CollectionForm";
+// import CollectionForm from "../views/collections/CollectionForm";
 import UserForm from "../views/users/UserForm";
 import UserDetails from "../views/users/UserDetails";
-import Reports from "../views/Reports";
+import Reports from "../views/reports/Reports";
 import CrawlScheduleDetails from "../views/scheduler/CrawlScheduleDetails";
 import CrawlScheduleForm from "../views/scheduler/CrawlScheduleForm";
 import CrawlLogs from "../views/scheduler/CrawlLogs";
 import CrawlSteps from "../views/scheduler/CrawlSteps";
-const CrawlScheduler = () => import('../views/scheduler/CrawlScheduler')
-const Search = () => import('../views/Search')
-const Users = () => import('../views/users/Users')
-const ServerStatus = () => import('../views/ServerStatus')
+// import CollectionDetails from "../views/collections/CollectionDetails";
+import AddRemoveUrls from "../views/collections/collection/AddRemoveUrls";
+import KeywordReport from "../views/collections/collection/reports/KeywordReport";
+import KeywordCountReport from "../views/collections/collection/reports/KeywordCountReport";
+import IndexedUrlsReport from "../views/collections/collection/reports/IndexedUrlsReport";
+import UrlReport from "../views/collections/collection/reports/UrlReport";
+import CrawldbReport from "../views/collections/collection/reports/CrawldbReport";
+import ChangeHistory from "../views/collections/collection/ChangeHistory";
+import BackupRestore from "../views/collections/collection/BackupRestore";
+import CollectionOverview from "../views/collections/collection/CollectionOverview";
+import CollectionSearchConfig from "../views/collections/collection/search/CollectionSearchConfig";
+import CollectionSearchFacetConfig from "../views/collections/collection/search/CollectionSearchFacetConfig";
+import CollectionSearchKeymatchConfig from "../views/collections/collection/search/CollectionSearchKeymatchConfig";
+import CollectionOverlappingSearchConfig from "../views/collections/collection/search/CollectionOverlappingSearchConfig";
+import CollectionCrawlingConfig from "../views/collections/collection/crawling/CollectionCrawlingConfig";
+import CollectionCrawlSchedule from "../views/collections/collection/crawling/CollectionCrawlSchedule";
+import CollectionUsers from "../views/collections/collection/CollectionUsers";
+import CollectionCrawlingIncludeExcludeSiteUrls
+  from "../views/collections/collection/crawling/CollectionCrawlingIncludeExcludeSiteUrls";
+import CollectionCrawlingUrlExclusionPatterns
+  from "../views/collections/collection/crawling/CollectionCrawlingUrlExclusionPatterns";
+import CollectionCrawlingSitemaps from "../views/collections/collection/crawling/CollectionCrawlingSitemaps";
+import CollectionCreate from "../views/collections/CollectionCreate";
+import CollectionSearchPageResults from "../views/collections/collection/search/CollectionSearchPageResults";
+import SearchReport from "../views/collections/collection/reports/SearchReport";
+const CrawlScheduler = () => import('../views/scheduler/CrawlScheduler');
+import SearchCounts from '../views/reports/search/SearchCounts';
+import SearchUrls from '../views/reports/search/SearchUrls';
+const Users = () => import('../views/users/Users');
+const ServerStatus = () => import('../views/ServerStatus');
 
 const routes = [
   {
@@ -31,7 +57,9 @@ const routes = [
   },
   {
     path: '/dashboard',
-    component: Dashboard,
+    redirect: {
+      name: 'Dashboard'
+    }
   },
   {
     path: '/login',
@@ -67,38 +95,222 @@ const routes = [
   // },
   {
     path: '/collections',
-    name: Collections,
+    name: 'collections',
     // lazy-loaded
     component: Collections,
   },
   {
+    path: '/collections/:name/reports',
+    props: true,
+    redirect: {
+      name: 'configuration'
+    }
+  },
+  {
+    path: '/collections/:name/search',
+    props: true,
+    redirect: {
+      name: 'collectionSearch'
+    }
+  },
+  {
+    path: '/collections/:name/crawling',
+    props: true,
+    redirect: {
+      name: 'collectionCrawlingConfig'
+    }
+  },
+  {
     path: '/collections/:name',
-    name: 'collectionDetails',
-    component: CollectionDetails
+    name: 'collection',
+    component: Collection,
+    props: true,
+    redirect: {
+      name: 'collectionOverview'
+    },
+    children: [
+      /*{
+        path: 'configuration',
+        name: 'configuration',
+        component: CollectionDetails,
+        props: true
+      },*/
+      {
+        path: 'overview',
+        name: 'collectionOverview',
+        component: CollectionOverview,
+        props: true
+      },
+      {
+        path: 'search/config',
+        name: 'collectionSearch',
+        component: CollectionSearchConfig,
+        props: true
+      },
+      {
+        path: 'search/faceting',
+        name: 'collectionSearchFaceting',
+        component: CollectionSearchFacetConfig,
+        props: true
+      },
+      {
+        path: 'search/keymatch',
+        name: 'collectionSearchKeymatch',
+        component: CollectionSearchKeymatchConfig,
+        props: true
+      },
+      {
+        path: 'search/overlapping-searches',
+        name: 'collectionOverlappingSearches',
+        component: CollectionOverlappingSearchConfig,
+        props: true
+      },
+      {
+        path: 'search/page-results',
+        name: 'collectionSearchPageResults',
+        component: CollectionSearchPageResults,
+        props: true
+      },
+      {
+        path: 'crawling',
+        name: 'collectionCrawlingConfig',
+        component: CollectionCrawlingConfig,
+        props: true
+      },
+      {
+        path: 'crawling/include-exclude-urls',
+        name: 'collectionCrawlingIncludeExcludeSiteUrls',
+        component: CollectionCrawlingIncludeExcludeSiteUrls,
+        props: true
+      },
+      {
+        path: 'crawling/url-exclusion-patterns',
+        name: 'collectionCrawlingUrlExclusionPatterns',
+        component: CollectionCrawlingUrlExclusionPatterns,
+        props: true
+      },
+      {
+        path: 'crawling/sitemaps',
+        name: 'collectionCrawlingSitemaps',
+        component: CollectionCrawlingSitemaps,
+        props: true
+      },
+      {
+        path: 'crawling/schedule',
+        name: 'collectionCrawlSchedule',
+        component: CollectionCrawlSchedule,
+        props: true
+      },
+      {
+        path: 'addRemoveUrls',
+        name: 'addRemoveUrls',
+        component: AddRemoveUrls,
+        props: true
+      },
+      {
+        path: 'reports/search',
+        name: 'searchReport',
+        component: SearchReport,
+        props: true
+      },
+      {
+        path: 'reports/keywords',
+        name: 'keywordReport',
+        component: KeywordReport,
+        props: true
+      },
+      {
+        path: 'reports/keywordsCount',
+        name: 'keywordCountReport',
+        component: KeywordCountReport,
+        props: true
+      },
+      {
+        path: 'reports/indexedUrls',
+        name: 'indexedUrlsReport',
+        component: IndexedUrlsReport,
+        props: true
+      },
+      {
+        path: 'reports/urlDetails',
+        name: 'urlReport',
+        component: UrlReport,
+        props: true
+      },
+      {
+        path: 'reports/crawldb',
+        name: 'crawldbReport',
+        component: CrawldbReport,
+        props: true
+      },
+      {
+        path: 'changeHistory',
+        name: 'changeHistory',
+        component: ChangeHistory,
+        props: true
+      },
+      {
+        path: 'backupRestore',
+        name: 'backupRestore',
+        component: BackupRestore,
+        props: true
+      },
+      {
+        path: 'users',
+        name: 'collectionUsers',
+        component: CollectionUsers,
+        props: true
+      },
+    ]
   },
   {
     path: '/collections/create',
+    name: 'collectionCreate',
+    component: CollectionCreate
+  },
+  /*{
+    path: '/collections/create',
     name: 'collectionForm',
     component: CollectionForm
-  },
+  },*/
   {
     path: '/scheduler',
     name: 'crawlScheduler',
     // lazy-loaded
-    component: CrawlScheduler
+    component: CrawlScheduler,
   },
   {
     path: '/scheduler/create',
     name: 'crawlScheduleForm',
-    component: CrawlScheduleForm
+    component: CrawlScheduleForm,
+    props: true
   },
   {
-    path: '/scheduler/:jobName',
+    path: '/scheduler/scheduled_crawl',
+    redirect: {
+      name: 'crawlScheduler'
+    }
+  },
+  {
+    path: '/scheduler/:groupName/:jobName',
     name: 'crawlScheduleDetails',
-    component: CrawlScheduleDetails
+    component: CrawlScheduleDetails,
+    props: true
   },
   {
-    path: '/scheduler/logs/:jobGroup/:jobName',
+    path: '/scheduler/logs/scheduled_crawl',
+    redirect: {
+      name: 'crawlScheduler'
+    }
+  },
+  {
+    path: '/scheduler/logs',
+    redirect: {
+      name: 'crawlScheduler'
+    }
+  },
+  {
+    path: '/scheduler/logs/:jobName',
     name: 'crawlLogs',
     component: CrawlLogs,
     children: [
@@ -119,9 +331,19 @@ const routes = [
   },
   {
     path: '/search',
-    name: Search,
-    // lazy-loaded
-    component: Search
+    name: 'search',
+    children: [
+      {
+        path: 'counts',
+        name: 'searchCounts',
+        component: SearchCounts,
+      },
+      {
+        path: 'urls',
+        name: 'searchUrls',
+        component: SearchUrls,
+      }
+    ]
   },
   {
     path: '/users',
@@ -152,6 +374,14 @@ const routes = [
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: () => import(/* webpackChunkName: 'about' */ '../views/About.vue')
+  },
+  {
+    path: '/FAQ',
+    name: 'FAQ',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: 'about' */ '../views/FAQ.vue')
   }
 ]
 

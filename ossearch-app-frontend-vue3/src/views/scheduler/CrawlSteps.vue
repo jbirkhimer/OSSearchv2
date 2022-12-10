@@ -1,11 +1,11 @@
 <template>
-  <template v-if="loading">
+<!--  <template v-if="loading">
     <div class="d-flex justify-content-center">
       <div class="spinner-border" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
     </div>
-  </template>
+  </template>-->
 
   <template v-if="error">
     {{ error }}
@@ -37,15 +37,10 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        Crawl Step Logs
+        <b>Crawl Step Logs</b>
       </div>
       <div class="card-body">
-        <div v-if="loading" class="d-flex justify-content-center">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-        <Datatable v-if="!loading"
+        <Datatable :loading="loading"
                    :tableData="crawlStepLogs"
                    :tableOptions="tableOptions.crawlStepLogs"
                    id="crawlStepLogsTable"
@@ -58,10 +53,10 @@
                 <td v-else-if="column.name === 'stepType'">{{ step[column.name].toUpperCase() }}</td>
 
                 <td v-else-if="column.name === 'state'">
-                  <span v-if="step[column.name] === 'Failed'" class="badge rounded-pill bg-danger text-light">{{ step[column.name] }}</span>
-                  <span v-else-if="step[column.name] === 'Stopped'" class="badge rounded-pill bg-warning text-dark">{{ step[column.name] }}</span>
-                  <span v-else-if="step[column.name] === 'Finished'" class="badge rounded-pill bg-success text-light">{{ step[column.name] }}</span>
-                  <span v-else class="badge rounded-pill bg-primary text-light">{{ step[column.name] }}</span>
+                  <span v-if="step[column.name] === 'failed'.toUpperCase()" class="badge rounded-pill bg-danger text-danger bg-opacity-25">{{ step[column.name] }}</span>
+                  <span v-else-if="step[column.name] === 'stopped'.toUpperCase()" class="badge rounded-pill bg-warning text-warning bg-opacity-25">{{ step[column.name] }}</span>
+                  <span v-else-if="step[column.name] === 'finished'.toUpperCase()" class="badge rounded-pill bg-success text-success bg-opacity-25">{{ step[column.name] }}</span>
+                  <span v-else class="badge rounded-pill bg-primary text-primary bg-opacity-25">{{ step[column.name] }}</span>
                 </td>
                 <td v-else-if="column.name === 'args'"
                     data-bs-toggle="tooltip" data-bs-placement="top" :title="step[column.name]">
@@ -71,7 +66,7 @@
                 </td>
                 <td v-else-if="column.name === 'dbStats'">
                   <a href="#" v-if="step[column.name]" class="link-primary" data-bs-toggle="modal"
-                          data-bs-target="#crawlStepStats" @click="selectedStep = step">db: {{ step[column.name]?.status?.['2']?.['count'] }} / solr: {{ step?.solrCount }}
+                          data-bs-target="#modal_crawlStepStats" @click="selectedStep = step">db: {{ numberComma(step[column.name]?.status?.['2']?.['count']) }} / indexed: {{ step?.solrCount.toLocaleString() }}
                   </a>
                 </td>
                 <td v-else-if="column.name === 'errors'" class="text-danger text-truncate" style="max-width: 250px;"
@@ -106,64 +101,15 @@
       </div>
     </div>
 
-    <div class="modal fade" id="crawlStepStats" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="crawlStepStats" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Crawl Round {{selectedStep?.round }} Stats</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="card-body">
-              <h2 class="h4 mb-1">Urls in CrawlDB</h2>
-              <ul class="list-group mb-3">
-                <li class="list-group-item d-flex justify-content-between align-items-center text-capitalize" v-for="(value, i) in selectedStep?.dbStats?.status" :key="i">
-                  {{ value.statusValue.replace(/^db_/,'') }}
-                  <span >{{ value.count }}</span>
-                </li>
-              </ul>
+  <CrawlDbStatsModal id="modal_crawlStepStats" :title="'Crawl Round ' +selectedStep?.round + ' Stats'" :data="selectedStep"/>
 
-              <ul class="list-group">
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <b>Total Urls in CrawlDB</b>
-                  <span class="badge bg-primary rounded-pill">{{ selectedStep?.dbStats?.totalUrls }}</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <b>Total Urls in Solr</b>
-                  <span class="badge bg-primary rounded-pill">{{ selectedStep?.solrCount }}</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal fade" id="crawlStepErrors" tabindex="-1" aria-labelledby="crawlStepErrors" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">{{ selectedStep?.stepType }} Error</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <p class="text-danger">{{ selectedStep?.errors }}</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
+  <ErrorModal id="crawlStepErrors" :title="selectedStep?.stepType +' Error'" :data="selectedStep"/>
 
     <!-- JSON Review -->
-    <div class="card mb-4">
+<!--    <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        JSON Review
+        <b>JSON Review</b>
         <div class="form-check form-switch float-end">
           <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_crawlStepJson'" v-model="showJson">
         </div>
@@ -171,18 +117,23 @@
       <div class="card-body" v-if="showJson">
         <pre>{{ print(crawlStepLogs) }}</pre>
       </div>
-    </div>
+    </div>-->
 <!--  </div>-->
 </template>
 
 <script>
 import SchedulerService from "../../services/scheduler.service";
 import Datatable from "../../components/table/Datatable";
+import CrawlDbStatsModal from "../../components/CrawlDbStatsModal";
+import ErrorModal from "../../components/ErrorModal";
+import EventBus from "../../common/EventBus";
 
 export default {
   name: "CrawlSteps",
   components: {
-    Datatable
+    Datatable,
+    CrawlDbStatsModal,
+    ErrorModal
   },
   data() {
     return {
@@ -213,11 +164,14 @@ export default {
       },
     }
   },
-  created() {
+  mounted() {
+    // await this.fetchData()
     // watch the params of the route to fetch the data again
     this.$watch(
-        () => this.$route.params,
-        () => {this.fetchData()},
+        () => this.$route.params.jobId,
+        async () => {
+          await this.fetchData()
+        },
         // fetch the data when the view is created and the data is
         // already being observed
         { immediate: true }
@@ -227,14 +181,19 @@ export default {
     error: {
       deep: true,
       handler: function () {
-        alert("ERROR: " + this.error)
+        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
+        if (this.error.response && this.error.response.status === 403) {
+          EventBus.dispatch("logout");
+        } else {
+          alert("ERROR: " + content)
+        }
       }
     }
   },
   methods: {
     async fetchData() {
       this.loading = true
-      if (Object.keys(this.$route.params).length !== 0) {
+      if (Object.keys(this.$route.params.jobId).length !== 0) {
         this.error = this.crawlStepLogs = null
         await this.getCrawlStepLogs(this.$route.params.jobId)
       }
@@ -266,6 +225,14 @@ export default {
     getLocalDateTime(utc) {
       let u = utc+'Z'
       return new Date(u).toLocaleString()
+    },
+    numberComma(value) {
+      if (typeof value === 'number') {
+        return value.toLocaleString()
+      } else if (!isNaN(value)) {
+        return Number(value).toLocaleString()
+      }
+      return value
     }
   },
 }

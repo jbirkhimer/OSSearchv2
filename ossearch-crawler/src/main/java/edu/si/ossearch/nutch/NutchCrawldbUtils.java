@@ -4,7 +4,12 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import edu.si.ossearch.nutch.entity.CrawlDb;
+import edu.si.ossearch.nutch.entity.Inlink;
+import edu.si.ossearch.nutch.entity.Webpage;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.MapFile;
@@ -12,15 +17,15 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
 import org.apache.nutch.crawl.CrawlDatum;
-import org.apache.nutch.crawl.CrawlDb;
 import org.apache.nutch.crawl.CrawlDbReader;
 import org.apache.nutch.crawl.FetchSchedule;
+import org.apache.nutch.crawl.Inlinks;
 import org.apache.nutch.util.StringUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.Closeable;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -63,7 +68,7 @@ public class NutchCrawldbUtils implements Closeable {
 
                     log.debug("crawldb: {}, key: {}, value: {}", crawldb, key, value);
 
-                    String answer = write(key, value);
+                    String answer = writeJson(key, value);
                     crawldbData.put(new JSONObject(answer));
                 }
                 reader.close();
@@ -80,6 +85,56 @@ public class NutchCrawldbUtils implements Closeable {
         log.info("crawldbData url count: {}", crawldbData.length());
 
         return crawldbData;
+    }
+
+    public ByteArrayInputStream dumpCrawldbCsv(Path crawldb, Configuration conf) {
+
+        String[] csvHeader = "Url,Status code,Status name,Fetch Time,Modified Time,Retries since fetch,Retry interval seconds,Retry interval days,Score,Signature,Metadata".split(",");
+        ByteArrayInputStream byteArrayOutputStream;
+
+        try (
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                // defining the CSV printer
+                CSVPrinter csvPrinter = new CSVPrinter(
+                        new PrintWriter(out),
+                        // withHeader is optional
+                        CSVFormat.DEFAULT.withHeader(csvHeader)
+                );
+        ) {
+            openReaders(crawldb.toString(), conf);
+
+            for (int i = 0; i < readers.length; i++) {
+
+                MapFile.Reader reader = readers[i];
+                //SequenceFile.Reader reader = readers[i];
+
+                Text key = new Text();
+                CrawlDatum value = new CrawlDatum();
+
+                while (reader.next(key, value)) {
+
+                    log.debug("crawldb: {}, key: {}, value: {}", crawldb, key, value);
+
+                    // populating the CSV content
+                    List<String> row = writeCsv(key, value);
+                    csvPrinter.printRecord(row);
+                    // writing the underlying stream
+                    csvPrinter.flush();
+                }
+                reader.close();
+            }
+
+            closeReaders();
+
+            byteArrayOutputStream = new ByteArrayInputStream(out.toByteArray());
+
+        } catch (IOException e) {
+            log.error("problem reading crawldb {}", crawldb, e);
+            closeReaders();
+            throw new RuntimeException(e.getMessage());
+        }
+
+        return byteArrayOutputStream;
     }
 
     public List<Map<String, Object>> dumpCrawldbList(Path crawldb, Configuration conf) {
@@ -101,7 +156,7 @@ public class NutchCrawldbUtils implements Closeable {
 
                     log.debug("crawldb: {}, key: {}, value: {}", crawldb, key, value);
 
-                    String answer = write(key, value);
+                    String answer = writeJson(key, value);
                     crawldbData.add(new JSONObject(answer).toMap());
                 }
                 reader.close();
@@ -120,7 +175,107 @@ public class NutchCrawldbUtils implements Closeable {
         return crawldbData;
     }
 
-    public synchronized String write(Text key, CrawlDatum value) throws IOException {
+    public List<Webpage> dumpCrawlDatumEntityList(Path crawldb, Configuration conf, CrawlDb crawl_db) {
+
+        List<Webpage> crawldbData = new ArrayList<>();
+
+        try {
+            openReaders(crawldb.toString(), conf);
+
+            for (int i = 0; i < readers.length; i++) {
+
+                MapFile.Reader reader = readers[i];
+                //SequenceFile.Reader reader = readers[i];
+
+                Text key = new Text();
+                CrawlDatum value = new CrawlDatum();
+
+                while (reader.next(key, value)) {
+
+                    log.debug("crawldb: {}, key: {}, value: {}", crawldb, key, value);
+
+                    Webpage answer = writeEntity(key, value, crawl_db);
+                    crawldbData.add(answer);
+                }
+                reader.close();
+            }
+
+            closeReaders();
+
+        } catch (IOException e) {
+            log.error("problem reading crawldb {}", crawldb, e);
+            closeReaders();
+        }
+
+        log.debug("crawldb dump: {}", crawldbData);
+        log.info("crawldbData url count: {}", crawldbData.size());
+
+        return crawldbData;
+    }
+
+    public Map<String, Inlink> dumpInlinksEntityList(Path crawldb, Configuration conf, CrawlDb crawl_db) {
+
+        Map<String, Inlink> crawldbData = new HashMap<>();
+
+        try {
+            openReaders(crawldb.toString(), conf);
+
+            for (int i = 0; i < readers.length; i++) {
+
+                MapFile.Reader reader = readers[i];
+                //SequenceFile.Reader reader = readers[i];
+
+                Text key = new Text();
+//                CrawlDatum value = new CrawlDatum();
+                Inlinks value = new Inlinks();
+
+                while (reader.next(key, value)) {
+
+                    log.debug("crawldb: {}, key: {}, value: {}", crawldb, key, value);
+
+                    Inlink inlinkList = writeInlinks(key, value, crawl_db);
+                    crawldbData.put(key.toString(), inlinkList);
+                }
+                reader.close();
+            }
+
+            closeReaders();
+
+        } catch (IOException e) {
+            log.error("problem reading crawldb {}", crawldb, e);
+            closeReaders();
+        }
+
+        log.info("crawldb dump: {}", crawldbData);
+        log.info("crawldbData url count: {}", crawldbData.size());
+
+        return crawldbData;
+    }
+
+    public synchronized Inlink writeInlinks(Text key, Inlinks value, CrawlDb crawldb) {
+        Inlink inlink = new Inlink();
+        inlink.setId(UUID.nameUUIDFromBytes(key.toString().getBytes(StandardCharsets.UTF_8)).toString());
+        inlink.setUrl(key.toString());
+
+        Iterator<org.apache.nutch.crawl.Inlink> it = value.iterator();
+        while (it.hasNext()) {
+            org.apache.nutch.crawl.Inlink next = it.next();
+
+            String anchor = next.getAnchor();
+            String fromUrl = next.getFromUrl();
+
+            if (anchor != null && !anchor.isEmpty()) {
+                inlink.getAnchors().add(anchor);
+            }
+
+            if (fromUrl != null && !fromUrl.isEmpty()) {
+                inlink.getFromUrl().add(fromUrl);
+            }
+        }
+        return inlink;
+    }
+
+    public synchronized String writeJson(Text key, CrawlDatum value) throws IOException {
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("url", key.toString());
         data.put("statusCode", value.getStatus());
@@ -148,8 +303,63 @@ public class NutchCrawldbUtils implements Closeable {
         return jsonWriter.writeValueAsString(data);
     }
 
+    public synchronized List<String> writeCsv(Text key, CrawlDatum value) throws IOException {
+        List<String> row = new ArrayList<>();
+        
+        row.add(key.toString());
+        row.add(Integer.toString(value.getStatus()));
+        row.add(CrawlDatum.getStatusName(value.getStatus()));
+        row.add(new Date(value.getFetchTime()).toString());
+        row.add(new Date(value.getModifiedTime()).toString());
+        row.add(Integer.toString(value.getRetriesSinceFetch()));
+        row.add(Float.toString(value.getFetchInterval()));
+        row.add(Float.toString((value.getFetchInterval() / FetchSchedule.SECONDS_PER_DAY)));
+        row.add(Float.toString(value.getScore()));
+        row.add(value.getSignature() != null ? StringUtil.toHexString(value.getSignature()) : "null");
+        if (value.getMetaData() != null) {
+            StringBuilder sb = new StringBuilder();
+            for (Map.Entry<Writable, Writable> e : value.getMetaData().entrySet()) {
+                sb.append(e.getKey().toString());
+                sb.append(':');
+                sb.append(e.getValue().toString());
+                sb.append("|||");
+            }
+            row.add(sb.toString());
+        }
+
+        return row;
+    }
+
+    public synchronized Webpage writeEntity(Text key, CrawlDatum value, CrawlDb crawldb) throws IOException {
+        Webpage data = new Webpage();
+        data.setId(UUID.nameUUIDFromBytes(key.toString().getBytes(StandardCharsets.UTF_8)).toString());
+        data.setCrawlDb(crawldb);
+        data.setUrl(key.toString());
+        data.setStatusCode(Integer.valueOf(value.getStatus()));
+        data.setStatusName(CrawlDatum.getStatusName(value.getStatus()));
+        data.setFetchTime(new Date(value.getFetchTime()));
+        data.setModifiedTime(new Date(value.getModifiedTime()));
+        data.setRetriesSinceFetch(Integer.valueOf(value.getRetriesSinceFetch()));
+        data.setRetryIntervalSeconds(value.getFetchInterval());
+        data.setRetryIntervalDays((value.getFetchInterval() / FetchSchedule.SECONDS_PER_DAY));
+        data.setScore(value.getScore());
+        data.setSignature((value.getSignature() != null ? StringUtil.toHexString(value.getSignature()) : "null"));
+        Map<String, String> metaData = null;
+        if (value.getMetaData() != null) {
+            metaData = new LinkedHashMap<String, String>();
+            for (Map.Entry<Writable, Writable> e : value.getMetaData().entrySet()) {
+                metaData.put(e.getKey().toString(), e.getValue().toString());
+            }
+        }
+        if (metaData != null) {
+            data.setMetadata(new JSONObject(metaData).toString());
+        }
+
+        return data;
+    }
+
     private void openReaders(String crawlDb, Configuration config) throws IOException {
-        Path crawlDbPath = new Path(crawlDb, CrawlDb.CURRENT_NAME);
+        Path crawlDbPath = new Path(crawlDb, org.apache.nutch.crawl.CrawlDb.CURRENT_NAME);
 
         FileSystem fs = crawlDbPath.getFileSystem(config);
         FileStatus stat = fs.getFileStatus(crawlDbPath);
@@ -227,7 +437,7 @@ public class NutchCrawldbUtils implements Closeable {
      **/
     /*public void openReaders(String crawlDb, Configuration conf) throws IOException {
 
-        Path crawlDbPath = new Path(crawlDb, CrawlDb.CURRENT_NAME);
+        Path crawlDbPath = new Path(crawlDb, org.apache.nutch.crawl.CrawlDb.CURRENT_NAME);
 
         FileSystem fs = crawlDbPath.getFileSystem(conf);
         PathFilter filter = new PathFilter() {

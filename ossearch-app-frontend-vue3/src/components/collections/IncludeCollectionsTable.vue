@@ -6,7 +6,7 @@
           enableImport: false,
           enableAddRow: false,
           enableActions: false,
-          actionDisabledDefaultValues: [this.collectionId],
+          actionDisabledDefaultValues: [this.includedCollectionId],
           columns: [
             {label: 'Collection ID', name: 'id', width: '15%;', class: 'text-center'},
             {label: 'Name', name: 'name', width: '85%', class: 'text-center'}
@@ -16,6 +16,7 @@
         :selected="includedCollections"
         @selected="$emit('update:includedCollections', $event)"
         uniqueCheckField="id"
+        :isEditing="isEditing"
     />
     <!--  </div>-->
   </fieldset>
@@ -23,17 +24,15 @@
 
 <script>
 import ImportAddEditCheckTable from "../forms/ImportAddEditCheckTable";
-import CollectionService from "../../services/collection.service";
 
 export default {
   name: "IncludeCollectionsTable",
-  props: ['isEditing', 'includedCollections', 'collectionId'],
+  props: ['isEditing', 'includedCollections', 'collections', 'includedCollectionId'],
   components: {
     ImportAddEditCheckTable
   },
   data() {
     return {
-      collections: [],
       tableOptions: {
         includeCollections: {
           enableImport: false,
@@ -46,30 +45,6 @@ export default {
         }
       }
     }
-  },
-  methods: {
-    getCollections(url = '/collection', params = {projection: 'collectionIdNameInfo', size: 1000}) {
-
-      //console.log("[getCollections] url: " + url + ", prams: " + JSON.stringify(params), null, 2)
-
-      // this.tableData.draw++;
-      CollectionService.getCollections(url, params)
-          .then(response => {
-            let data = response.data;
-
-            if (this.collectionId) {
-              this.collections = data._embedded.collection.filter(collection => collection.id !== this.collectionId );
-            } else {
-              this.collections = data._embedded.collection;
-            }
-          })
-          .catch(errors => {
-            console.log(errors);
-          });
-    }
-  },
-  mounted() {
-    this.getCollections()
   }
 }
 </script>

@@ -1,0 +1,17 @@
+<div id="oss-keymatch-wrapper" xmlns:th="http://www.thymeleaf.org">
+    <div th:each="key:${keymatch}" class='oss-keymatch-container'>
+
+    <div class="oss-url-keymatch">
+        <a th:ctype="${key.type}" th:uhref="${key.GL}" th:text="${key.GD.get(0)}"></a>
+    </div>
+        <div class="oss-font-keymatch">
+            <span class="a" th:text="${key.GL}"></span>
+        </div>
+        <div th:switch="${key.type}" class="oss-keymatch-term">
+            <span th:case="'keyword'">KeywordMatch</span>
+            <span th:case="'phrase'">PhraseMatch</span>
+            <span th:case="'exact'">ExactMatch</span>
+        </div>
+    </div>
+
+</div>

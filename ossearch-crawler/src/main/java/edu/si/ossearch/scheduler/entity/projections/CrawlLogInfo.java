@@ -2,6 +2,7 @@ package edu.si.ossearch.scheduler.entity.projections;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import edu.si.ossearch.scheduler.entity.CrawlLog;
+import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType;
 import org.springframework.data.rest.core.config.Projection;
 
 import java.util.Date;
@@ -16,6 +17,8 @@ public interface CrawlLogInfo {
     String getJobKey();
 
     String getJobId();
+
+    JobType getJobType();
 
     String getJobConfig();
 

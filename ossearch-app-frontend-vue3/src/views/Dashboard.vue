@@ -1,25 +1,30 @@
 <template>
-  <div v-if="loading" class="container-fluid px-4 loading">
+<!--  <div v-if="loading" class="container-fluid px-4 loading">
     <div class="d-flex justify-content-center">
       <div class="spinner-border" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
     </div>
-  </div>
+  </div>-->
 
   <div v-if="error" class="container-fluid px-4 error">
     {{ error }}
   </div>
 
   <div class="container-fluid px-4">
-    <h1 class="mt-4">Dashboard</h1>
+<!--    <h1 class="mt-4">Dashboard</h1>-->
     <Breadcrumb/>
     <div class="row">
-      <div class="col-md-4 col-xl-3">
-        <div class="card bg-primary text-white mb-4">
-          <div class="card-body">
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card bg-primary text-white">
+          <div class="card-body d-flex flex-column">
             <h5 class="card-title text-uppercase">Scheduled Crawls</h5>
-            <h2 class="card-text text-end"><i class="fas fa-spider float-start"></i><span>{{ scheduledCrawls }}</span></h2>
+            <div class="d-flex justify-content-center" v-if="loading">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <h2 v-if="!loading" class="card-text text-end mt-auto"><i class="fas fa-spider float-start"></i><span>{{ numberComma(scheduledCrawls) }}</span></h2>
 <!--            <span class="card-text">Number of Crawls Executed:<span class="float-end">{{ numberOfJobsExecuted }}</span></span>-->
           </div>
           <div class="card-footer d-flex align-items-center justify-content-between">
@@ -28,11 +33,16 @@
           </div>
         </div>
       </div>
-      <div class="col-md-4 col-xl-3">
-        <div class="card bg-primary text-white mb-4">
-          <div class="card-body">
-            <h5 class="card-title text-uppercase">Collections</h5>
-            <h2 class="card-text text-white text-end"><i class="fas fa-sitemap float-start"></i><span>{{ collectionCount }}</span></h2>
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card bg-primary text-white">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title text-uppercase">Active Collections</h5>
+            <div class="d-flex justify-content-center" v-if="loading">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <h2 v-if="!loading" class="card-text text-white text-end mt-auto"><i class="fas fa-sitemap float-start"></i><span>{{ numberComma(collectionCount) }}</span></h2>
 <!--            <span>Number of Crawls Executed:<span class="float-end">{{ numberOfJobsExecuted }}</span></span>-->
           </div>
           <div class="card-footer d-flex align-items-center justify-content-between">
@@ -41,12 +51,20 @@
           </div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6">
-        <div class="card bg-primary text-white mb-4">
-          <div class="card-body">
-            <h5 class="card-title text-uppercase">Searches</h5>
-            <h2 class="card-text text-white text-end"><i class="fas fa-search float-start"></i><span>{{ searchesCount }}</span></h2>
-<!--            <span>Number of Crawls Executed:<span class="float-end">{{ numberOfJobsExecuted }}</span></span>-->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card bg-primary text-white">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title text-uppercase">User's Searches</h5>
+            <span v-if="!loading" class="card-subtitle text-end">Last 30 days</span>
+            <div class="d-flex justify-content-center" v-if="loading">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <h2 v-if="!loading" class="card-text text-white text-end mt-auto">
+              <i class="fas fa-search float-start"></i>
+              <span>{{ numberComma(searchesCount) }}</span>
+            </h2>
           </div>
           <div class="card-footer d-flex align-items-center justify-content-between">
             <router-link class="small text-white stretched-link" to="/search">View Details</router-link>
@@ -54,11 +72,16 @@
           </div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6">
-        <div class="card bg-primary text-white mb-4">
-          <div class="card-body">
-            <h5 class="card-title text-uppercase">Solr Records</h5>
-            <h2 class="card-text text-white text-end"><i class="fas fa-users float-start"></i><span>{{ solrCount }}</span></h2>
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card bg-primary text-white">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title text-uppercase">Total Public URL's Available</h5>
+            <div class="d-flex justify-content-center" v-if="loading">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <h2 v-if="!loading" class="card-text text-white text-end mt-auto"><i class="fas fa-cloud float-start"></i><span>{{ numberComma(solrCount) }}</span></h2>
             <!--            <span>Number of Crawls Executed:<span class="float-end">{{ numberOfJobsExecuted }}</span></span>-->
           </div>
           <div class="card-footer d-flex align-items-center justify-content-between">
@@ -67,11 +90,16 @@
           </div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6">
-        <div class="card bg-primary text-white mb-4">
-          <div class="card-body">
+      <div class="col-xl-3 col-md-6 mb-4" v-if="isAdmin">
+        <div class="card bg-primary text-white">
+          <div class="card-body d-flex flex-column">
             <h5 class="card-title text-uppercase">Users</h5>
-            <h2 class="card-text text-white text-end"><i class="fas fa-users float-start"></i><span>{{ userCount }}</span></h2>
+            <div class="d-flex justify-content-center" v-if="loading">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <h2 v-if="!loading" class="card-text text-white text-end mt-auto"><i class="fas fa-users float-start"></i><span>{{ numberComma(userCount) }}</span></h2>
             <!--            <span>Number of Crawls Executed:<span class="float-end">{{ numberOfJobsExecuted }}</span></span>-->
           </div>
           <div class="card-footer d-flex align-items-center justify-content-between">
@@ -80,11 +108,16 @@
           </div>
         </div>
       </div>
-      <div class="col-xl-3 col-md-6">
-        <div class="card text-white mb-4" :class="systemStatus === 'UP' ? 'bg-primary' : 'bg-danger'">
-          <div class="card-body">
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card text-white" :class="systemStatus === 'UP' ? 'bg-success' : 'bg-danger'">
+          <div class="card-body d-flex flex-column">
             <h5 class="card-title text-uppercase">System Status</h5>
-            <h2 class="card-text text-white text-end"><i class="fas fa-server float-start"></i><span>{{ systemStatus }}</span></h2>
+            <div class="d-flex justify-content-center" v-if="loading">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <h2 v-if="!loading" class="card-text text-white text-end mt-auto"><i class="fas fa-server float-start"></i><span>{{ systemStatus }}</span></h2>
             <!--            <span>Number of Crawls Executed:<span class="float-end">{{ numberOfJobsExecuted }}</span></span>-->
           </div>
           <div class="card-footer d-flex align-items-center justify-content-between">
@@ -103,24 +136,24 @@
             </div>
         </div>-->
     </div>
-    <div class="row">
-        <div class="col-xl-6">
-            <div class="card mb-4">
+<!--    <div class="row">
+        <div class="col-xl-6  mb-4">
+            <div class="card">
                 <div class="card-header">
                   <i class="fas fa-chart-bar me-1"></i>
-                    Solr Collection Record Counts
+                  <b>Public URL's Available By Collection</b>
                 </div>
                 <div class="card-body">
 
-                  <Datatable v-if="!loading"
+                  <Datatable :loading="loading"
                              :tableData="solrCounts"
                              :tableOptions="tableOptions.solrCounts"
                              id="solrRecordTable"
                   >
                     <template v-slot:table-body>
                       <tr v-for="(collection, i) in solrCounts" :key="i">
-                        <td>{{ collection.id }}</td>
-                        <td><router-link :to="{ name: 'collectionDetails', params: { name: collection.name, id: collection.id }}">{{ collection.name }}</router-link></td>
+                        <td v-if="isAdmin">{{ collection.id }}</td>
+                        <td><router-link :to="{ name: 'collection', params: { name: collection.name, id: collection.id }}">{{ collection.name }}</router-link></td>
                         <td>{{ collection.count }}</td>
                       </tr>
                     </template>
@@ -129,16 +162,17 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-6">
-            <div class="card mb-4">
+        <div class="col-xl-6 mb-4">
+            <div class="card">
                 <div class="card-header">
                   <i class="fas fa-chart-area me-1"></i>
-                    Latest CrawlDb Counts
+                  <b>Latest Crawl URL Counts By Collection</b>
                 </div>
                 <div class="card-body">
-                  <Datatable v-if="!loading"
+                  <Datatable :loading="loading"
                              :tableData="crawlDbStats"
                              :tableOptions="tableOptions.crawlDbStats"
+                             :responsive="true"
                              id="dbStatsTable"
                   >
                     <template v-slot:table-body>
@@ -148,58 +182,75 @@
                           <td v-if="column.name === 'jobKey'">
                             <router-link :to="{name: 'crawlLogs', params: { jobName: crawLog[column.name].split('.')[1], jobGroup: crawLog[column.name].split('.')[0] }}">{{ crawLog[column.name] }}</router-link>
                           </td>
-                          <td v-if="column.name === 'fetched'">{{ crawLog.dbStats?.status?.['2']?.['count'] }}
-                            <a class="link-primary" href="#" data-bs-toggle="modal" data-bs-target="#crawlStats" @click="selectedDbStats = crawLog"> (details)</a>
-                          </td>
-                          <td v-if="column.name === 'unfetched'">{{ crawLog.dbStats?.status?.['1']?.['count'] }}
-                            <a class="link-primary" href="#" data-bs-toggle="modal" data-bs-target="#crawlStats" @click="selectedDbStats = crawLog"> (details)</a>
-                          </td>
+                          <td v-if="column.name === 'fetched'">{{ crawLog.dbStats?.status?.['2']?.['count'] ? crawLog.dbStats?.status?.['2']?.['count'] : 0}}</td>
+                          <td v-if="column.name === 'unfetched'">{{ crawLog.dbStats?.status?.['1']?.['count'] ? crawLog.dbStats?.status?.['1']?.['count'] : 0 }}</td>
                           <td v-if="column.name === 'solrCount'">{{ crawLog[column.name] }}</td>
                         </template>
+                        <td><a class="link-primary" href="#" data-bs-toggle="modal" data-bs-target="#crawlStats_dashboard" @click="selectedDbStats = crawlDbStats[i]">details</a></td>
                       </tr>
                     </template>
                   </Datatable>
                 </div>
             </div>
         </div>
+    </div>-->
+    <div class="card mb-4">
+      <div class="card-header">
+        <i class="fas fa-chart-bar me-1"></i>
+        <b>Public URL's Available By Collection</b>
+      </div>
+      <div class="card-body">
+
+        <Datatable :loading="loading"
+                   :tableData="solrCounts"
+                   :tableOptions="tableOptions.solrCounts"
+                   id="solrRecordTable"
+        >
+          <template v-slot:table-body>
+            <tr v-for="(collection, i) in solrCounts" :key="i">
+              <td v-if="isAdmin">{{ collection.id }}</td>
+              <td><router-link :to="{ name: 'collection', params: { name: collection.name, id: collection.id }}">{{ collection.name }}</router-link></td>
+              <td class="text-end">{{ collection.count.toLocaleString() }}</td>
+            </tr>
+          </template>
+        </Datatable>
+
+      </div>
     </div>
-  </div>
 
-  <div class="modal fade" id="crawlStats" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Crawl Stats</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="card-body">
-            <h2 class="h4 mb-1">Urls in CrawlDB</h2>
-            <ul class="list-group mb-3">
-              <li class="list-group-item d-flex justify-content-between align-items-center text-capitalize" v-for="(value, i) in selectedDbStats?.dbStats?.status" :key="i">
-                {{value.statusValue.replace(/^db_/,'')}}
-                <span >{{ value.count }}</span>
-              </li>
-            </ul>
-
-            <ul class="list-group">
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <b>Total Urls in CrawlDB</b>
-                <span class="badge bg-primary rounded-pill">{{ selectedDbStats?.dbStats?.totalUrls }}</span>
-              </li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <b>Total Urls in Solr</b>
-                <span class="badge bg-primary rounded-pill">{{ selectedDbStats?.solrCount }}</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-        </div>
+    <div class="card mb-4">
+      <div class="card-header">
+        <i class="fas fa-chart-area me-1"></i>
+        <b>Latest Crawl URL Counts By Collection</b>
+      </div>
+      <div class="card-body">
+        <Datatable :loading="loading"
+                   :tableData="crawlDbStats"
+                   :tableOptions="tableOptions.crawlDbStats"
+                   :responsive="true"
+                   id="dbStatsTable"
+        >
+          <template v-slot:table-body>
+            <tr v-for="(crawLog, i) in crawlDbStats" :key="i">
+              <template v-for="column in tableOptions.crawlDbStats.columns" :key="column">
+                <td v-if="column.name === 'id'">{{ crawLog[column.name] }}</td>
+                <td v-if="column.name === 'jobKey'">
+                  <router-link :to="{name: 'crawlLogs', params: { jobName: crawLog[column.name].split('.')[1], jobGroup: crawLog[column.name].split('.')[0] }}">{{ crawLog[column.name] }}</router-link>
+                </td>
+                <td class="text-end" v-if="column.name === 'fetched'">{{ crawLog.dbStats?.status?.['2']?.['count'] ? numberComma(crawLog.dbStats?.status?.['2']?.['count']) : 0}}</td>
+                <td class="text-end" v-if="column.name === 'unfetched'">{{ crawLog.dbStats?.status?.['1']?.['count'] ? numberComma(crawLog.dbStats?.status?.['1']?.['count']) : 0 }}</td>
+                <td class="text-end" v-if="column.name === 'solrCount'">{{ crawLog[column.name].toLocaleString() }}</td>
+              </template>
+              <td class="text-end"><a class="link-primary" href="#" data-bs-toggle="modal" data-bs-target="#crawlStats_dashboard" @click="selectedDbStats = crawlDbStats[i]">details</a></td>
+            </tr>
+          </template>
+        </Datatable>
       </div>
     </div>
   </div>
+
+  <CrawlDbStatsModal id="crawlStats_dashboard" title="Crawl Stats" :data="selectedDbStats"/>
+
 </template>
 
 <script>
@@ -209,12 +260,16 @@ import CollectionService from "../services/collection.service";
 import UserService from "../services/user.service";
 import Breadcrumb from "../components/Breadcrumb";
 import Datatable from "../components/table/Datatable";
+import CrawlDbStatsModal from "../components/CrawlDbStatsModal";
+import EventBus from "../common/EventBus";
+import SearchLogService from "../services/searchLog.service";
 
 export default {
   name: "Dashboard",
   components: {
     Breadcrumb,
-    Datatable
+    Datatable,
+    CrawlDbStatsModal
   },
   data() {
     return {
@@ -222,45 +277,54 @@ export default {
       error: null,
       scheduledCrawls: null,
       numberOfJobsExecuted: null,
-      collectionCount: null,
+      collectionCount: 0,
       searchesCount: 0,
-      userCount: null,
+      userCount: 0,
       schedulerStatus: null,
       backedStatus: null,
-      solrCount: null,
-      solrCounts: null,
+      solrCount: 0,
+      solrCounts: 0,
       crawlDbStats: null,
       selectedDbStats: null,
       tableOptions: {
         solrCounts: {
           order: [[0, "asc"]],
           columns: [
-            {label: 'CollectionId', name: 'id'},
-            {label: 'Name', name: 'name'},
-            {label: 'Records', name: 'count'},
+            {label: 'ID', name: 'id', adminOnly: true, style: 'width: 10%'},
+            {label: 'Collection Name', name: 'name'},
+            {label: 'URL\'s', name: 'count', class: 'text-end'},
           ],
         },
         crawlDbStats: {
           order: [[0, "desc"]],
           columns: [
-            { label: 'Id', name: 'id'},
-            { label: 'Job Key', name: 'jobKey'},
-            { label: 'Fetched', name: 'fetched'},
-            { label: 'Unfetched', name: 'unfetched'},
-            { label: 'Solr Count', name: 'solrCount'},
+            // { label: 'Id', name: 'id'},
+            { label: 'Scheduled Crawl', name: 'jobKey'},
+            { label: 'Crawled', name: 'fetched', class: 'text-end'},
+            { label: 'Uncrawled', name: 'unfetched', class: 'text-end'},
+            { label: 'Indexed', name: 'solrCount', class: 'text-end'},
+            { label: 'Details', name: 'details', class: 'text-end'},
           ]
         },
       },
     }
   },
   computed: {
+    currentUser() {
+      return this.$store.state.auth.user;
+    },
+    isAdmin() {
+      if (this.currentUser && this.currentUser['roles']) {
+        return this.currentUser['roles'].includes('ROLE_ADMIN');
+      }
+      return false;
+    },
     systemStatus() {
       if (this.schedulerStatus && this.backedStatus === "UP") {
         return "UP"
       } else {
         return "DOWN"
       }
-
     }
   },
   async mounted() {
@@ -270,10 +334,24 @@ export default {
     await this.getCollections()
     await this.getUsers()
     await this.getServerStatus()
-    await this.getSolrCounts()
+    // await this.getSolrCounts()
     await this.getSolrCollectionCounts()
     await this.getCrawlLogStats()
+    await this.getSearchLogCounts()
     this.loading = false
+  },
+  watch: {
+    error: {
+      deep: true,
+      handler: function () {
+        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
+        if (this.error.response && this.error.response.status === 403) {
+          EventBus.dispatch("logout");
+        } else {
+          alert("ERROR: " + content)
+        }
+      }
+    }
   },
   methods: {
     async getScheduledCrawls() {
@@ -316,19 +394,10 @@ export default {
             this.error = errors
           })
     },
-    async getUsers(url = '/users', params = {size: 1, projection: 'userIdNameEmailRoles'}) {
-      await UserService.getUsers(url, params)
+    async getUsers() {
+      await UserService.getUsers('/users', {size: 1, projection: 'userIdNameEmailRoles'})
           .then(response => {
             this.userCount = response.data.page.totalElements;
-          })
-          .catch(errors => {
-            this.error = errors
-          })
-    },
-    async getSolrCounts() {
-      await ServerStatusService.getSolr()
-          .then(response => {
-            this.solrCount = response.data.numDocs;
           })
           .catch(errors => {
             this.error = errors
@@ -337,12 +406,25 @@ export default {
     async getSolrCollectionCounts() {
       await ServerStatusService.getSolrCollectionCounts()
           .then(response => {
-            this.solrCounts = response.data;
+            this.solrCounts = response.data.data;
+            this.solrCount = response.data.totalCount;
+            /*this.solrCount = this.solrCounts.reduce((accumulator, object) => {
+              return accumulator + object.count;
+            }, 0);*/
           })
           .catch(errors => {
             this.error = errors
           })
     },
+    /*async getSolrCounts() {
+      await ServerStatusService.getSolr()
+          .then(response => {
+            this.solrCount = response.data;
+          })
+          .catch(errors => {
+            this.error = errors
+          })
+    },*/
     async getCrawlLogStats() {
       await ServerStatusService.getCrawlLogStats()
           .then(response => {
@@ -358,60 +440,28 @@ export default {
             this.error = errors
           })
     },
+    async getSearchLogCounts() {
+      await SearchLogService.get("/searchlog/search/totalCountForAllCollectionsLastNumDays", {days: 30})
+          .then(response => {
+            this.searchesCount = response.data
+          }).catch(errors => {
+            this.error = errors
+          })
+    },
+    numberComma(value) {
+      if (typeof value === 'number') {
+        return value.toLocaleString()
+      } else if (!isNaN(value)) {
+        return Number(value).toLocaleString()
+      }
+      return value
+    }
   }
 }
 </script>
 
-<style lang="sass" scoped>
-$card-height: 100%
-/*.card {*/
-/*  position: relative;*/
-/*  display: flex;*/
-/*  flex-direction: column;*/
-/*  min-width: 0;*/
-/*  word-wrap: break-word;*/
-/*  border: 1px solid rgba(0, 0, 0, .05);*/
-/*  border-radius: .375rem;*/
-/*  background-color: #fff;*/
-/*  background-clip: border-box;*/
-/*}*/
-
-/*.card-body {*/
-/*  padding: 1.5rem;*/
-/*  flex: 1 1 auto;*/
-/*}*/
-
-/*.card-title {*/
-/*  margin-bottom: 1.25rem;*/
-/*}*/
-
-/*.rounded-circle {*/
-/*  border-radius: 50% !important;*/
-/*}*/
-
-/*.shadow {*/
-/*  box-shadow: 0 0 2rem 0 rgba(136, 152, 170, .15) !important;*/
-/*}*/
-
-/*.icon {*/
-/*  width: 3rem;*/
-/*  height: 3rem;*/
-/*}*/
-
-/*.icon i {*/
-/*  font-size: 2.25rem;*/
-/*}*/
-
-/*.icon-shape {*/
-/*  display: inline-flex;*/
-/*  padding: 12px;*/
-/*  text-align: center;*/
-/*  border-radius: 50%;*/
-/*  align-items: center;*/
-/*  justify-content: center;*/
-/*}*/
-
-/*.icon-shape i {*/
-/*  font-size: 1.25rem;*/
-/*}*/
+<style lang="scss" scoped>
+.card{
+  height: 100%;
+}
 </style>

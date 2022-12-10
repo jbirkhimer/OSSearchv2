@@ -22,6 +22,8 @@
                        v-bind:serviceStatus="ldap"/>
         <ServiceStatus serviceName="Solr Master"
                        v-bind:serviceStatus="solr_master"/>
+        <ServiceStatus serviceName="Solr Slave"
+                       v-bind:serviceStatus="solr_slave"/>
 
         <div :class="scheduler_status.started ? 'alert-success' : 'alert-danger'"  class="alert d-flex align-items-center" role="alert">
           <i :class="scheduler_status.started ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"  style="font-size: x-large" class="bi bi-check-circle-fill flex-shrink-0 me-2" aria-label="Success:"></i>
@@ -38,6 +40,7 @@
 <script>
 import ServerStatusService from "../services/server-status.service"
 import ServiceStatus from "../components/ServiceStatus";
+import EventBus from "../common/EventBus";
 
 export default {
   name: "ServerStatus",
@@ -49,7 +52,7 @@ export default {
       schedulerStatus: '',
       ldap: '',
       solr_master: '',
-      solrSlave: '',
+      solr_slave: '',
       scheduler_status: '',
     }
   },
@@ -61,20 +64,28 @@ export default {
     this.getSchedulerStatus()
 
   },
+  watch: {
+    error: {
+      deep: true,
+      handler: function () {
+        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
+        if (this.error.response && this.error.response.status === 403) {
+          EventBus.dispatch("logout");
+        } else {
+          alert("ERROR: " + content)
+        }
+      }
+    }
+  },
   methods: {
     async getServerStatus() {
       await ServerStatusService.getServerStatus().then(
           response => {
-            //this.json = JSON.stringify(response.data, null, 2)
             this.json = response.data
-            // console.log(JSON.stringify(this.json, null, 2))
-            // this.backend_status = this.json.status
             this.db_status = this.json.components?.db?.status
             this.ldap = this.json.components?.ldap?.status
-            this.solr_master = this.json.components?.solr?.status
-            // console.log("db:" + this.db_status)
-            // console.log("ldap: "+this.ldap)
-            // console.log("solr: "+this.solr_master)
+            this.solr_master = this.json.components?.solr?.components?.master?.status
+            this.solr_slave = this.json.components?.solr?.components?.slave?.status
           }
       )
     },

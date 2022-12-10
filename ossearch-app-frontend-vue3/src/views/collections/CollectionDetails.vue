@@ -1,43 +1,24 @@
 <template>
-
-  <div v-if="loading" class="container-fluid px-4 loading">
-    Loading...
-    <h2>Name: {{ $route.params.name }}</h2>
-    <h2>Id: {{ $route.params.id }}</h2>
+  <div v-if="loading" class="d-flex justify-content-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
   </div>
 
   <div v-if="error" class="container-fluid px-4 error">
     {{ error }}
   </div>
 
-  <div v-if="collection" class="container-fluid px-4">
-    <h1 class="mt-4">{{ collection.name }}</h1>
-    <Breadcrumb/>
-
-    <div class="btn-toolbar justify-content-between mb-3" role="toolbar" aria-label="Toolbar with button groups">
-      <div class="btn-toolbar float-start" role="toolbar" aria-label="Toolbar with button groups">
-        <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#addUrlsModal">Add Urls</button>
-        <button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#removeUrlsModal">Remove Urls</button>
+  <template v-if="!loading">
+    <div class="btn-toolbar justify-content-between mb-3 mt-3" role="toolbar" aria-label="Toolbar with button groups">
+        <div class="btn-toolbar float-end" role="toolbar" aria-label="Toolbar with button groups">
+  <!--        <button type="button" class="btn btn-primary me-2" @click="updateCollection()">Update Collection</button>-->
+          <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteCollectionModal">Delete Collection</button>
+        </div>
       </div>
 
-      <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#auditLogsModal">Audit Logs</button>
-<!--        <router-link class="btn btn-primary" type="button" role="toolbar" aria-label="Toolbar with button groups" :to="{name: 'crawlLogs', params: { jobName: this.jobData.jobName, jobGroup: this.jobData.jobGroup }}">Crawl Logs</router-link>-->
-      </div>
-
-      <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-        <button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#backupModal">Backup</button>
-        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#restoreModal">Restore</button>
-      </div>
-
-      <div class="btn-toolbar float-end" role="toolbar" aria-label="Toolbar with button groups">
-        <button type="button" class="btn btn-primary me-2" @click="updateCollection()">Update Collection</button>
-        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteCollectionModal">Delete Collection</button>
-      </div>
-    </div>
-
-    <!-- Modal -->
-    <div class="modal fade" id="nutchReindexlModal" tabindex="-1" aria-labelledby="nutchReindexlModal" aria-hidden="true">
+    <!-- Reindex Modal -->
+<!--    <div class="modal fade" id="nutchReindexlModal" tabindex="-1" aria-labelledby="nutchReindexlModal" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
@@ -54,95 +35,9 @@
           </div>
         </div>
       </div>
-    </div>
+    </div>-->
 
-    <!-- Add Urls Modal -->
-    <Modal id="addUrlsModal">
-      <template v-slot:header>
-        <h5 class="modal-title text-black">Add Urls</h5>
-      </template>
-      <template v-slot:body>
-        <!--        <p>Are you sure you want to delete collection <b>{{ collection.name }}</b>!</p>
-                <p class="text-danger"><b>This can not be undone!</b></p>-->
-        <h5>Add Urls Coming Soon</h5>
-      </template>
-      <template v-slot:button-action>
-        <button type="button" class="btn btn-success" data-bs-dismiss="modal"
-                @click.prevent="addUrls()">Add
-        </button>
-      </template>
-    </Modal>
-
-    <!-- Remove Urls Modal -->
-    <Modal id="removeUrlsModal">
-      <template v-slot:header>
-        <h5 class="modal-title text-black">Remove Urls</h5>
-      </template>
-      <template v-slot:body>
-        <!--        <p>Are you sure you want to delete collection <b>{{ collection.name }}</b>!</p>
-                <p class="text-danger"><b>This can not be undone!</b></p>-->
-        <h5>Remove Urls Coming Soon</h5>
-      </template>
-      <template v-slot:button-action>
-        <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
-                @click.prevent="removeUrls()">Remove
-        </button>
-      </template>
-    </Modal>
-
-    <!-- Audit Logs Modal -->
-    <Modal id="auditLogsModal">
-      <template v-slot:header>
-        <h5 class="modal-title text-black">Audit Log</h5>
-      </template>
-      <template v-slot:body>
-        <!--        <p>Are you sure you want to delete collection <b>{{ collection.name }}</b>!</p>
-                <p class="text-danger"><b>This can not be undone!</b></p>-->
-        <h5>Audit Logs Coming Soon</h5>
-      </template>
-      <template v-slot:button-action>
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
-                @click.prevent="auditLogs()">Continue
-        </button>
-      </template>
-    </Modal>
-
-    <!-- Backup Collection Modal -->
-    <Modal id="backupModal">
-      <template v-slot:header>
-        <h5 class="modal-title text-black">Backup Collection</h5>
-      </template>
-      <template v-slot:body>
-        <!--        <p>Are you sure you want to delete collection <b>{{ collection.name }}</b>!</p>
-                <p class="text-danger"><b>This can not be undone!</b></p>-->
-        <h5>Backup Coming Soon</h5>
-      </template>
-      <template v-slot:button-action>
-        <button type="button" class="btn btn-success" data-bs-dismiss="modal"
-                @click.prevent="backupCollection()">Backup
-        </button>
-      </template>
-    </Modal>
-
-    <!-- Restore Collection Modal -->
-    <Modal id="restoreModal">
-      <template v-slot:header>
-        <h5 class="modal-title text-black">Restore Collection</h5>
-      </template>
-      <template v-slot:body>
-        <!--        <p>Are you sure you want to delete collection <b>{{ collection.name }}</b>!</p>
-        <p class="text-danger"><b>This can not be undone!</b></p>-->
-        <h5>Restore Coming Soon</h5>
-      </template>
-      <template v-slot:button-action>
-        <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
-                @click.prevent="restoreCollection()">Restore
-        </button>
-      </template>
-    </Modal>
-
-
-
+    <!-- Delete Collection Modal -->
     <Modal id="deleteCollectionModal">
       <template v-slot:header>
         <h5 class="modal-title text-black">Delete Collection</h5>
@@ -158,29 +53,29 @@
       </template>
     </Modal>
 
-<!--    <div class="modal fade" id="deleteCollectionModal" tabindex="-1" aria-labelledby="deleteCollectionModal" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Delete Collection</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <p>Are you sure you want to delete collection <b>{{ collection.name }}</b>!</p>
-            <p class="text-danger"><b>This can not be undone!</b></p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click.prevent="deleteCollection(collection._links.self.href)">Delete</button>
+  <!--    <div class="modal fade" id="deleteCollectionModal" tabindex="-1" aria-labelledby="deleteCollectionModal" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Delete Collection</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to delete collection <b>{{ collection.name }}</b>!</p>
+              <p class="text-danger"><b>This can not be undone!</b></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click.prevent="deleteCollection(collection._links.self.href)">Delete</button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>-->
+      </div>-->
 
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        Basic Information
+        <b>Basic Information</b>
         <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEditBasicInfo = JSON.parse(JSON.stringify(collection)); isEditBasicInfo = !isEditBasicInfo" v-if="!isEditBasicInfo">Edit</button>
           <button v-if="isEditBasicInfo" class="btn btn-sm btn-success me-md-2" type="button" @click="saveBasicInfo()">Save</button>
@@ -200,7 +95,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-search me-1"></i>
-        Search Configuration
+        <b>Search Configuration</b>
         <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEditSearchConfig = JSON.parse(JSON.stringify(collection)); isEditSearchConfig = !isEditSearchConfig" v-if="!isEditSearchConfig">Edit</button>
           <button v-if="isEditSearchConfig" class="btn btn-sm btn-success me-md-2" type="button" @click="saveSearchConfig()">Save</button>
@@ -220,7 +115,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-search me-1"></i>
-        Search Dynamic Navigation Configuration
+        <b>Search Dynamic Navigation Configuration</b>
         <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEditDynamicNav = JSON.parse(JSON.stringify(collection)); isEditDynamicNav = !isEditDynamicNav" v-if="!isEditDynamicNav">Edit</button>
           <button v-if="isEditDynamicNav" class="btn btn-sm btn-success me-md-2" type="button" @click="saveDynamicNav()">Save</button>
@@ -239,7 +134,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-search me-1"></i>
-        Search Keymatch Configuration
+        <b>Search Keymatch Configuration</b>
         <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEditKeymatch = JSON.parse(JSON.stringify(collection)); isEditKeymatch = !isEditKeymatch" v-if="!isEditKeymatch">Edit</button>
           <button v-if="isEditKeymatch" class="btn btn-sm btn-success me-md-2" type="button" @click="saveKeymatches()">Save</button>
@@ -257,7 +152,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-search me-1"></i>
-        Search Include Other Collections
+        <b>Search Include Other Collections</b>
         <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEditIncludeCollections = JSON.parse(JSON.stringify(collection)); isEditIncludeCollections = !isEditIncludeCollections" v-if="!isEditIncludeCollections">Edit</button>
           <button v-if="isEditIncludeCollections" class="btn btn-sm btn-success me-md-2" type="button" @click="saveIncludeCollections()">Save</button>
@@ -277,7 +172,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-search me-1"></i>
-        Search Part Of Other Collections
+        <b>Search Part Of Other Collections</b>
         <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEditPartOfCollections = JSON.parse(JSON.stringify(collection)); isEditPartOfCollections = !isEditPartOfCollections" v-if="!isEditPartOfCollections">Edit</button>
           <button v-if="isEditPartOfCollections" class="btn btn-sm btn-success me-md-2" type="button" @click="savePartOfCollections()">Save</button>
@@ -297,7 +192,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-spider me-1"></i>
-        Crawl Configuration
+        <b>Crawl Configuration</b>
         <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEditCrawlConfig = JSON.parse(JSON.stringify(collection)); isEditCrawlConfig = !isEditCrawlConfig" v-if="!isEditCrawlConfig">Edit</button>
           <button v-if="isEditCrawlConfig" class="btn btn-sm btn-success me-md-2" type="button" @click="saveCrawlConfig()">Save</button>
@@ -317,6 +212,7 @@
             v-model:seedUrls="collection.crawlConfig.seedUrls"
             v-model:crawlDbPath="collection.crawlConfig.crawlDbPath"
             v-model:crawlSeedPath="collection.crawlConfig.crawlSeedPath"
+            v-model:includeSiteUrls="collection.crawlConfig.includeSiteUrls"
             v-model:excludeSiteUrls="collection.crawlConfig.excludeSiteUrls"
             v-model:useSitemap="collection.crawlConfig.useSitemap"
             v-model:sitemapUrls="collection.crawlConfig.sitemapUrls"
@@ -330,7 +226,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-clock me-1"></i>
-        Crawl Schedule
+        <b>Crawl Schedule</b>
         <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEditCrawlSchedule = JSON.parse(JSON.stringify(collection)); isEditCrawlSchedule = !isEditCrawlSchedule" v-if="!isEditCrawlSchedule">Edit</button>
           <button v-if="isEditCrawlSchedule" class="btn btn-sm btn-success me-md-2" type="button" @click="saveCrawlSchedule()">Save</button>
@@ -352,7 +248,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-users me-1"></i>
-        Managers
+        <b>Managers</b>
         <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEditManagers = JSON.parse(JSON.stringify(collection)); isEditManagers = !isEditManagers" v-if="!isEditManagers">Edit</button>
           <button v-if="isEditManagers" class="btn btn-sm btn-success me-md-2" type="button" @click="saveManagers()">Save</button>
@@ -368,20 +264,19 @@
         />
       </div>
     </div>
-    <div class="card mb-4">
+<!--    <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        JSON Review
+        <b>JSON Review</b>
         <div class="form-check form-switch float-end">
-          <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_collectionDetailsShowJson'" v-model="showJson">
+          <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_collectionShowJson'" v-model="showJson">
         </div>
       </div>
       <div class="card-body" v-if="showJson">
         <pre>{{ print(collection) }}</pre>
       </div>
-    </div>
-  </div>
-
+    </div>-->
+  </template>
 </template>
 
 <script>
@@ -392,15 +287,15 @@ import Keymatch from "../../components/collections/Keymatch";
 import IncludeCollectionsTable from "../../components/collections/IncludeCollectionsTable";
 import CollectionCrawlConfigurationForm from "../../components/collections/CollectionCrawlConfigurationForm"
 import CollectionManagers from "../../components/collections/CollectionManagers";
-import CollectionCrawlScheduleForm from "../../components/collections/CollectionCrawlScheduleForm"
-import Breadcrumb from "../../components/Breadcrumb";
+import CollectionCrawlScheduleForm from "../../components/collections/CollectionCrawlScheduleForm";
 import CollectionService from "../../services/collection.service";
 import Modal from "../../components/Modal";
+import EventBus from "../../common/EventBus";
 
 export default {
-  name: "CollectionDetails",
+  name: "Collection",
+  props: ['name', 'tabName'],
   components: {
-    Breadcrumb,
     CollectionBasicInfo,
     SearchConfigurationForm,
     DynamicNavigation,
@@ -437,6 +332,7 @@ export default {
       beforeEditCrawlConfig: null,
       beforeEditCrawlSchedule: null,
       beforeEditManagers: null,
+
     }
   },
   created () {
@@ -456,6 +352,19 @@ export default {
   //   console.log("collection name:", this.$route.params.name, "id:", this.collection.id)
   //   this.getCollection()
   // },
+  watch: {
+    error: {
+      deep: true,
+      handler: function () {
+        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
+        if (this.error.response && this.error.response.status === 403) {
+          EventBus.dispatch("logout");
+        } else {
+          alert("ERROR: " + content)
+        }
+      }
+    }
+  },
   methods: {
     async fetchData() {
       this.loading = true
@@ -472,12 +381,12 @@ export default {
       // let params = {projection: 'collectionFormData', name: name}
 
       //console.log("collectionId", JSON.stringify(this.$route.params.id))
-      let url = '/collection/search/getCollectionByName'
-      let params = {name: this.$route.params.name, projection: 'collectionFormData'}
+      // let url = '/collection/search/getCollectionByName'
+      // let params = {name: this.$route.params.name, projection: 'collectionFormData'}
 
       //console.log("[getCollections] url: " + url + ", prams: " + JSON.stringify(params), null, 2)
 
-      await CollectionService.getCollections(url, params)
+      await CollectionService.getCollections('/collection/search/getCollectionByName', {name: this.$route.params.name, projection: 'collectionFormData'})
           .then(response => {
             let data = response.data;
             this.collection = data;
@@ -502,9 +411,14 @@ export default {
       //console.log('updateCronEditorData', event)
       this.collection.crawlConfig.cronEditorData = event;
     },
+    includeSiteUrls(event) {
+      // $emit('update:includeSiteUrls', $event)
+      console.log("addUrls event", event)
+    },
     print(value) {
       return JSON.stringify(value, null, 2)
     },
+
     // async updateCollection(url, body) {
     //   console.log("collectionId", JSON.stringify(this.collection.id))
     //
@@ -524,14 +438,14 @@ export default {
     //   await this.getCollection()
     // },
     async saveBasicInfo() {
-      let url = '/collection/'+this.collection.id
+      //let url = '/collection/'+this.collection.id
       let body = {
         name: this.collection.name,
         siteUrl: this.collection.siteUrl,
         description: this.collection.description,
         keywords: this.collection.keywords
       }
-      await CollectionService.updateCollection(url, JSON.stringify(body))
+      await CollectionService.updateCollection('/collection/'+this.collection.id, JSON.stringify(body))
           .then(response => {
             let data = response.data;
             // this.collection = data;
@@ -542,18 +456,18 @@ export default {
             this.error = errors
           });
       // await this.getCollection()
-      await this.$router.push({ name: 'collectionDetails', params: { name:this.collection.name, id: this.collection.id }})
+      await this.$router.push({ name: 'collection', params: { name:this.collection.name, id: this.collection.id }})
       this.isEditBasicInfo = false
     },
     async saveSearchConfig() {
-      let url = '/collection/'+this.collection.id
+      // let url = '/collection/'+this.collection.id
       let body = {
         responseType: this.collection.responseType,
         resultsPerPage: this.collection.resultsPerPage,
         resultLimit: this.collection.resultLimit,
         includeFields: this.collection.includeFields
       }
-      await CollectionService.updateCollection(url, JSON.stringify(body))
+      await CollectionService.updateCollection('/collection/'+this.collection.id, JSON.stringify(body))
           .then(response => {
             let data = response.data;
             // this.collection = data;
@@ -594,11 +508,11 @@ export default {
       await this.deleteDynamicNav(deleteDynamicNavigations)
 
       // update useFacet
-      let url = '/collection/'+this.collection.id
+      //let url = '/collection/'+this.collection.id
       let body = {
         useFacets: this.collection.useFacets
       }
-      await CollectionService.updateCollection(url, JSON.stringify(body))
+      await CollectionService.updateCollection('/collection/'+this.collection.id, JSON.stringify(body))
           .then(response => {
             let data = response.data;
             this.collection = data;
@@ -617,15 +531,15 @@ export default {
 
       this.collection.dynamicNavigations.forEach(dynamicNavigation => {
         //console.log("dynamicNavigation:", JSON.stringify(dynamicNavigation))
-        let url = "/dynamic-navigation"
+        //let url = "/dynamic-navigation"
         let body = dynamicNavigation
 
         if (dynamicNavigation._links && dynamicNavigation.id) {
-          url = dynamicNavigation._links.self.href
-          promises.push(CollectionService.updateCollection(url, JSON.stringify(body)))
+          //url = dynamicNavigation._links.self.href
+          promises.push(CollectionService.updateCollection(dynamicNavigation._links.self.href, JSON.stringify(body)))
         } else {
           body.collection = this.collection._links.self.href
-          promises.push(CollectionService.addCollection(url, JSON.stringify(body)))
+          promises.push(CollectionService.addCollection('/dynamic-navigation', JSON.stringify(body)))
         }
       })
 
@@ -665,6 +579,7 @@ export default {
             this.error = errors
           })
     },
+
     async saveKeymatches() {
 
       let origKeymatches = []
@@ -701,15 +616,15 @@ export default {
 
       this.collection.keymatches.forEach(keymatch => {
         //console.log("keymatch:", JSON.stringify(keymatch))
-        let url = "/keymatch"
+        //let url = "/keymatch"
         let body = keymatch
 
         if (keymatch._links && keymatch.id) {
-          url = keymatch._links.self.href
-          promises.push(CollectionService.updateCollection(url, JSON.stringify(body)))
+          // url = keymatch._links.self.href
+          promises.push(CollectionService.updateCollection(keymatch._links.self.href, JSON.stringify(body)))
         } else {
           body.collection = this.collection._links.self.href
-          promises.push(CollectionService.addCollection(url, JSON.stringify(body)))
+          promises.push(CollectionService.addCollection('/keymatch', JSON.stringify(body)))
         }
       })
 
@@ -752,14 +667,14 @@ export default {
 
 
     async saveIncludeCollections() {
-      let url = '/collection/'+this.collection.id+'/includedCollections'
+      // let url = '/collection/'+this.collection.id+'/includedCollections'
       let body = []
 
       this.collection.includedCollections.forEach(collection => {
         body.push(collection._links.self.href.replace('{?projection}',''))
       })
 
-      await CollectionService.addIncludedCollections(url, body.join("\n"))
+      await CollectionService.addIncludedCollections('/collection/'+this.collection.id+'/includedCollections', body.join("\n"))
           .then(response => {
             let data = response.data;
             // this.collection = data;
@@ -774,14 +689,14 @@ export default {
     },
 
     async savePartOfCollections() {
-      let url = '/collection/'+this.collection.id+'/partOfCollections'
+      // let url = '/collection/'+this.collection.id+'/partOfCollections'
       let body = []
 
       this.collection.partOfCollections.forEach(collection => {
         body.push(collection._links.self.href.replace('{?projection}',''))
       })
 
-      await CollectionService.addPartOfCollections(url, body.join("\n"))
+      await CollectionService.addPartOfCollections('/collection/'+this.collection.id+'/partOfCollections', body.join("\n"))
           .then(response => {
             let data = response.data;
             // this.collection = data;
@@ -806,11 +721,11 @@ export default {
 
       // console.log("crawlConfig", JSON.stringify(crawlConfig,null,2), "\n>>>>urlExclusionPatterns", JSON.stringify(urlExclusionPatterns, null, 2))
 
-      let url = this.collection.crawlConfig._links.self.href
+      // let url = this.collection.crawlConfig._links.self.href
       let body = this.collection.crawlConfig
       // delete body.urlExclusionPatterns
 
-      await CollectionService.updateCollection(url, JSON.stringify(body))
+      await CollectionService.updateCollection(this.collection.crawlConfig._links.self.href, JSON.stringify(body))
           .then(response => {
             let data = response.data;
             // this.collection = data;
@@ -913,12 +828,12 @@ export default {
 
 
     async saveCrawlSchedule() {
-      let url = this.collection.crawlConfig._links.self.href
+      // let url = this.collection.crawlConfig._links.self.href
       let body = {
         crawlCronSchedule: this.collection.crawlConfig.crawlCronSchedule,
         cronEditorData: this.collection.crawlConfig.cronEditorData
       }
-      await CollectionService.updateCollection(url, JSON.stringify(body))
+      await CollectionService.updateCollection(this.collection.crawlConfig._links.self.href, JSON.stringify(body))
           .then(response => {
             let data = response.data;
             // this.collection = data;
@@ -933,13 +848,34 @@ export default {
 
 
     async saveManagers() {
-      let url = '/collection/'+this.collection.id
+      // let url = '/collection/'+this.collection.id+'/users'
+
+      let body = []
+
+      this.collection.users.forEach(user => {
+        body.push(user._links.self.href.replace('{?projection}',''))
+      })
+
+      // console.log("saveManagers body:", body);
+      await CollectionService.updateManagers('/collection/'+this.collection.id+'/users', body.join("\n"))
+          .then(response => {
+            let data = response.data;
+            // this.collection = data;
+            console.log("saveManagers data", data)
+          })
+          .catch(errors => {
+            //console.log(errors);
+            this.error = errors
+          });
+      
+      /*let url = '/collection/'+this.collection.id
       let body = {
         users: this.collection.users
       }
-      await this.updateCollection(url, body)
+      await this.updateCollection(url, body)*/
       this.isEditManagers = false
     },
+
     deleteCollection(url) {
       CollectionService.deleteCollection(url)
           .then(response => {

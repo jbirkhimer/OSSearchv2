@@ -29,6 +29,7 @@
             @updateTableData="$emit('update:seedUrls', $event)"
             :selected="selected"
             @selected="updateSelected"
+            :isEditing="isEditing"
         />
       </div>
     </div>
@@ -50,29 +51,14 @@
 
     <div class="row g-3 mb-3">
       <div class="col-md-12">
-        <ImportAddEditCheckSortableTable
-            v-model:tableOptions="tableOptions.urlExclusionPatterns"
-            :tableData="urlExclusionPatterns"
-            :isEditing="!isEditing"
-            @updateTableData="$emit('update:urlExclusionPatterns', $event)"
-        >
-<!--          <template v-slot:caption>
-            <caption>For regex URL exclusion patterns the first matching pattern determines whether a URL is included or ignored during indexing. <b class="text-danger">NOTE: Order matters drag rows to achive desired order</b></caption>
-          </template>-->
-        </ImportAddEditCheckSortableTable>
-        <p class="mt-1">For regex URL exclusion patterns the first matching pattern determines whether a URL is included or ignored during indexing. <b class="text-danger">NOTE: Order matters drag rows to achive desired order</b></p>
-      </div>
-    </div>
-
-<!--    <div class="row g-3 mb-3">
-      <div class="col-md-12">
         <ImportAddEditCheckTable
-            v-model:tableOptions="tableOptions.urlExclusionPatterns"
-            :tableData="urlExclusionPatterns"
-            @updateTableData="$emit('update:urlExclusionPatterns', $event)"
+            v-model:tableOptions="tableOptions.includeSiteUrls"
+            :tableData="includeSiteUrls"
+            @updateTableData="$emit('update:includeSiteUrls', $event)"
+            :isEditing="isEditing"
         />
       </div>
-    </div>-->
+    </div>
 
     <div class="row g-3 mb-3">
       <div class="col-md-12">
@@ -80,9 +66,37 @@
             v-model:tableOptions="tableOptions.excludeSiteUrls"
             :tableData="excludeSiteUrls"
             @updateTableData="$emit('update:excludeSiteUrls', $event)"
+            :isEditing="isEditing"
         />
       </div>
     </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-12">
+        <ImportAddEditCheckSortableTable
+            v-model:tableOptions="tableOptions.urlExclusionPatterns"
+            :tableData="urlExclusionPatterns"
+            :isEditing="!isEditing"
+            @updateTableData="$emit('update:urlExclusionPatterns', $event)"
+        >
+          <!--          <template v-slot:caption>
+                      <caption>For regex URL exclusion patterns the first matching pattern determines whether a URL is included or ignored during indexing. <b class="text-danger">NOTE: Order matters drag rows to achive desired order</b></caption>
+                    </template>-->
+        </ImportAddEditCheckSortableTable>
+        <p class="mt-1">For regex URL exclusion patterns the first matching pattern determines whether a URL is included or ignored during indexing. <b class="text-danger">NOTE: Order matters drag rows to achive desired order</b></p>
+      </div>
+    </div>
+
+    <!--    <div class="row g-3 mb-3">
+          <div class="col-md-12">
+            <ImportAddEditCheckTable
+                v-model:tableOptions="tableOptions.urlExclusionPatterns"
+                :tableData="urlExclusionPatterns"
+                @updateTableData="$emit('update:urlExclusionPatterns', $event)"
+                :isEditing="isEditing"
+            />
+          </div>
+        </div>-->
 
     <div class="row g-3 mb-3">
       <div class="col-md-6">
@@ -110,6 +124,7 @@
                                  @updateTableData="$emit('update:sitemapUrls', $event)"
                                  :selected="selected"
                                  @selected="updateSelected"
+                                 :isEditing="isEditing"
         />
       </div>
     </div>
@@ -119,6 +134,7 @@
             v-model:tableOptions="tableOptions.excludeSitemapUrls"
             :tableData="excludeSitemapUrls"
             @updateTableData="$emit('update:excludeSitemapUrls', $event)"
+            :isEditing="isEditing"
         />
       </div>
     </div>
@@ -132,7 +148,7 @@ import ImportAddEditCheckSortableTable from "../forms/ImportAddEditCheckSortable
 
 export default {
   name: "CollectionCrawlConfigurationForm",
-  props: ['isEditing', 'seedUrls', 'siteUrl', 'crawlDbPath', 'collectionName', 'crawlSeedPath', 'useSitemap', 'sitemapUrls', 'excludeSiteUrls', 'excludeSitemapUrls', 'urlExclusionPatterns', 'regexUrlFilters'],
+  props: ['isEditing', 'seedUrls', 'siteUrl', 'crawlDbPath', 'collectionName', 'crawlSeedPath', 'useSitemap', 'sitemapUrls', 'includeSiteUrls', 'excludeSiteUrls', 'excludeSitemapUrls', 'urlExclusionPatterns', 'regexUrlFilters'],
   components: {
     ImportAddEditCheckTable,
     ImportAddEditCheckSortableTable,
@@ -142,6 +158,7 @@ export default {
     'addKeymatch',
     'deleteKeymatch',
     'updateKeymatch',
+    'includeSiteUrls',
     'excludeSiteUrls',
     'excludeSitemapUrls',
     'regexUrlFilters'
@@ -174,6 +191,14 @@ export default {
             {label: 'Additional Sitemap URL\'s', width: '75%'},
           ]
         },
+        includeSiteUrls: {
+          enableImport: true,
+          enableAddRow: true,
+          enableActions: true,
+          columns: [
+            {label: 'Include Site URL\'s', name: 'siteUrl', width: '75%'}
+          ]
+        },
         excludeSiteUrls: {
           enableImport: true,
           enableAddRow: true,
@@ -194,6 +219,7 @@ export default {
           enableImport: true,
           enableAddRow: true,
           enableActions: true,
+          itemKey: '',
           columns: [
             {label: 'URL Exclusion Patterns', name: 'expression', width: '70%'},
             {label: 'Type', name: 'type', class: 'text-center', type: 'select', options: patternTypes, default: "regex", width: '10%'},

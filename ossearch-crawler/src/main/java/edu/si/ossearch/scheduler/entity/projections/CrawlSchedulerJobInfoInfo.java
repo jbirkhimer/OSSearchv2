@@ -2,6 +2,7 @@ package edu.si.ossearch.scheduler.entity.projections;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
+import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType;
 import org.springframework.data.rest.core.config.Projection;
 
 import java.util.Date;
@@ -51,6 +52,8 @@ public interface CrawlSchedulerJobInfoInfo {
     boolean isReindex();
 
     boolean isRecrawl();
+
+    JobType getJobType();
 
     Map<String, String> getCrawlOptions();
 

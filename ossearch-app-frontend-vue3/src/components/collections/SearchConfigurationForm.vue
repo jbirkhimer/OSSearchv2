@@ -1,6 +1,6 @@
 <template>
   <fieldset :disabled="!isEditing">
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-3">
       <div class="col-md-4">
         <div class="form-floating">
           <select :value="responseType" @input="$emit('update:responseType', $event.target.value)" class="form-select"
@@ -168,6 +168,7 @@
             @updateTableData="$emit('update:includeFields', $event)"
             :selected="selected"
             @selected="updateSelected"
+            :isEditing="isEditing"
         />
       </div>
     </div>

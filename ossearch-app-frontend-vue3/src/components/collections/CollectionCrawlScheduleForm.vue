@@ -15,7 +15,7 @@
 
       <div class="tab-content" id="nav-tabContent">
 
-        <div class="tab-pane fade" :class="activeTab === tabs[0].name ? ' show active' : ''" id="nav-minutes"
+        <div class="tab-pane fade" :class="activeTab === tabs[0].name ? 'show show active' : ''" id="nav-minutes"
              role="tabpanel"
              aria-labelledby="nav-minutes-tab">
           <template v-if="activeTab === tabs[0].name">
@@ -488,7 +488,7 @@ export default {
       return cronExpression
     },
   },
-  // watch: {
+  watch: {
   //   cronEditorData: {
   //     deep: true,
   //     handler() {
@@ -497,7 +497,13 @@ export default {
   //       this.activeTab = cronEditorData.name
   //     }
   //   }
-  // },
+    isValid: {
+      deep: true,
+      handler() {
+        this.$emit('isValid', this.isValid)
+      }
+    }
+  },
   methods: {
     validate(expr) {
       this.isValid = cronValidator.isValidCronExpression(expr, {error: true})

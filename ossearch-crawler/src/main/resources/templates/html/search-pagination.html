@@ -1,0 +1,17 @@
+<div class="oss-pagination">
+    <span th:if="${pagination.currentPage} > 1" class="oss-pagination-prev-link">
+        <a th:href="@{~/search(q=${query}, client=${client}, site=${site}, proxystylesheet=${proxystylesheet}, getfields=${getfields}, num=${num}, start=(((${pagination.currentPage}-1) * ${num}) - ${num}) )}">Prev</a>
+    </span>
+
+    <th:block th:each="page,iter:${#numbers.sequence(pagination.start, pagination.end)}">
+        <span th:switch="${pagination.currentPage} == ${page}"
+              th:class="'oss-pagination-link' + ((${pagination.currentPage} == ${page}) ? ' oss-pagination-link-active' : '')">
+            <th:block th:case="true" th:text="${page}"></th:block>
+            <a th:case="false" th:href="@{~/search(q=${query}, client=${client}, site=${site}, proxystylesheet=${proxystylesheet}, getfields=${getfields}, num=${num}, start=((${page}-1) * ${num})  )}" th:text="${page}"></a>
+        </span>
+    </th:block>
+
+    <span th:if="${pagination.currentPage} < ${pagination.totalPages}" class="oss-pagination-next-link">
+        <a th:href="@{~/search(q=${query}, client=${client}, site=${site}, proxystylesheet=${proxystylesheet}, getfields=${getfields}, num=${num}, start=( ( (${pagination.currentPage}-1) * ${num} ) + (${num}) ) )}">Next</a>
+    </span>
+</div>

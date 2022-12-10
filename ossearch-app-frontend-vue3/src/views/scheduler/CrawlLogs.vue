@@ -1,61 +1,76 @@
 <template>
-  <div v-if="loading" class="container-fluid px-4 loading">
-    <div class="d-flex justify-content-center">
-      <div class="spinner-border" role="status">
-        <span class="visually-hidden">Loading...</span>
+  <!--  <div v-if="loading" class="container-fluid px-4 loading">
+      <div class="d-flex flex-column align-items-center justify-content-center">
+        <div class="row">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <div class="row">
+          <strong>Loading</strong>
+        </div>
       </div>
-    </div>
-  </div>
+    </div>-->
 
   <div v-if="error" class="container-fluid px-4 error">
     {{ error }}
   </div>
 
-  <div v-if="!loading" class="container-fluid px-4">
+  <div class="container-fluid px-4">
     <!--    <h1 class="mt-4">{{ jobData.jobName }}</h1>-->
     <h1 class="mt-4">Crawl Logs for {{ $route.params.jobGroup }}.{{ $route.params.jobName }}</h1>
     <Breadcrumb/>
-<!--    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="createCrawlSchedule()">Create
-    </button>-->
+    <!--    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="createCrawlSchedule()">Create
+        </button>-->
 
     <!-- Crawl Scheduler Details -->
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        Crawl Logs
+        <b>Crawl Logs</b>
       </div>
       <div class="card-body">
-        <div v-if="loading" class="d-flex justify-content-center">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-        <Datatable v-if="!loading"
-            :tableData="crawlLogs"
-            :tableOptions="tableOptions.crawlLogs"
+        <Datatable :loading="loading"
+                   :tableData="crawlLogs"
+                   :tableOptions="tableOptions.crawlLogs"
                    id="crawlLogsTable"
         >
           <template v-slot:table-body>
-            <tr v-for="(crawLog, i) in crawlLogs" :key="i">
+            <tr v-for="(crawLog, i) in crawlLogs" :class="selectedJobId === crawLog['jobId'] ? 'table-active' :''" :key="i">
               <template v-for="column in tableOptions.crawlLogs.columns" :key="column">
-                <td v-if="!['state', 'progress', 'view', 'dbStats', 'errors', 'rounds', 'currentRound', 'currentStep', 'createdDate', 'updatedDate'].includes(column.name)">{{ crawLog[column.name] }}</td>
-                <td v-if="column.name === 'currentStep'">{{ JSON.parse(crawLog?.jobConfig).reindex ? 'Reindex' : crawLog[column.name] }}</td>
-                <td v-if="['rounds', 'currentRound'].includes(column.name)">{{ !JSON.parse(crawLog?.jobConfig).reindex ? crawLog[column.name] : '' }}</td>
+                <td v-if="!['state', 'progress', 'view', 'dbStats', 'errors', 'rounds', 'currentRound', 'currentStep', 'createdDate', 'updatedDate'].includes(column.name)">
+                  {{ crawLog[column.name] }}
+                </td>
+                <td v-if="column.name === 'currentStep'">
+                  {{ JSON.parse(crawLog?.jobConfig)?.reindex ? 'Reindex' : crawLog[column.name] }}
+                </td>
+                <td v-if="['rounds', 'currentRound'].includes(column.name)">
+                  {{ !JSON.parse(crawLog?.jobConfig)?.reindex ? crawLog[column.name] : '' }}
+                </td>
                 <td v-if="column.name === 'dbStats'">
                   <a href="#" v-if="crawLog[column.name]" class="link-primary" data-bs-toggle="modal"
-                          data-bs-target="#crawlStats" @click="selectedJob = crawLog">db:
-                    {{ crawLog[column.name]?.status?.['2']?.['count'] }} / solr: {{ crawLog?.solrCount }}
+                     data-bs-target="#crawlStats_crawlLogs" @click="selectedJob = crawLog">db:
+                    {{ numberComma(crawLog[column.name]?.status?.['2']?.['count']) }} / indexed: {{ crawLog?.solrCount.toLocaleString() }}
                   </a>
                 </td>
                 <td v-if="column.name === 'state'">
-                  <span v-if="crawLog[column.name] === 'Failed'" class="badge rounded-pill bg-danger text-light">{{ crawLog[column.name] }}</span>
-                  <span v-else-if="crawLog[column.name] === 'Stopped'" class="badge rounded-pill bg-warning text-dark">{{ crawLog[column.name] }}</span>
-                  <span v-else-if="crawLog[column.name] === 'Finished'" class="badge rounded-pill bg-success text-light">{{ crawLog[column.name] }}</span>
-                  <span v-else class="badge rounded-pill bg-primary text-light">{{ crawLog[column.name] }}</span>
+                  <span v-if="crawLog[column.name] === 'failed'.toUpperCase()"
+                        class="badge rounded-pill bg-danger text-danger bg-opacity-25">{{ crawLog[column.name] }}</span>
+                  <span v-else-if="crawLog[column.name] === 'stopped'.toUpperCase()"
+                        class="badge rounded-pill bg-warning text-warning bg-opacity-25">{{
+                      crawLog[column.name]
+                    }}</span>
+                  <span v-else-if="crawLog[column.name] === 'finished'.toUpperCase()"
+                        class="badge rounded-pill bg-success text-success bg-opacity-25">{{
+                      crawLog[column.name]
+                    }}</span>
+                  <span v-else class="badge rounded-pill bg-primary text-secondary bg-opacity-25">{{
+                      crawLog[column.name]
+                    }}</span>
                 </td>
                 <td v-if="column.name === 'progress'">
                   <div class="progress position-relative">
-                    <template v-if="JSON.parse(crawLog?.jobConfig).reindex">
+                    <template v-if="JSON.parse(crawLog?.jobConfig)?.reindex">
                       <div class="progress-bar" role="progressbar"
                            :style="'width: '+(crawLog.state === 'Running' ? 0 : 1)*100+'%'"
                            :aria-valuenow="(crawLog.state === 'Running' ? 0 : 1)*100" aria-valuemin="0"
@@ -84,10 +99,12 @@
                 <td v-if="column.name === 'errors'" class="text-danger text-truncate" style="max-width: 250px;"
                     data-bs-toggle="tooltip" data-bs-placement="top" :title="crawLog[column.name]">
                   <a href="#" v-if="crawLog[column.name]" class="link-primary"
-                          data-bs-toggle="modal" data-bs-target="#crawlErrors" @click="selectedJob = crawLog">errors
+                     data-bs-toggle="modal" data-bs-target="#crawlErrors" @click="selectedJob = crawLog">errors
                   </a>
                 </td>
-                <td v-if="['createdDate', 'updatedDate'].includes(column.name)">{{ getLocalDateTime(crawLog[column.name]) }}</td>
+                <td v-if="['createdDate', 'updatedDate'].includes(column.name)">
+                  {{ getLocalDateTime(crawLog[column.name]) }}
+                </td>
               </template>
             </tr>
           </template>
@@ -95,58 +112,9 @@
       </div>
     </div>
 
-    <div class="modal fade" id="crawlStats" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Crawl Stats</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="card-body">
-              <h2 class="h4 mb-1">Urls in CrawlDB</h2>
-              <ul class="list-group mb-3">
-                <li class="list-group-item d-flex justify-content-between align-items-center text-capitalize" v-for="(value, i) in selectedJob?.dbStats?.status" :key="i">
-                  {{value.statusValue.replace(/^db_/,'')}}
-                  <span >{{ value.count }}</span>
-                </li>
-              </ul>
+    <CrawlDbStatsModal id="crawlStats_crawlLogs" :data="selectedJob"/>
 
-              <ul class="list-group">
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <b>Total Urls in CrawlDB</b>
-                  <span class="badge bg-primary rounded-pill">{{ selectedJob?.dbStats?.totalUrls }}</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <b>Total Urls in Solr</b>
-                  <span class="badge bg-primary rounded-pill">{{ selectedJob?.solrCount }}</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal fade" id="crawlErrors" tabindex="-1" aria-labelledby="crawlErrors" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Error</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <p class="text-danger">{{ selectedJob?.errors }}</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ErrorModal id="crawlErrors" :data="selectedJob"/>
 
     <router-view></router-view>
 
@@ -157,12 +125,17 @@
 import Breadcrumb from "../../components/Breadcrumb";
 import Datatable from "../../components/table/Datatable";
 import SchedulerService from "../../services/scheduler.service";
+import CrawlDbStatsModal from "../../components/CrawlDbStatsModal";
+import ErrorModal from "../../components/ErrorModal";
+import EventBus from "../../common/EventBus";
 
 export default {
   name: "CrawlLogs",
   components: {
     Breadcrumb,
-    Datatable
+    Datatable,
+    CrawlDbStatsModal,
+    ErrorModal
   },
   data() {
     return {
@@ -178,37 +151,46 @@ export default {
           // enableActions: true,
           order: [[0, "desc"]],
           columns: [
-            { label: 'JobId', name: 'jobId'},
-            { label: 'State', name: 'state'},
-            { label: 'On Step', name: 'currentStep'},
-            { label: 'Progress', name: 'progress'},
-            { label: 'Round', name: 'currentRound'},
-            { label: 'MaxRounds', name: 'rounds'},
-            { label: 'Total URL\'s', name: 'dbStats'},
-            { label: 'Errors', name: 'errors'},
-            { label: 'Start Time', name: 'createdDate'},
-            { label: 'End Time', name: 'updatedDate'},
-            { label: 'Step Logs', name: 'view'},
+            {label: 'JobId', name: 'jobId'},
+            {label: 'State', name: 'state'},
+            {label: 'Type', name: 'jobType'},
+            {label: 'On Step', name: 'currentStep'},
+            {label: 'Progress', name: 'progress'},
+            {label: 'Round', name: 'currentRound'},
+            {label: 'MaxRounds', name: 'rounds'},
+            {label: 'Total URL\'s', name: 'dbStats'},
+            {label: 'Errors', name: 'errors'},
+            {label: 'Start Time', name: 'createdDate'},
+            {label: 'End Time', name: 'updatedDate'},
+            {label: 'Step Logs', name: 'view'},
           ]
         },
       },
     }
   },
-  created() {
+  mounted() {
+    this.fetchData()
     // watch the params of the route to fetch the data again
-    this.$watch(
+    /*this.$watch(
         () => this.$route.params,
-        () => {this.fetchData()},
+        () => {
+          this.fetchData()
+        },
         // fetch the data when the view is created and the data is
         // already being observed
-        { immediate: true }
-    )
+        {immediate: true}
+    )*/
   },
   watch: {
     error: {
       deep: true,
       handler: function () {
-        alert("ERROR: " + this.error)
+        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
+        if (this.error.response && this.error.response.status === 403) {
+          EventBus.dispatch("logout");
+        } else {
+          alert("ERROR: " + content)
+        }
       }
     }
   },
@@ -218,23 +200,35 @@ export default {
       if (Object.keys(this.$route.params).length !== 0) {
         //console.log(">>>> params", this.$route.params, "query", this.$route.query)
         this.error = this.crawlLogs = null
-        await this.getCrawlLogs(this.$route.params.jobName, this.$route.params.jobGroup)
+        // await this.getCrawlLogs(this.$route.params.jobName, this.$route.params.jobGroup)
+        await this.getCrawlLogs(this.$route.params.jobName)
+        if (this.$route.params?.jobId) {
+          let selectedJob = this.crawlLogs.find(obj => { return obj.jobId === this.$route.params.jobId})
+          this.selectedJobId = selectedJob.jobId
+        }
       }
       this.loading = false
     },
-    async getCrawlLogs(jobName, jobGroup) {
+    async getCrawlLogs(jobName) {
       // http://localhost:8484/api/crawllog/search/getCrawlLogsByJobKey?jobKey=scheduled_crawl.collection1
-      let jobKey = jobGroup + "." + jobName
-      await SchedulerService.getCrawlLogs('crawllog/search/getCrawlLogsByJobKey', {jobKey: jobKey, projection: 'crawlLogInfo'})
+      /*let jobKey = jobGroup + "." + jobName
+      await SchedulerService.getCrawlLogs('crawllog/search/getCrawlLogsByJobKey', {
+        jobKey: jobKey,
+        projection: 'crawlLogInfo'
+      })*/
+      await SchedulerService.getCrawlLogs('crawllog/search/getCrawlLogsByJobKeyEndsWith', {
+        jobName: jobName,
+        projection: 'crawlLogInfo'
+      })
           .then(res => {
-            console.log("getCrawlLogs result:", res.data)
+            // console.log("getCrawlLogs result:", res.data)
             this.crawlLogs = res.data._embedded.crawllog
-            console.log("getCrawlLogs result:", this.crawlLogs)
+            // console.log("getCrawlLogs result:", this.crawlLogs)
             this.crawlLogs.forEach(crawlLog => {
               if (crawlLog.dbStats) {
-                console.log("dbStats", crawlLog.dbStats)
+                // console.log("dbStats", crawlLog.dbStats)
                 let json = JSON.parse(crawlLog.dbStats)
-                console.log("JSON parse result", json)
+                // console.log("JSON parse result", json)
                 crawlLog.dbStats = json
               }
             })
@@ -245,15 +239,27 @@ export default {
           })
     },
     getProgress(crawLog) {
-      if (crawLog['currentRound'] === crawLog['rounds'] && crawLog['state'] !== 'Finished') {
+      if (crawLog['currentRound'] === crawLog['rounds'] && crawLog['state'] !== 'FINISHED') {
         return 99
       }
-      let percent = Math.trunc( (crawLog['currentRound'] / crawLog['rounds']) * 100)
+      let percent = Math.trunc(((crawLog['currentRound']) / crawLog['rounds']) * 100)
+
+      if (percent > 100 || crawLog['state'] === 'FINISHED') {
+        return 100
+      }
       return percent
     },
     getLocalDateTime(utc) {
-      let u = utc+'Z'
+      let u = utc + 'Z'
       return new Date(u).toLocaleString()
+    },
+    numberComma(value) {
+      if (typeof value === 'number') {
+        return value.toLocaleString()
+      } else if (!isNaN(value)) {
+        return Number(value).toLocaleString()
+      }
+      return value
     }
   },
 

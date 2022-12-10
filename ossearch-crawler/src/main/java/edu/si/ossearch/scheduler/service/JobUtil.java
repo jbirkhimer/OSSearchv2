@@ -6,6 +6,8 @@ import org.json.JSONObject;
 import org.quartz.*;
 import org.springframework.stereotype.Component;
 
+import static org.quartz.DateBuilder.futureDate;
+
 /**
  * @author jbirkhimer
  */
@@ -87,7 +89,8 @@ public class JobUtil {
                     .build();
         } else {
             return simpleTrigger
-                    .startNow()
+//                    .startNow()
+                    .startAt(futureDate(10, DateBuilder.IntervalUnit.SECOND))
                     .build();
         }
     }

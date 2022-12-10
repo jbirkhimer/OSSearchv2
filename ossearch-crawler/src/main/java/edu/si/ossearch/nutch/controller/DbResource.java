@@ -18,10 +18,13 @@ package edu.si.ossearch.nutch.controller;
 
 import edu.si.ossearch.OSSearchException;
 import edu.si.ossearch.nutch.NutchCrawldbUtils;
+import edu.si.ossearch.nutch.entity.projections.CrawldbUrlStatusCounts;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
 import edu.si.ossearch.scheduler.repository.CrawlSchedulerJobInfoRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,17 +36,22 @@ import org.apache.nutch.util.NutchConfiguration;
 import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @Slf4j
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -132,12 +140,21 @@ public class DbResource {
 
     }
 
-    @Operation(summary = "get url from crawldb", responses = {@ApiResponse(content = @Content(mediaType = "application/json"))})
+    @Operation(summary = "dump urls from crawldb", responses = {
+            @ApiResponse(description = "Successful Operation", responseCode = "200", content = {@Content(mediaType = "application/csv"), @Content(mediaType = "application/json")})
+    })
     @GetMapping(value = "/crawldb/dump")
     public ResponseEntity<Object> getDump(@RequestParam(value = "jobName") String jobName,
                                           @RequestParam(value = "jobGroup", required = false, defaultValue = DEFAULT_JOB_GROUP_NAME) String jobGroup,
-                                          @RequestParam(value = "sort", required = false, defaultValue = "false") boolean sort
+                                          //@RequestParam(value = "sort", required = false, defaultValue = "false") boolean sort,
+                                          @Parameter(name = "type", schema = @Schema(type = "string", allowableValues = {"csv", "json"}, defaultValue = "csv")) String type
     ) throws OSSearchException {
+
+        SecurityContext context = SecurityContextHolder.getContext();
+        Authentication authentication = context.getAuthentication();
+        String username = authentication.getName();
+        Object principal = authentication.getPrincipal();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
         if (jobName == null || jobGroup == null) {
             return ResponseEntity.badRequest().body("jobName must not be null");
@@ -150,11 +167,38 @@ public class DbResource {
             Path crawlId = getCrawlDb(jobName, jobGroup);
 
             NutchCrawldbUtils crawldbUtils = new NutchCrawldbUtils();
-            JSONArray result = crawldbUtils.dumpCrawldbJson(new Path(crawlId, "crawldb"), conf);
 
-            return ResponseEntity.ok().body(result.toString());
+            if (type.equals("json")) {
+
+                JSONArray result = crawldbUtils.dumpCrawldbJson(new Path(crawlId, "crawldb"), conf);
+                //return ResponseEntity.ok().body(result.toString());
+
+                ByteArrayInputStream byteArrayOutputStream = new ByteArrayInputStream(result.toString(2).getBytes(StandardCharsets.UTF_8));
+
+                InputStreamResource fileInputStream = new InputStreamResource(byteArrayOutputStream);
+
+                String csvFileName = jobGroup+"_"+jobName+"_dump_"+new Date().getTime()+".json";
+
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + csvFileName)
+                        .contentType(MediaType.parseMediaType("application/json"))
+                        .body(fileInputStream);
+
+            } else {
+                ByteArrayInputStream byteArrayOutputStream = crawldbUtils.dumpCrawldbCsv(new Path(crawlId, "crawldb"), conf);
+
+                InputStreamResource fileInputStream = new InputStreamResource(byteArrayOutputStream);
+
+                String csvFileName = jobGroup+"_"+jobName+"_dump_"+new Date().getTime()+".csv";
+
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + csvFileName)
+                        .contentType(MediaType.parseMediaType("application/csv"))
+                        .body(fileInputStream);
+            }
+
+
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.internalServerError().contentType(MediaType.TEXT_PLAIN).body(e.getMessage());
         }
 

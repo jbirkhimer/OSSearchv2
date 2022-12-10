@@ -1,9 +1,12 @@
 package edu.si.ossearch.scheduler.controller;
 
-import edu.si.ossearch.dao.entity.Collection;
+import edu.si.ossearch.collection.entity.Collection;
+import edu.si.ossearch.collection.repository.CollectionRepository;
+import edu.si.ossearch.scheduler.entity.CrawlLog;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
 import edu.si.ossearch.scheduler.entity.JobState;
 import edu.si.ossearch.scheduler.entity.ServerResponse;
+import edu.si.ossearch.scheduler.repository.CrawlLogRepository;
 import edu.si.ossearch.scheduler.service.JobService;
 import edu.si.ossearch.scheduler.util.ServerResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,13 +15,22 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerMetaData;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -136,7 +148,7 @@ public class CrawlSchedulerController {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(getServerResponse(ServerResponseCode.ERROR, false));
                 }
             } else {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(getServerResponse(ServerResponseCode.JOB_ALREADY_IN_RUNNING_STATE, false));
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(getServerResponse(ServerResponseCode.JOB_ALREADY_IN_RUNNING_STATE, "Crawl Currently Running!", false));
             }
         } else {
             //Job doesn't exist
@@ -150,7 +162,7 @@ public class CrawlSchedulerController {
 
         if (jobService.isJobWithNamePresent(jobName, jobGroup)) {
 
-            boolean isJobRunning = jobService.isJobRunning(jobName, jobGroup);
+            /*boolean isJobRunning = jobService.isJobRunning(jobName, jobGroup);
 
             if (!isJobRunning) {
                 boolean status = jobService.pauseJob(jobName, jobGroup);
@@ -161,6 +173,12 @@ public class CrawlSchedulerController {
                 }
             } else {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(getServerResponse(ServerResponseCode.JOB_ALREADY_IN_RUNNING_STATE, false));
+            }*/
+            boolean status = jobService.pauseJob(jobName, jobGroup);
+            if (status) {
+                return ResponseEntity.status(HttpStatus.OK).body(getServerResponse(ServerResponseCode.SUCCESS, true));
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(getServerResponse(ServerResponseCode.ERROR, false));
             }
 
         } else {
@@ -212,7 +230,7 @@ public class CrawlSchedulerController {
 
             } else {
                 //Job not in running state
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(getServerResponse(ServerResponseCode.JOB_NOT_IN_RUNNING_STATE, false));
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(getServerResponse(ServerResponseCode.JOB_NOT_IN_RUNNING_STATE, "Crawl Not Running", false));
             }
 
         } else {
@@ -241,7 +259,7 @@ public class CrawlSchedulerController {
 
             } else {
                 //Job already running
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(getServerResponse(ServerResponseCode.JOB_ALREADY_IN_RUNNING_STATE, false));
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(getServerResponse(ServerResponseCode.JOB_ALREADY_IN_RUNNING_STATE, "Crawl Already Running!", false));
             }
 
         } else {
@@ -315,5 +333,16 @@ public class CrawlSchedulerController {
         serverResponse.setMessage(message);
         serverResponse.setData(data);
         return serverResponse;
+    }
+
+
+
+    @Operation(summary = "Get Crawl Log History By User", tags = "Crawl Logs", responses = {@ApiResponse(content = @Content(mediaType = "application/json"))})
+    @GetMapping(value = "/crawlLogHistory")
+    public ResponseEntity<String> getCrawlLogHistoryByUser() throws IOException, SolrServerException {
+
+        JSONArray answer = jobService.getCrawlLogHistoryByUser();
+
+        return ResponseEntity.status(HttpStatus.OK).body(answer.toString());
     }
 }

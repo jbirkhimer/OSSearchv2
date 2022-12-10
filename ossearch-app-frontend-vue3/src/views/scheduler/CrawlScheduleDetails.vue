@@ -1,24 +1,24 @@
 <template>
-  <div v-if="loading" class="container-fluid px-4 loading">
+<!--  <div v-if="loading" class="container-fluid px-4 loading">
     <div class="d-flex justify-content-center">
       <div class="spinner-border" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
     </div>
-  </div>
+  </div>-->
 
   <div v-if="error" class="container-fluid px-4 error">
     {{ error }}
   </div>
 
-  <div v-if="!loading" class="container-fluid px-4">
+  <div class="container-fluid px-4">
 <!--    <h1 class="mt-4">{{ jobData.jobName }}</h1>-->
     <h1 class="mt-4">Scheduled Crawl Details: {{ jobData.jobName }}</h1>
     <Breadcrumb/>
 
     <div class="btn-toolbar justify-content-between mb-3" role="toolbar" aria-label="Toolbar with button groups">
       <div class="btn-toolbar float-start" role="toolbar" aria-label="Toolbar with button groups">
-        <button type="button" class="btn btn-success me-2" data-bs-dismiss="modal" @click="startCrawl()">Crawl Now</button>
+        <button type="button" class="btn btn-success me-2" data-bs-dismiss="modal" @click="crawlNow()">Crawl Now</button>
         <button type="button" class="btn btn-warning me-2" data-bs-dismiss="modal" @click="pauseCrawl()">Pause</button>
         <button type="button" class="btn btn-info me-2" data-bs-dismiss="modal" @click="resumeCrawl()">Resume</button>
         <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="stopCrawl()">Stop</button>
@@ -27,13 +27,13 @@
 <!--        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="crawlLogs()">Crawl Logs</button>-->
         <router-link class="btn btn-primary" type="button" role="toolbar" aria-label="Toolbar with button groups" :to="{name: 'crawlLogs', params: { jobName: this.jobData.jobName, jobGroup: this.jobData.jobGroup }}">Crawl Logs</router-link>
       </div>
-      <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+      <div v-if="isAdmin" class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
         <button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#nutchReindexlModal">ReIndex</button>
         <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#nutchRecrawlModal">ReCrawl</button>
       </div>
       <div class="btn-toolbar float-end" role="toolbar" aria-label="Toolbar with button groups">
         <button type="button" class="btn btn-primary me-2" data-bs-dismiss="modal" @click="updateCrawlSchedule()">Update Schedule</button>
-        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="deleteCrawlSchedule()">Delete Schedule</button>
+        <button v-if="isAdmin" type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="deleteCrawlSchedule()">Delete Schedule</button>
       </div>
     </div>
 
@@ -82,7 +82,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        Crawl Scheduler Details
+        <b>Crawl Scheduler Details</b>
         <!--            <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = {...jobData}; isEditBasicInfo = !isEditBasicInfo" v-if="!isEditBasicInfo">Edit</button>
           <button v-if="isEditBasicInfo" class="btn btn-sm btn-success me-md-2" type="button" @click="updateCrawlJobSchedule()">Save</button>
@@ -90,41 +90,54 @@
                     </div>-->
       </div>
       <div class="card-body">
+        <div v-if="loading" class="d-flex justify-content-center">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <template v-else>
           <div class="row g-3 mb-3">
             <div class="col-md-6">
-            <div class="form-floating">
-                <input v-model="jobData.jobName" type="text" class="form-control" id="validationDefault01" required placeholder="job name" disabled>
+              <div class="form-floating">
+                <input v-model="jobData.jobName" type="text" class="form-control" id="validationDefault01" required
+                       placeholder="job name" disabled>
                 <label for="validationDefault01" class="form-label">Job Name</label>
               </div>
             </div>
-          <div class="form-floating col-md-6">
-<!--            <input class="form-control" list="datalistOptions" id="exampleDataList" :value="jobData.collectionName" @input="selectCollection($event.target.value)" placeholder="Type to search...">
-            <label for="exampleDataList" class="form-label">Collection</label>
-            <datalist id="datalistOptions">
-              <option v-for="(collection, i) in collections" :key="i" :value="collection.name">{{collection.name}}</option>
-            </datalist>-->
-            <div class="form-floating">
-              <select class="form-select" id="floatingCollectionSelect" aria-label="select collection" :value="jobData.collectionName" @change="selectCollection($event.target.value)" disabled>
-                <option v-for="(collection, i) in collections" :key="i" :value="collection.name">{{collection.name}}</option>
-              </select>
-              <label for="floatingCollectionSelect">Collection</label>
+            <div class="form-floating col-md-6">
+              <!--            <input class="form-control" list="datalistOptions" id="exampleDataList" :value="jobData.collectionName" @input="selectCollection($event.target.value)" placeholder="Type to search...">
+                          <label for="exampleDataList" class="form-label">Collection</label>
+                          <datalist id="datalistOptions">
+                            <option v-for="(collection, i) in collections" :key="i" :value="collection.name">{{collection.name}}</option>
+                          </datalist>-->
+              <div class="form-floating">
+                <select class="form-select" id="floatingCollectionSelect" aria-label="select collection"
+                        :value="jobData.collectionName" @change="selectCollection($event.target.value)" disabled>
+                  <option v-for="(collection, i) in collections" :key="i" :value="collection.name">
+                    {{ collection.name }}
+                  </option>
+                </select>
+                <label for="floatingCollectionSelect">Collection</label>
+              </div>
             </div>
           </div>
-          </div>
-        <div class="row g-3">
+          <div class="row g-3">
             <div class="col-md-6">
-            <div class="form-floating">
-                <input v-model="jobData.description" type="text" class="form-control" id="validationDefault02" required placeholder="description">
+              <div class="form-floating">
+                <input v-model="jobData.description" type="text" class="form-control" id="validationDefault02" required
+                       placeholder="description">
                 <label for="validationDefault01" class="form-label">Description</label>
               </div>
             </div>
             <div class="col-md-6">
-            <div class="form-floating">
-                <input v-model="jobData.numberOfRounds" type="text" class="form-control" id="validationDefault03" required placeholder="50">
+              <div class="form-floating">
+                <input v-model="jobData.numberOfRounds" type="text" class="form-control" id="validationDefault03"
+                       required placeholder="50">
                 <label for="validationDefault02" class="form-label">Number of Crawl Rounds</label>
               </div>
             </div>
           </div>
+        </template>
       </div>
     </div>
 
@@ -132,7 +145,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-clock me-1"></i>
-        Crawl Schedule
+        <b>Crawl Schedule</b>
 <!--        <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = {...jobData}; isEditCrawlSchedule = !isEditCrawlSchedule" v-if="!isEditCrawlSchedule">Edit</button>
           <button v-if="isEditCrawlSchedule" class="btn btn-sm btn-success me-md-2" type="button" @click="updateCrawlconfig()">Save</button>
@@ -140,26 +153,33 @@
         </div>-->
       </div>
       <div class="card-body">
-        <CollectionCrawlScheduleForm
-            v-if="jobData.jobName === jobData.collectionName"
-           :isEditing="jobData.jobName === jobData.collectionName"
-           :collectionName="jobData.jobName"
-           v-model:crawlScheduleCron="crawlConfig.crawlCronSchedule"
-           :activeTab="getActiveTab()"
-           :editorData="getEditorData()"
-           @updateCronEditorData="updateCronEditorData"
-        />
-        <div v-else>
-          <h4>Custom Crawl Job Starts Immediately</h4>
+        <div v-if="loading" class="d-flex justify-content-center">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
         </div>
+        <template v-else>
+          <CollectionCrawlScheduleForm
+              v-if="jobData.jobName === jobData.collectionName"
+              :isEditing="jobData.jobName === jobData.collectionName"
+              :collectionName="jobData.jobName"
+              v-model:crawlScheduleCron="crawlConfig.crawlCronSchedule"
+              :activeTab="getActiveTab()"
+              :editorData="getEditorData()"
+              @updateCronEditorData="updateCronEditorData"
+          />
+          <div v-else>
+            <h4>Custom Crawl Job Starts Immediately</h4>
+          </div>
+        </template>
       </div>
     </div>
 
     <!-- Basic Crawl Options -->
-    <div class="card mb-4">
+    <div class="card mb-4" v-if="isAdmin">
       <div class="card-header">
-        <i class="fas fa-clock me-1"></i>
-        Basic Crawl Options
+        <i class="fas fa-cog me-1"></i>
+        <b>Basic Crawl Options</b>
         <!--        <div class="float-end">
                   <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = {...jobData}; isEditCrawlSchedule = !isEditCrawlSchedule" v-if="!isEditCrawlSchedule">Edit</button>
                   <button v-if="isEditCrawlSchedule" class="btn btn-sm btn-success me-md-2" type="button" @click="updateCrawlconfig()">Save</button>
@@ -167,8 +187,13 @@
                 </div>-->
       </div>
       <div class="card-body">
+        <div v-if="loading" class="d-flex justify-content-center">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
         <!-- Crawl Options -->
-        <div class="row">
+        <div v-else class="row">
           <JSONFormGenerator
               :formData="jobData.crawlOptions"
               @formData="updateCrawlOptions"
@@ -179,10 +204,10 @@
     </div>
 
     <!-- Advanced Crawling -->
-    <div class="card mb-4">
+    <div class="card mb-4" v-if="isAdmin">
       <div class="card-header">
-        <i class="fas fa-clock me-1"></i>
-        Advanced Crawling <b class="text-danger">(Advanced)</b>
+        <i class="fas fa-cogs me-1"></i>
+        <b>Advanced Crawling</b> <b class="text-danger">(Advanced)</b>
 <!--        <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = {...jobData}; isEditCrawlSchedule = !isEditCrawlSchedule" v-if="!isEditCrawlSchedule">Edit</button>
           <button v-if="isEditCrawlSchedule" class="btn btn-sm btn-success me-md-2" type="button" @click="updateCrawlconfig()">Save</button>
@@ -193,79 +218,95 @@
         </div>
       </div>
       <div class="card-body" v-if="advancedCrawling">
-        <div class="row mb-3">
-
-          <div class="col col-6 text-center">
-            <figure class="figure">
-              <a href="../../assets/images/nutch_crawler_workflow.jpg" data-bs-toggle="modal" data-bs-target="#nutchCrawlWorkflowImage">
-                <img class="figure-img img-fluid img-thumbnail" src="../../assets/images/nutch_crawler_workflow.jpg" style="width: 400px; height: 264px;"></a>
-              <figcaption class="figure-caption">Click to Enlarge</figcaption>
-            </figure>
-            <div class="modal fade" id="nutchCrawlWorkflowImage" tabindex="-1" aria-labelledby="nutchCrawlWorkflowImage" aria-hidden="true">
-              <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                  <div class="modal-body">
-                    <img class="img-fluid rounded mx-auto d-block" src="../../assets/images/nutch_crawler_workflow.jpg">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col col-6 text-center">
-            <figure class="figure">
-              <a href="../../assets/images/nutch_storage_and_data_flow.jpg" data-bs-toggle="modal" data-bs-target="#nutchCrawlStorageAndDataFlowImage">
-                <img class="figure-img img-fluid img-thumbnail" src="../../assets/images/nutch_storage_and_data_flow.jpg" style="width: 400px; height: 264px;"></a>
-              <figcaption class="figure-caption">Click to Enlarge</figcaption>
-            </figure>
-            <div class="modal fade" id="nutchCrawlStorageAndDataFlowImage" tabindex="-1" aria-labelledby="nutchCrawlStorageAndDataFlowImage" aria-hidden="true">
-              <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                  <div class="modal-body">
-                    <img class="img-fluid rounded mx-auto d-block" src="../../assets/images/nutch_storage_and_data_flow.jpg">
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div v-if="loading" class="d-flex justify-content-center">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
           </div>
         </div>
-        <template v-for="(step, i) in nutchSteps" :key="i">
-
+        <template v-else>
           <div class="row mb-3">
-            <legend class="col col-sm-auto col-form-label text-capitalize pt-0">{{ i }} Step:</legend>
-            <!--                <div class="col col-sm-2">
-                              <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_'+i"
-                                       :value="jobData.nutchSteps[i]" :checked="jobData.nutchSteps.includes(i)" @change="updateStep(i, $event.target.checked)">
-                                <label class="form-check-label text-capitalize" :for="'flexSwitchCheck_'+i">{{ i }}</label>
-                              </div>
-                            </div>-->
-            <div class="col col-sm-10">
-              <div class="row mb-3">
-                <div class="form-text" style="white-space: pre-line;" v-html="step.desc"></div>
+
+            <div class="col col-6 text-center">
+              <figure class="figure">
+                <a href="../../assets/images/nutch_crawler_workflow.jpg" data-bs-toggle="modal"
+                   data-bs-target="#nutchCrawlWorkflowImage">
+                  <img class="figure-img img-fluid img-thumbnail" src="../../assets/images/nutch_crawler_workflow.jpg"
+                       style="width: 400px; height: 264px;"></a>
+                <figcaption class="figure-caption">Click to Enlarge</figcaption>
+              </figure>
+              <div class="modal fade" id="nutchCrawlWorkflowImage" tabindex="-1"
+                   aria-labelledby="nutchCrawlWorkflowImage" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-body">
+                      <img class="img-fluid rounded mx-auto d-block"
+                           src="../../assets/images/nutch_crawler_workflow.jpg">
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="row">
-                <legend class="col col-sm-auto col-form-label text-end pt-0">args:</legend>
-                <div class="col col-sm-10">
-                  <!-- Loop Nutch Step Args -->
-                  <JSONFormGenerator
-                      :formData="jobData.nutchStepArgs[i]"
-                      @formData="updateNutchStepArg(i, $event)"
-                      :formOptions="step.args"
-                  />
+            </div>
+            <div class="col col-6 text-center">
+              <figure class="figure">
+                <a href="../../assets/images/nutch_storage_and_data_flow.jpg" data-bs-toggle="modal"
+                   data-bs-target="#nutchCrawlStorageAndDataFlowImage">
+                  <img class="figure-img img-fluid img-thumbnail"
+                       src="../../assets/images/nutch_storage_and_data_flow.jpg"
+                       style="width: 400px; height: 264px;"></a>
+                <figcaption class="figure-caption">Click to Enlarge</figcaption>
+              </figure>
+              <div class="modal fade" id="nutchCrawlStorageAndDataFlowImage" tabindex="-1"
+                   aria-labelledby="nutchCrawlStorageAndDataFlowImage" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-body">
+                      <img class="img-fluid rounded mx-auto d-block"
+                           src="../../assets/images/nutch_storage_and_data_flow.jpg">
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+          <template v-for="(step, i) in nutchSteps" :key="i">
 
+            <div class="row mb-3">
+              <legend class="col col-sm-auto col-form-label text-capitalize pt-0">{{ i }} Step:</legend>
+              <!--                <div class="col col-sm-2">
+                                <div class="form-check form-switch">
+                                  <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_'+i"
+                                         :value="jobData.nutchSteps[i]" :checked="jobData.nutchSteps.includes(i)" @change="updateStep(i, $event.target.checked)">
+                                  <label class="form-check-label text-capitalize" :for="'flexSwitchCheck_'+i">{{ i }}</label>
+                                </div>
+                              </div>-->
+              <div class="col col-sm-10">
+                <div class="row mb-3">
+                  <div class="form-text" style="white-space: pre-line;" v-html="step.desc"></div>
+                </div>
+                <div class="row">
+                  <legend class="col col-sm-auto col-form-label text-end pt-0">args:</legend>
+                  <div class="col col-sm-10">
+                    <!-- Loop Nutch Step Args -->
+                    <JSONFormGenerator
+                        :formData="jobData.nutchStepArgs[i]"
+                        @formData="updateNutchStepArg(i, $event)"
+                        :formOptions="step.args"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </template>
         </template>
       </div>
     </div>
 
     <!-- Nutch Crawler Properties -->
-    <div class="card mb-4">
+    <div class="card mb-4" v-if="isAdmin">
       <div class="card-header">
-        <i class="fas fa-cog me-1"></i>
-        Nutch Crawler Properties <b class="text-danger">(Advanced)</b>
+        <i class="fas fa-tools me-1"></i>
+        <b>Nutch Crawler Properties</b> <b class="text-danger">(Advanced)</b>
 <!--        <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = {...jobData}; isEditCrawlSchedule = !isEditCrawlSchedule" v-if="!isEditCrawlSchedule">Edit</button>
           <button v-if="isEditCrawlSchedule" class="btn btn-sm btn-success me-md-2" type="button" @click="updateCrawlconfig()">Save</button>
@@ -275,13 +316,8 @@
           <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_advancedCrawling'" v-model="advancedProperties">
         </div>
       </div>
-      <div class="card-body" v-if="advancedProperties">
-        <div v-if="loading" class="d-flex justify-content-center">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-        <Datatable v-if="!loading"
+      <div class="card-body" v-show="advancedProperties">
+        <Datatable :loading="loading"
             :tableData="nutchProperties"
             :tableOptions="tableOptions.nutchProperties"
             id="nutchPropsTable"
@@ -313,14 +349,17 @@
     <!-- Parser HTML Blacklist -->
     <div class="card mb-4">
       <div class="card-header">
-        <i class="fas fa-info-circle me-1"></i>
-        Parser HTML Blacklist
+        <i class="fas fa-code me-1"></i>
+        <b>Parser HTML Blacklist</b>
+        <div class="form-check form-switch float-end">
+          <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_parseHtmlBlacklist'" v-model="parseHtmlBlacklist">
+        </div>
       </div>
-      <div class="card-body">
+      <div class="card-body" v-if="parseHtmlBlacklist">
         <div class="row g-3 mb-3">
           <div class="form-floating">
-            <input v-model="jobData.nutchProperties['parser.html.blacklist']" type="text" class="form-control" id="validationDefault01" required placeholder="description">
-            <label for="validationDefault01" class="form-label">{{ getProperty('parser.html.blacklist') }}</label>
+            <input v-model="jobData.nutchProperties['parser.html.blacklist']" type="text" class="form-control" id="parserhtmlblacklist" required placeholder="description">
+            <label for="parserhtmlblacklist" class="form-label">{{ getProperty('parser.html.blacklist') }}</label>
           </div>
         </div>
         <div class="row g-3 mb-3">
@@ -342,14 +381,17 @@
     <!-- Parser HTML Whitelist -->
     <div class="card mb-4">
       <div class="card-header">
-        <i class="fas fa-info-circle me-1"></i>
-        Parser HTML Whitelist
+        <i class="fas fa-code me-1"></i>
+        <b>Parser HTML Whitelist</b>
+        <div class="form-check form-switch float-end">
+          <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_parseHtmlWhitelist'" v-model="parseHtmlWhitelist">
+        </div>
       </div>
-      <div class="card-body">
+      <div class="card-body" v-if="parseHtmlWhitelist">
         <div class="row g-3 mb-3">
           <div class="form-floating">
-            <input v-model="jobData.nutchProperties['parser.html.whitelist']" type="text" class="form-control" id="validationDefault01" required placeholder="description">
-            <label for="validationDefault01" class="form-label">{{ getProperty('parser.html.whitelist') }}</label>
+            <input v-model="jobData.nutchProperties['parser.html.whitelist']" type="text" class="form-control" id="parserhtmlwhitelist" required placeholder="description">
+            <label for="parserhtmlwhitelist" class="form-label">{{ getProperty('parser.html.whitelist') }}</label>
           </div>
         </div>
         <div class="row g-3 mb-3">
@@ -366,14 +408,17 @@
     <!-- Parser HTML Text Blacklist -->
     <div class="card mb-4">
       <div class="card-header">
-        <i class="fas fa-info-circle me-1"></i>
-        Parser HTML Text Blacklist
+        <i class="fas fa-code me-1"></i>
+        <b>Parser HTML Text Blacklist</b>
+        <div class="form-check form-switch float-end">
+          <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_parseHtmlTextBlacklist'" v-model="parseHtmlTextBlacklist">
+        </div>
       </div>
-      <div class="card-body">
+      <div class="card-body" v-if="parseHtmlTextBlacklist">
         <div class="row g-3 mb-3">
           <div class="form-floating">
-            <input v-model="jobData.nutchProperties['parser.html.text.blacklist']" type="text" class="form-control" id="validationDefault01" required placeholder="description">
-            <label for="validationDefault01" class="form-label">{{ getProperty('parser.html.text.blacklist') }}</label>
+            <input v-model="jobData.nutchProperties['parser.html.text.blacklist']" type="text" class="form-control" id="parserhtmltextblacklist" required placeholder="description">
+            <label for="parserhtmltextblacklist" class="form-label">{{ getProperty('parser.html.text.blacklist') }}</label>
           </div>
         </div>
         <div class="row g-3 mb-3">
@@ -389,10 +434,10 @@
     </div>
 
     <!-- JSON Review -->
-    <div class="card mb-4">
+<!--    <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        JSON Review
+        <b>JSON Review</b>
         <div class="form-check form-switch float-end">
           <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_crawlScheduleDetailsShowJson'" v-model="showJson">
         </div>
@@ -400,7 +445,7 @@
       <div class="card-body" v-if="showJson">
         <pre>{{ print(jobData) }}</pre>
       </div>
-    </div>
+    </div>-->
 
     <div class="modal fade" id="crawlPropDetails" tabindex="-1" aria-labelledby="crawlPropDetails" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -413,7 +458,7 @@
             <p class="text-wrap">{{ selectedProp?.description.replace(/\s{2,}/g, '\n') }}</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
@@ -429,9 +474,11 @@ import CollectionService from "../../services/collection.service";
 import Breadcrumb from "../../components/Breadcrumb";
 import JSONFormGenerator from "../../components/forms/JSONFormGenerator";
 import Datatable from "../../components/table/Datatable";
+import EventBus from "../../common/EventBus";
 
 export default {
   name: "CrawlScheduleDetails",
+  props: ['jobName', 'groupName'],
   components: {
     Breadcrumb,
     CollectionCrawlScheduleForm,
@@ -445,7 +492,8 @@ export default {
       showJson: false,
       selectedProp: null,
       jobData: {
-        jobName: null,
+        jobName: this.jobName,
+        jobGroup: this.groupName,
         collectionId: null,
         collectionName: null,
         numberOfRounds: 50,
@@ -484,7 +532,7 @@ export default {
         {name: "time_limit_fetch", type: "number", desc: "&lt;time_limit_fetch&gt; Number of minutes allocated to the fetching [default: 180]"},
         {name: "num_threads", type: "number", desc: "&lt;num_threads&gt; Number of threads for fetching / sitemap processing [default: 50]"},
         {name: "sitemaps_from_hostdb", type: "select", desc: "&lt;frequency&gt; Whether and how often to process sitemaps based on HostDB.\nSupported values are:\n- never [default]\n- always (processing takes place in every iteration)\n- once (processing only takes place in the first iteration)\n", options: [{label: "never", value: "never"}, {label: "always", value: "always"}, {label: "once", value: "once"}], default: "never"},
-        {name: "dedup_group", type: "select", desc: "&lgt;none|host|domain&gt; Deduplication group method [default: none]", options: [{label: "none", value: "none"}, {label: "host", value: "host"}, {label: "domain", value: "domain"}], default: "none"}
+        {name: "dedup_group", type: "select", desc: "&lt;none|host|domain&gt; Deduplication group method [default: none]", options: [{label: "none", value: "none"}, {label: "host", value: "host"}, {label: "domain", value: "domain"}], default: "none"}
       ],
       nutchSteps: {
         inject: {
@@ -537,9 +585,9 @@ export default {
         updatedb: {
           desc: "Takes the output of the fetcher and updates the crawldb accordingly",
           args: [
-            {name: "force", type: "checkbox", desc: "This arguement will force an update even if the crawldb appears to be locked. <b class='text-danger'>(CAUTION: advised)</b>", default: false},
-            {name: "normalize", type: "checkbox", desc: "This arguement uses any current URLNormalizer's on urls in crawldb and segment (usually not needed).", default: false},
-            {name: "filter", type: "checkbox", desc: "Pass this arguement to use any current URLFilters on urls in the crawldb and segment. This can provide better quality results in certain applications.", default: false},
+            {name: "force", type: "checkbox", desc: "This argument will force an update even if the crawldb appears to be locked. <b class='text-danger'>(CAUTION: advised)</b>", default: false},
+            {name: "normalize", type: "checkbox", desc: "This argument uses any current URLNormalizer's on urls in crawldb and segment (usually not needed).", default: false},
+            {name: "filter", type: "checkbox", desc: "Pass this argument to use any current URLFilters on urls in the crawldb and segment. This can provide better quality results in certain applications.", default: false},
             {name: "noAdditions", type: "checkbox", desc: "If pass this parameter the updatedb command will only update already existing URLs, and will not add any newly discovered URLs during a fetch.", default: false}
           ]
         },
@@ -592,24 +640,37 @@ export default {
       advancedProperties: false,
       collections: null,
       selectedCollection: null,
-      nutchProperties: null
+      nutchProperties: null,
+      parseHtmlBlacklist: false,
+      parseHtmlWhitelist: false,
+      parseHtmlTextBlacklist: false
     }
   },
-  created() {
+  /*created() {
     // watch the params of the route to fetch the data again
     this.$watch(
         () => this.$route.params,
-        () => {this.fetchData()},
+        () => {
+          this.fetchData()
+        },
         // fetch the data when the view is created and the data is
         // already being observed
         { immediate: true }
     )
+  },*/
+  async mounted() {
+    await this.fetchData()
   },
   watch: {
     error: {
       deep: true,
       handler: function () {
-        alert("ERROR: " + this.error)
+        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
+        if (this.error.response && this.error.response.status === 403) {
+          EventBus.dispatch("logout");
+        } else {
+          alert("ERROR: " + content)
+        }
       }
     },
     jobData: {
@@ -617,14 +678,26 @@ export default {
       handler: function () {
         if (this.jobData?.jobName !== this.jobData?.collectionName) {
           delete this.jobData.cronExpression
-          this.jobData.jobGroup = "custom_crawl"
+          // this.jobData.jobGroup = "custom_crawl"
         }
       }
+    }
+  },
+  computed: {
+    currentUser() {
+      return this.$store.state.auth.user;
+    },
+    isAdmin() {
+      if (this.currentUser && this.currentUser['roles']) {
+        return this.currentUser['roles'].includes('ROLE_ADMIN');
+      }
+      return false;
     }
   },
   methods: {
     async fetchData() {
       this.loading = true
+      this.error = null
       let promises = []
       promises.push(CollectionService.getCollections('/collection', {projection: 'collectionIdNameInfo', size: 1000}))
       promises.push(CollectionService.getCollections('/scheduler/utils/nutch/properties'))
@@ -637,6 +710,7 @@ export default {
             } else {
               this.collections = getColections.data._embedded.collection;
             }
+            this.collections.sort((a, b) => a.name.localeCompare(b.name));
 
             this.nutchProperties = getNutchProperties.data
 
@@ -652,12 +726,10 @@ export default {
             this.error = errors
           })
 
-      if (Object.keys(this.$route.params).length !== 0) {
-        console.log(">>>> params", this.$route.params, "query", this.$route.query)
-        this.error = this.jobData = this.crawlConfig = null
-        await this.getJob(this.$route.params.jobName)
-        await this.getCrawlConfig(this.jobData.collectionName)
-      }
+      // this.error = this.jobData = this.crawlConfig = null
+      await this.getJob(this.jobName, this.groupName)
+      await this.getCrawlConfig(this.jobData.collectionName)
+
       this.loading = false
     },
     async getCrawlConfig(name){
@@ -679,8 +751,8 @@ export default {
             this.error = errors
           })
     },
-    async getJob(jobName) {
-      await SchedulerService.getJob("/crawlschedulerjobinfo/search/findByJobName", {jobName: jobName, projection: 'crawlSchedulerJobInfoInfo'})
+    async getJob(jobName, jobGroup) {
+      await SchedulerService.getJob("/crawlschedulerjobinfo/search/findByJobNameAndJobGroup", {jobName: jobName, jobGroup: jobGroup, projection: 'crawlSchedulerJobInfoInfo'})
           .then(res => {
             let jobData = res.data
 
@@ -729,7 +801,7 @@ export default {
       this.getCrawlConfig(this.selectedCollection.id, this.selectedCollection.name)
     },
     updateCrawlOptions(event) {
-      //console.log("updateCrawlOptions event", event)
+      console.log("updateCrawlOptions event", event)
       this.jobData.crawlOptions = event
 
       if ("num_tasks" in event) {
@@ -740,32 +812,38 @@ export default {
         }
       }
 
-      if ("num_threads" in event) {
+      //TODO: Fix when checked and values are empty then unchecked, the fields are removed correctly
+      //console.log("updateCrawlOptions num_threads add:", ("num_threads" in event && Object.keys(event?.num_threads).length !== 0))
+      if ("num_threads" in event && Object.keys(event?.num_threads).length !== 0) {
         this.jobData.nutchStepArgs['fetch'] = {...this.jobData.nutchStepArgs['fetch'], threads: event.num_threads}
         this.jobData.nutchStepArgs['sitemap'] = {...this.jobData.nutchStepArgs['sitemap'], threads: event.num_threads}
       } else {
         if (this.jobData.nutchStepArgs?.['fetch']?.['threads']) {
+          //console.log("remove fetch.num_threads")
           delete this.jobData.nutchStepArgs['fetch']['threads']
         }
         if (this.jobData.nutchStepArgs?.['fetch'] && Object.keys(this.jobData.nutchStepArgs['fetch']).length === 0) {
+          //console.log("remove fetch")
           delete this.jobData.nutchStepArgs['fetch']
         }
 
         if (this.jobData.nutchStepArgs?.['sitemap']?.['threads']) {
+          //console.log("remove sitemap.num_threads")
           delete this.jobData.nutchStepArgs['sitemap']['threads']
         }
         if (this.jobData.nutchStepArgs?.['sitemap'] && Object.keys(this.jobData.nutchStepArgs['sitemap']).length === 0) {
+          //console.log("remove sitemap")
           delete this.jobData.nutchStepArgs['sitemap']
         }
       }
 
-      if ("size_fetchlist" in event) {
+      if ("size_fetchlist" in event && Object.keys(event?.size_fetchlist).length !== 0) {
         this.jobData.nutchStepArgs['generate'] = {...this.jobData.nutchStepArgs['generate'], topN: event.size_fetchlist}
       } else {
         if (this.jobData.nutchStepArgs?.['generate']?.['topN']) {
           delete this.jobData.nutchStepArgs['generate']['topN']
         }
-        if (this.jobData.nutchStepArgs?.['generate'] && Object.keys(this.jobData.nutchStepArgs['generate']).length === 0) {
+        if (this.jobData.nutchStepArgs?.['generate'] && Object.keys(this.jobData.nutchStepArgs['generate']).length === 0 ) {
           delete this.jobData.nutchStepArgs['generate']
         }
       }
@@ -801,29 +879,15 @@ export default {
       await this.updateCrawlConfig()
       await this.updateCrawlJobSchedule()
     },
-    async recrawl() {
-      this.jobData.recrawl = true;
-      this.jobData.reindex = false;
-      await this.updateCrawlConfig()
-      await this.updateCrawlJobSchedule()
-      await this.startCrawl()
-    },
-    async reindex() {
-      this.jobData.reindex = true;
-      this.jobData.recrawl = false;
-      this.jobData.nutchStepArgs.index.deleteGone = true
-      await this.updateCrawlConfig()
-      await this.updateCrawlJobSchedule()
-      await this.startCrawl()
-    },
     async updateCrawlConfig() {
       if (this.jobData?.jobName === this.jobData?.collectionName) {
-        let url = this.crawlConfig._links.self.href
+        // let url = this.crawlConfig._links.self.href
         let body = {
           crawlCronSchedule: this.crawlConfig.crawlCronSchedule,
           cronEditorData: this.crawlConfig.cronEditorData
         }
-        await CollectionService.updateCollection(url, JSON.stringify(body))
+
+        await CollectionService.updateCollection(this.crawlConfig._links.self.href, JSON.stringify(body))
             .then(response => {
               let data = response.data;
               this.crawlConfig = data;
@@ -835,12 +899,28 @@ export default {
               }
 
               this.jobData.cronExpression = this.crawlConfig.crawlCronSchedule
+              EventBus.dispatch('toast', {
+                type: 'success',
+                msg: this.jobData.jobName +' Crawl Config Updated!'
+              })
             })
             .catch(errors => {
               //console.log(errors);
-              this.error = errors
+              // this.error = errors
+              let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+              EventBus.dispatch('toast', {
+                type: 'danger',
+                msg: 'Error Updating '+this.jobData.jobName +' Crawl Config!' + content
+              })
             });
       }
+    },
+    removeEmpty(obj) {
+      return JSON.parse(JSON.stringify(obj), (key, value) => {
+        if (value == null || value == '' || value == [] || value == {})
+          return undefined;
+        return value;
+      });
     },
     async updateCrawlJobSchedule() {
 
@@ -848,7 +928,10 @@ export default {
         this.jobData.nutchStepArgs.dedup.compareOrder = this.jobData.nutchStepArgs.dedup.compareOrder.join(",")
       }
 
-      //console.log("save updateCrawlJobSchedule", JSON.stringify(this.jobData, null, 2))
+      console.log("removeEmpty before updateCrawlJobSchedule", JSON.stringify(this.jobData, null, 2))
+      this.jobData = this.removeEmpty(this.jobData)
+      console.log("removeEmpty after updateCrawlJobSchedule", JSON.stringify(this.jobData, null, 2))
+
       await SchedulerService.updateCrawlJob("/scheduler/update", JSON.stringify(this.jobData))
           .then(response => {
             let data = response.data;
@@ -857,11 +940,19 @@ export default {
                 console.log("create CrawlJobSchedule", JSON.stringify(job, null, 2))
               }
             })
-
+            EventBus.dispatch('toast', {
+              type: 'success',
+              msg: this.jobData.jobName +' Crawl Job Scudule Updated!'
+            })
           })
           .catch(errors => {
             //console.log(errors);
-            this.error = errors
+            // this.error = errors
+            let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+            EventBus.dispatch('toast', {
+              type: 'danger',
+              msg: 'Error Updating '+this.jobData.jobName +' Crawl Job Schedule!' + content
+            })
           });
     },
 
@@ -870,10 +961,19 @@ export default {
           .then(response => {
             let data = response.data;
             console.log("start CrawlJobSchedule", JSON.stringify(data, null, 2))
+            EventBus.dispatch('toast', {
+              type: 'success',
+              msg: this.jobData.jobName + ' ' + this.jobData.jobType + ' Started!'
+            })
           })
           .catch(errors => {
             //console.log(errors);
-            this.error = errors
+            // this.error = errors
+            let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+            EventBus.dispatch('toast', {
+              type: 'danger',
+              msg: 'Error Starting ' + this.jobData.jobName + ' ' + this.jobData.jobType + '! ' + content
+            })
           });
     },
     async pauseCrawl() {
@@ -881,10 +981,19 @@ export default {
           .then(response => {
             let data = response.data;
             console.log("pause CrawlJobSchedule", JSON.stringify(data, null, 2))
+            EventBus.dispatch('toast', {
+              type: 'success',
+              msg: this.jobData.jobName +' Scheduled Crawling Paused!'
+            })
           })
           .catch(errors => {
             //console.log(errors);
-            this.error = errors
+            // this.error = errors
+            let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+            EventBus.dispatch('toast', {
+              type: 'danger',
+              msg: 'Error Pausing ' + this.jobData.jobName + ' ' + this.jobData.jobType + '! ' + content
+            })
           });
     },
     async resumeCrawl() {
@@ -892,10 +1001,19 @@ export default {
           .then(response => {
             let data = response.data;
             console.log("resume CrawlJobSchedule", JSON.stringify(data, null, 2))
+            EventBus.dispatch('toast', {
+              type: 'success',
+              msg: this.jobData.jobName +' Scheduled Crawling Resumed!'
+            })
           })
           .catch(errors => {
             //console.log(errors);
-            this.error = errors
+            // this.error = errors
+            let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+            EventBus.dispatch('toast', {
+              type: 'danger',
+              msg: 'Error Resuming ' + this.jobData.jobName + ' ' + this.jobData.jobType + '! ' + content
+            })
           });
     },
     async stopCrawl() {
@@ -903,10 +1021,26 @@ export default {
           .then(response => {
             let data = response.data;
             console.log("stop CrawlJobSchedule", JSON.stringify(data, null, 2))
+            EventBus.dispatch('toast', {
+              type: 'success',
+              msg: this.jobData.jobName +' Crawl Stopping!'
+            })
           })
           .catch(errors => {
             //console.log(errors);
-            this.error = errors
+            // this.error = errors
+            let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+            if (content === 'Crawl Not Running') {
+              EventBus.dispatch('toast', {
+                type: 'warning',
+                msg: 'Stopping ' + this.jobData.jobName + ' ' + this.jobData.jobType + '! ' + content
+              })
+            } else {
+              EventBus.dispatch('toast', {
+                type: 'danger',
+                msg: 'Error Stopping ' + this.jobData.jobName + ' ' + this.jobData.jobType + '! ' + content
+              })
+            }
           });
     },
     crawlLogs() {
@@ -917,13 +1051,46 @@ export default {
           .then(response => {
             let data = response.data;
             console.log("delete CrawlJobSchedule", JSON.stringify(data, null, 2))
+            EventBus.dispatch('toast', {
+              type: 'success',
+              msg: this.jobData.jobName +' Crawl Schedule Deleted!'
+            })
           })
           .catch(errors => {
             //console.log(errors);
-            this.error = errors
+            // this.error = errors
+            let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+            EventBus.dispatch('toast', {
+              type: 'danger',
+              msg: 'Error Deleting '+this.jobData.jobName +' Crawl Schedule!' + content
+            })
           });
-    }
-
+    },
+    async crawlNow() {
+      this.jobData.recrawl = false;
+      this.jobData.jobType = 'CRAWL_NOW'
+      this.jobData.reindex = false;
+      await this.updateCrawlConfig()
+      await this.updateCrawlJobSchedule()
+      await this.startCrawl()
+    },
+    async recrawl() {
+      this.jobData.recrawl = true;
+      this.jobData.jobType = 'RECRAWL'
+      this.jobData.reindex = false;
+      await this.updateCrawlConfig()
+      await this.updateCrawlJobSchedule()
+      await this.startCrawl()
+    },
+    async reindex() {
+      this.jobData.reindex = true;
+      this.jobData.jobType = 'REINDEX'
+      this.jobData.recrawl = false;
+      this.jobData.nutchStepArgs.index.deleteGone = true
+      await this.updateCrawlConfig()
+      await this.updateCrawlJobSchedule()
+      await this.startCrawl()
+    },
   }
 }
 </script>

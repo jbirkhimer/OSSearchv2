@@ -21,6 +21,15 @@
 
       </description>
    </property>
+    <property>
+        <name>linkdb.ignore.internal.links</name>
+        <value>false</value>
+        <description>If true, when adding new links to a page, links from
+            the same host are ignored.  This is an effective way to limit the
+            size of the link database, keeping only the highest quality
+            links.
+        </description>
+    </property>
   <property>
       <name>db.ignore.external.links</name>
       <!--<value>false</value>--> <!-- Nutch 1.18 default -->
@@ -34,7 +43,7 @@
   <property>
       <name>plugin.includes</name>
       <!--<value>protocol-httpclient|urlfilter-regex|index-(basic|more)|query-(basic|site|url|lang)|indexer-solr|nutch-extensionpoints|protocol-httpclient|urlfilter-regex|parse-(text|html|msexcel|msword|mspowerpoint|pdf)|summary-basic|scoring-opic|urlnormalizer-(pass|regex|basic)|urlfilter-regex|parse-(html|tika|metatags)|index-(basic|anchor|more|metadata)</value>-->
-      <value>protocol-httpclient|urlfilter-(regex|validator)|parse-(html|tika|metatags)|index-(basic|anchor|more|metadata|static)|indexer-solr|scoring-opic|urlnormalizer-(pass|regex|basic)|index-blacklist-whitelist</value>
+      <value>protocol-httpclient|urlfilter-(regex|validator)|parse-(html|tika|metatags)|index-(basic|anchor|more|metadata|static)|indexer-(solr|jsonbatch)|scoring-opic|urlnormalizer-(pass|regex|basic)|index-blacklist-whitelist</value>
       <description>Regular expression naming plugin directory names to
           include.  Any plugin not matching this expression is excluded.
           By default Nutch includes plugins to crawl HTML and various other
@@ -131,8 +140,8 @@
   <property>
     <name>fetcher.server.delay</name>
       <!--<value>5.0</value>--> <!-- Nutch 1.x default -->
-      <!--<value>2</value>--> <!-- OSSearch nutch 2.x setting-->
-      <value>1</value> <!-- Testing -->
+      <value>2</value> <!-- OSSearch nutch 2.x setting-->
+      <!--<value>1</value>--> <!-- Testing -->
       <description>The number of seconds the fetcher will delay between
           successive requests to the same server. Note that this might get
           overridden by a Crawl-Delay from a robots.txt and is used ONLY if
@@ -143,7 +152,7 @@
     <name>fetcher.threads.fetch</name>
       <!--<value>10</value>--> <!-- Nutch 1.x default -->
       <!--<value>128</value>--> <!-- OSSearch nutch 2.x setting-->
-      <value>250</value> <!-- Testing -->
+      <value>50</value> <!-- Testing -->
       <description>The number of FetcherThreads the fetcher should use.
           This is also determines the maximum number of requests that are
           made at once (each FetcherThread handles one connection). The total
@@ -155,7 +164,7 @@
     <name>fetcher.threads.per.queue</name>
       <!--<value>1</value>--> <!-- Nutch 1.x default -->
       <!--<value>2</value>--> <!-- OSSearch nutch 2.x setting-->
-      <value>10</value> <!-- Testing -->
+      <value>50</value> <!-- Testing -->
       <description>This number is the maximum number of threads that
           should be allowed to access a queue at one time. Setting it to
           a value > 1 will cause the Crawl-Delay value from robots.txt to
@@ -175,8 +184,8 @@
   </property>
   <property>
       <name>fetcher.maxNum.threads</name>
-      <!--<value>25</value>--> <!-- Nutch 1.x default -->
-      <value>250</value> <!-- Testing -->
+      <value>25</value> <!-- Nutch 1.x default -->
+      <!--<value>250</value>--> <!-- Testing -->
       <description>Max number of fetch threads allowed when using fetcher.bandwidth.target. Defaults to fetcher.threads.fetch if unspecified or
           set to a value lower than it. </description>
   </property>
@@ -192,7 +201,7 @@
 <!-- index.metadata is not in Nutch 1.x nutch-default.xml, In Nutch 1.x its index.parse.md and each item in the list needs prefixed with 'meta_'. NOTE: values should be lowercase -->
   <property>
       <name>index.parse.md</name>
-      <value>meta_AlbumTitle,meta_Artist,meta_CatalogNumber,meta_Category,meta_ContentType,meta_Content-Type,meta_Country,meta_Culture,meta_Decade,meta_Format,meta_Genre,meta_HandheldFriendly,meta_ImageURL,meta_InfoText,meta_Instrument,meta_Isrc,meta_Keywords,meta_Label,meta_Language,meta_MobileOptimized,meta_PriceTrackDownload,meta_Program,meta_Region,meta_SampleAudio,meta_SortDate,meta_Source,meta_Subject,meta_SubRegion,meta_Theme,meta_Title,meta_X-UA-Compatible,meta_Year,meta_gEra,meta_inLanguage,meta_useRightsURL,meta_alt_title,meta_author,meta_buylinkalbumdownload,meta_buylinkpre-6cd-book-set,meta_category-site-sections,meta_cleartype,meta_created,meta_cttype,meta_description,meta_generator,meta_keywords,meta_modified,meta_name,meta_physical_description,meta_pricealbumdownload,meta_pricepre-6cd-book-set,meta_record_number,meta_topicids,meta_unit_code,meta_viewport,meta_article:published_time,meta_article:modified_time,meta_dc.author,meta_dc.contributor,meta_dc.creator,meta_dc.date,meta_dc.date.created,meta_dc.format,meta_dc.identifier,meta_dc.publisher,meta_dc.subject,meta_dc.title,meta_dc.type,meta_dcterms.creator,meta_dcterms.date,meta_dcterms.description,meta_dcterms.format,meta_dcterms.identifier,meta_dcterms.ispartof,meta_dcterms.language,meta_dcterms.spatial,meta_dcterms.subject,meta_dcterms.temporal,meta_dcterms.title,meta_dcterms.type,meta_fb:admins,meta_fb:app_id,meta_fb:page_id,meta_og:description,meta_og:image,meta_og:image:url,meta_og:locale,meta_og:site_name,meta_og:title,meta_og:type,meta_og:updated_time,meta_og:url,meta_twitter:card,meta_twitter:creator,meta_twitter:description,meta_twitter:image,meta_twitter:site,meta_twitter:title,meta_twitter:url,meta_Content Type,meta_fid,meta_ftype,meta_Era,meta_Label,meta_Release Decade,meta_sort-lastmodified,meta_sort-title,meta_og:image:alt</value>
+      <value>meta_AlbumTitle,meta_Artist,meta_CatalogNumber,meta_Category,meta_ContentType,meta_Content-Type,meta_Country,meta_Culture,meta_Decade,meta_Format,meta_Genre,meta_HandheldFriendly,meta_ImageURL,meta_InfoText,meta_Instrument,meta_Isrc,meta_Keywords,meta_Label,meta_Language,meta_MobileOptimized,meta_PriceTrackDownload,meta_Program,meta_Region,meta_SampleAudio,meta_SortDate,meta_Source,meta_Subject,meta_SubRegion,meta_Theme,meta_Title,meta_X-UA-Compatible,meta_Year,meta_gEra,meta_inLanguage,meta_useRightsURL,meta_alt_title,meta_author,meta_buylinkalbumdownload,meta_buylinkpre-6cd-book-set,meta_category-site-sections,meta_cleartype,meta_created,meta_cttype,meta_description,meta_generator,meta_keywords,meta_modified,meta_name,meta_physical_description,meta_pricealbumdownload,meta_pricepre-6cd-book-set,meta_record_number,meta_topicids,meta_unit_code,meta_viewport,meta_article:published_time,meta_article:modified_time,meta_dc.author,meta_dc.contributor,meta_dc.creator,meta_dc.date,meta_dc.date.created,meta_dc.format,meta_dc.identifier,meta_dc.publisher,meta_dc.subject,meta_dc.title,meta_dc.type,meta_dcterms.creator,meta_dcterms.date,meta_dcterms.description,meta_dcterms.format,meta_dcterms.identifier,meta_dcterms.ispartof,meta_dcterms.language,meta_dcterms.spatial,meta_dcterms.subject,meta_dcterms.temporal,meta_dcterms.title,meta_dcterms.type,meta_fb:admins,meta_fb:app_id,meta_fb:page_id,meta_og:description,meta_og:image,meta_og:image:url,meta_og:locale,meta_og:site_name,meta_og:title,meta_og:type,meta_og:updated_time,meta_og:url,meta_twitter:card,meta_twitter:creator,meta_twitter:description,meta_twitter:image,meta_twitter:site,meta_twitter:title,meta_twitter:url,meta_Content Type,meta_fid,meta_ftype,meta_Era,meta_Label,meta_Release Decade,meta_sort-lastmodified,meta_sort-title,meta_og:image:alt,meta_topics,meta_representation_ids,meta_representations,meta_bundle</value>
       <!--<value>meta_albumtitle,meta_artist,meta_catalognumber,meta_category,meta_contenttype,meta_content-type,meta_country,meta_culture,meta_decade,meta_format,meta_genre,meta_handheldfriendly,meta_imageurl,meta_infotext,meta_instrument,meta_isrc,meta_keywords,meta_label,meta_language,meta_mobileoptimized,meta_pricetrackdownload,meta_program,meta_region,meta_sampleaudio,meta_sortdate,meta_source,meta_subject,meta_subregion,meta_theme,meta_title,meta_x-ua-compatible,meta_year,meta_gera,meta_inlanguage,meta_userightsurl,meta_alt_title,meta_author,meta_buylinkalbumdownload,meta_buylinkpre-6cd-book-set,meta_category-site-sections,meta_cleartype,meta_created,meta_cttype,meta_description,meta_generator,meta_keywords,meta_modified,meta_name,meta_physical_description,meta_pricealbumdownload,meta_pricepre-6cd-book-set,meta_record_number,meta_topicids,meta_unit_code,meta_viewport,meta_article:published_time,meta_article:modified_time,meta_dc.author,meta_dc.contributor,meta_dc.creator,meta_dc.date,meta_dc.date.created,meta_dc.format,meta_dc.identifier,meta_dc.publisher,meta_dc.subject,meta_dc.title,meta_dc.type,meta_dcterms.creator,meta_dcterms.date,meta_dcterms.description,meta_dcterms.format,meta_dcterms.identifier,meta_dcterms.ispartof,meta_dcterms.language,meta_dcterms.spatial,meta_dcterms.subject,meta_dcterms.temporal,meta_dcterms.title,meta_dcterms.type,meta_fb:admins,meta_fb:app_id,meta_fb:page_id,meta_og:description,meta_og:image,meta_og:image:url,meta_og:locale,meta_og:site_name,meta_og:title,meta_og:type,meta_og:updated_time,meta_og:url,meta_twitter:card,meta_twitter:creator,meta_twitter:description,meta_twitter:image,meta_twitter:site,meta_twitter:title,meta_twitter:url,meta_content type,meta_fid,meta_ftype,meta_era,meta_label,meta_release decade,meta_sort-lastmodified,meta_sort-title,meta_og:image:alt</value>-->
       <description>
           Comma-separated list of keys to be taken from the parse metadata to generate fields.
@@ -216,6 +225,20 @@
         <!--<value>meta_topicids,meta_artist,meta_genre,meta_subregion,meta_dc.subject,meta_dcterms.subject,meta_dcterms.spatial,meta_dcterms.temporal,meta_dcterms.creator,meta_country,meta_culture,meta_instrument,meta_language,meta_decade,meta_region,meta_contenttype,meta_theme,meta_year,meta_program,meta_gera,meta_format,meta_content type,meta_source,meta_era,meta_label,meta_release decade</value>-->
         <description>
             Comma-separated list of dynamic-navigations-multivalue-fields to be taken from the parse metadata to generate fields.
+        </description>
+    </property>
+
+    <property>
+        <name>indexer.delete.robots.noindex</name>
+        <value>true</value>
+        <description>Whether the indexer will delete documents marked by robots=noindex
+        </description>
+    </property>
+
+    <property>
+        <name>indexer.delete.skipped.by.indexingfilter</name>
+        <value>true</value>
+        <description>Whether the indexer will delete documents that were skipped by indexing filters
         </description>
     </property>
 
@@ -313,7 +336,7 @@
     <property>
         <name>parser.html.blacklist</name>
         <!--<value>div.site-toggle robots-noindex,a.skip-main robots-noindex,div.header-nav  robots-noindex,div.browsenav robots-noindex,div.browsenav browsenav-stuck robots-noindex,div.row robots-noindex,div.footer robots-noindex</value>-->
-        <value></value>
+        <value>div.site-toggle robots-noindex,a.skip-main robots-noindex,div.header-nav robots-noindex,div.browsenav robots-noindex,div.browsenav browsenav-stuck robots-noindex,div.row robots-noindex,div.footer robots-noindex,div.row oss-nocrawl,div.skip-main oss-nocrawl</value>
         <description>
             A comma-delimited list of css like tags to identify the elements which should
             NOT be parsed. Use this to tell the HTML parser to ignore the given elements, e.g. site navigation.

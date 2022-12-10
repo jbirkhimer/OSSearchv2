@@ -1,9 +1,9 @@
 spring:
   data:
     solr:
-#      host: http://si-wsdsolr01.si.edu:8983/solr
+#      host: http://si-wsdsolr02.si.edu:8983/solr
 #      slave: http://si-wsdsolr02.si.edu:8983/solr
-#      collection: external-v1
+#      collection: external
       host: http://localhost:8984/solr
       slave: http://localhost:8984/solr
       collection: external-v1_FULL
@@ -15,7 +15,13 @@ spring:
     password: root
     hikari:
       maximum-pool-size: 10
-      minimum-idle: 5
+      minimum-idle: 6
+
+    legacy:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3309/si_search_db
+      username: root
+      password: root
 
   # JPA drop and recreate tables, show sql in logs
   jpa:
@@ -24,7 +30,16 @@ spring:
 #      ddl-auto: create-drop
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect #org.hibernate.dialect.MySQL5InnoDBDialect
         format_sql: true
+#        generate_statistics: true
+        order_inserts: true
+        jdbc:
+          batch_size: 100000
+#    hibernate:
+#      naming:
+#        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+#        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
 
   quartz:
     wait-for-jobs-to-complete-on-shutdown: false
@@ -32,7 +47,7 @@ spring:
       initialize-schema: never
 
   security:
-    enabled: false
+    enabled: true
     user:
       name: admin
       password: admin
@@ -63,6 +78,8 @@ spring:
 #Disable Health Checks while testing
 management:
   health:
+    solr:
+      enabled: false
     ldap:
       enabled: false
     mail:
@@ -70,18 +87,26 @@ management:
 
 ossearch:
   embedded-vuejs: true
-  allowedOrigins: "http://0.0.0.0:3000,http://localhost:3000,http://127.0.0.1:3000,http://192.168.1.128:3000,http://jbirkhimer.myquotient.net:3000,http://ossearchv2:8080,http://0.0.0.0:8484,http://localhost:8484,http://127.0.0.1:8484,http://192.168.1.128:8484,http://jbirkhimer.myquotient.net:8484,http://ossearchv2:8080"
-#  jwt:
+  allowedOrigins: "http://0.0.0.0:3000,http://localhost:3000,http://127.0.0.1:3000,http://10.0.0.95:3000,http://jbirkhimer.myquotient.net:3000,http://ossearchv2:8080,http://0.0.0.0:8484,http://localhost:8484,http://127.0.0.1:8484,http://10.0.0.95:8484,http://jbirkhimer.myquotient.net:8484,http://ossearchv2:8080"
+  jwt:
 #    #For Testing Refresh tokens
 #    expirationMs: 60000
 #    refreshExpirationMs: 120000
+    # Purge tokens Every 5 minutes, every hour, every day
+    token-purge-task:
+      cron:
+        expression: 0 0/5 * * * ?
   nutch:
     pluginsDir: /home/jbirkhimer/IdeaProjects/OSSearchv2/nutch-plugins/target/plugins
     confDir: conf
     crawlDir: crawls
 
 logging:
-  level:
-    root: info
   file:
     name: logs/${spring.application.name}.log
+  level:
+    root: info
+    org.apache.hadoop.mapred: DEBUG
+    org.hibernate.SQL: INFO
+#    org.springframework.web.method.HandlerMethod: TRACE
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO

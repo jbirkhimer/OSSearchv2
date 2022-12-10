@@ -7,8 +7,8 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-sitemap me-1"></i>
-        Collections
-        <div class="float-end">
+        <b>Collections</b>
+        <div v-if="isAdmin" class="float-end">
           <router-link type="button" class="btn btn-sm btn-primary bi-plus-lg float-end" to="/collections/create">
             Collection
           </router-link>
@@ -16,26 +16,16 @@
       </div>
 
       <div class="card-body">
-        <div v-if="loading" class="d-flex justify-content-center">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-        <Datatable v-if="!loading"
+        <Datatable :loading="loading"
             :tableData="items"
             :tableOptions="tableOptions"
                    id="collectionsTable"
         >
           <template v-slot:table-body>
             <tr v-for="(item, i) in items" :key="i">
-              <td>{{ item.id }}</td>
-              <td><router-link :to="{ name: 'collectionDetails', params: { name: item.name, id: item.id }}">{{ item.name }}</router-link></td>
+              <td><router-link :to="{ name: 'collection', params: { name: item.name, id: item.id }}">{{ item.name }}</router-link></td>
               <!--          <td>{{ item.description }}</td>-->
-              <td>{{ item.crawlConfig.crawlCronSchedule }}</td>
-              <td>
-                <template v-if="item.owner">{{ item.owner.firstName }} {{ item.owner.lastName }}</template>
-                <template v-else>None</template>
-              </td>
+              <td>{{ getCollectionSolrCount(item.name).toLocaleString() }}</td>
               <td>
                 <template v-if="item.users">
                   <div v-for="(user, i) in item.users" :key="i">
@@ -44,11 +34,17 @@
                 </template>
                 <template v-else>None</template>
               </td>
+              <td>{{ explain(item.crawlConfig.crawlCronSchedule) }}</td>
+              <td>
+                <template v-if="item.owner">{{ item.owner.firstName }} {{ item.owner.lastName }}</template>
+                <template v-else>None</template>
+              </td>
               <td>{{ item.dateCreated }}</td>
+              <td>{{ item.id }}</td>
               <td class="justify-content-evenly text-center">
                 <div class="btn-group btn-group-sm align-items-center">
-                  <router-link class="btn link-primary p-0 m-1" :to="{ name: 'collectionDetails', params: { name: item.name, id: item.id }}"><i class="fa fa-edit"></i></router-link>
-                  <a href="#" class="btn link-danger p-0" data-bs-toggle="modal" data-bs-target="#deleteCollectionModal" title="Delete" @click="selectCollection(item)">
+                  <router-link class="btn link-primary p-0 m-1" :to="{ name: 'collection', params: { name: item.name, id: item.id}}"><i class="fa fa-edit"></i></router-link>
+                  <a v-if="isAdmin" href="#" class="btn link-danger p-0" data-bs-toggle="modal" data-bs-target="#deleteCollectionModal" title="Delete" @click="selectCollection(item)">
                     <i class="fa fa-times-circle"></i>
                   </a>
                 </div>
@@ -84,6 +80,9 @@ import Datatable from "../../components/table/Datatable";
 import Modal from "../../components/Modal";
 import Breadcrumb from "../../components/Breadcrumb";
 import CollectionService from "../../services/collection.service"
+import EventBus from "../../common/EventBus";
+import cronstrue from 'cronstrue';
+import ServerStatusService from "../../services/server-status.service";
 
 export default {
   name: "Collections",
@@ -92,8 +91,11 @@ export default {
     Datatable,
     Modal,
   },
-  mounted() {
-    this.getCollections();
+  async mounted() {
+    this.loading = true
+    await this.getCollections();
+    await this.getSolrCollectionCounts()
+    this.loading = false
   },
   data() {
     return {
@@ -102,8 +104,8 @@ export default {
       tableOptions: {
         order: [[0, "asc"]],
         columns: [
-          {label: 'Id', name: 'id'},
-          {label: 'Name', name: 'name'},
+          {label: 'Collection Name', name: 'name'},
+          {label: 'Indexed URLs', name: 'urlCount'},
           // {label: 'Description', name: 'description'},
           // {label: 'Site url', name: 'siteUrl'},
           // {label: 'Included site urls', name: 'includedSiteUrls'},
@@ -124,10 +126,11 @@ export default {
           // {label: 'Included collections', name: 'includedCollections'},
           // {label: 'Part of collections', name: 'partOfCollections'},
           // {label: 'Crawdb path', name: 'crawDbPath'},
-          {label: 'Crawl Cron Schedule', name: 'crawlCronSchedule'},
-          {label: 'Owner', name: 'owner'},
           {label: 'Managers', name: 'users'},
-          {label: 'Created', name: 'dateCreated'},
+          {label: 'Crawl Schedule', name: 'crawlCronSchedule'},
+          {label: 'Created By', name: 'owner'},
+          {label: 'Created Date', name: 'dateCreated'},
+          {label: 'ID', name: 'id'},
           {label: 'Actions', name: 'Created', class: 'text-center'},
         ],
       },
@@ -136,19 +139,61 @@ export default {
       itemIndex: null
     }
   },
+  watch: {
+    error: {
+      deep: true,
+      handler: function () {
+        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
+        if (this.error.response && this.error.response.status === 403) {
+          EventBus.dispatch("logout");
+        } else {
+          alert("ERROR: " + content)
+        }
+      }
+    }
+  },
+  computed: {
+    currentUser() {
+      return this.$store.state.auth.user;
+    },
+    isAdmin() {
+      if (this.currentUser && this.currentUser['roles']) {
+        return this.currentUser['roles'].includes('ROLE_ADMIN');
+      }
+      return false;
+    }
+  },
   methods: {
     async getCollections() {
-      this.loading = true
-
       await CollectionService.getCollections('/collection', {size: 1000, projection: 'collectionTableData'})
           .then(response => {
+            console.log(">>>>>>collections", response.data);
             this.items = response.data._embedded.collection;
-            this.loading = false
+
           })
           .catch(errors => {
-            //console.log(errors);
+            console.log(">>>>>>collections", errors);
             this.error = errors
           });
+    },
+    async getSolrCollectionCounts() {
+      await ServerStatusService.getSolrCollectionCounts()
+          .then(response => {
+            this.solrCounts = response.data.data;
+            /*this.solrCount = this.solrCounts.reduce((accumulator, object) => {
+              return accumulator + object.count;
+            }, 0);*/
+          })
+          .catch(errors => {
+            this.error = errors
+          })
+    },
+    getCollectionSolrCount(name) {
+      let collectionSolrCount = this.solrCounts.find(x => x.name === name)
+      if (collectionSolrCount) {
+        return collectionSolrCount.count
+      }
+      return 0
     },
     deleteCollection(url) {
       CollectionService.deleteCollection(url)
@@ -159,19 +204,28 @@ export default {
             //     this.tableData.splice(i, 1);
             //   }
             // }
-            this.getCollections();
+
+            // this.getCollections();
+            this.items.splice(this.items.findIndex(({id}) => id == this.selectedCollection.id), 1);
             this.selectedCollection = null
           })
           .catch(errors => {
             //console.log(errors);
             this.error = errors
           });
-      this.getCollections()
+      // this.getCollections()
     },
     selectCollection(collection) {
       //console.log("selected collection", JSON.stringify(collection, null,2))
       this.selectedCollection = collection
-    }
+    },
+    explain(cronExpression) {
+      return cronstrue.toString(cronExpression, {
+        verbose: true,
+        use24HourTimeFormat: true,
+        dayOfWeekStartIndexZero: false
+      })
+    },
   }
 }
 </script>

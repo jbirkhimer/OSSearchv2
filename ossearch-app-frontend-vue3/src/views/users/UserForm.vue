@@ -22,7 +22,7 @@
 
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        Basic Information
+        <b>Basic Information</b>
       </div>
 
       <div class="card-body">
@@ -77,7 +77,7 @@
 
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        Password Information
+        <b>Password Information</b>
       </div>
 
       <div class="card-body">
@@ -163,7 +163,7 @@
 
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        Roles and Permissions
+        <b>Roles and Permissions</b>
       </div>
 
       <div class="card-body">
@@ -200,7 +200,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-search me-1"></i>
-        Collection Access
+        <b>Collection Access</b>
       </div>
       <div class="card-body">
         <ul class="list-group">
@@ -216,14 +216,14 @@
 <!--    <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        User JSON Data
+        <b>User JSON Data</b>
       </div>
       <div class="card-body">
         <pre>{{ print(user) }}</pre>
       </div>
     </div>-->
 
-    <div class="accordion" id="accordionExample">
+<!--    <div class="accordion" id="accordionExample">
       <div class="accordion-item">
         <h2 class="accordion-header" id="headingOne">
           <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
@@ -236,7 +236,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div>-->
   </div>
 
 </template>
@@ -251,6 +251,7 @@ import useVuelidate from '@vuelidate/core'
 import {required, minLength, maxLength, sameAs, helpers,} from "@vuelidate/validators";
 import { createPopper } from '@popperjs/core';
 import Breadcrumb from "../../components/Breadcrumb";
+import EventBus from "../../common/EventBus";
 // import Tooltip from 'bootstrap'
 // import Popover from 'bootstrap'
 
@@ -282,6 +283,19 @@ export default {
       },
       confirmPassword: '',
       submitted: false,
+    }
+  },
+  watch: {
+    error: {
+      deep: true,
+      handler: function () {
+        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
+        if (this.error.response && this.error.response.status === 403) {
+          EventBus.dispatch("logout");
+        } else {
+          alert("ERROR: " + content)
+        }
+      }
     }
   },
   validations () {
@@ -359,6 +373,7 @@ export default {
 
     CollectionService.getCollections("/collection", {size: 100, projection: 'collectionIdNameInfo'}).then(response => {
       this.collections = response.data._embedded.collection;
+      this.collections.sort((a, b) => a.name.localeCompare(b.name));
     })
         .catch(errors => {
           //console.log(errors);
@@ -391,16 +406,11 @@ export default {
       return JSON.stringify(value, null, 2)
     },
     async addUser() {
-      // let userRef = '';
+      let userRef = '';
 
       let body = JSON.parse(JSON.stringify(this.user))
       body.roles.length = 0
       body.collections.length = 0
-
-      // add the user collection relationship
-      this.user.collections.forEach(collection => {
-        body.collections.push(collection._links.self.href)
-      })
 
       // add the user role relationship
       this.user.roles.forEach(role => {
@@ -413,11 +423,11 @@ export default {
       await UserService.addUser("/users", body)
           .then(response => {
             //   //console.log("add user response: " + response);
-            // let userRef = response.data._links.self.href
+            userRef = response.data._links.self.href
 
-            if (response.status == 201) {
-              this.$router.push({path: '/users'})
-            }
+            // if (response.status == 201) {
+            //   this.$router.push({path: '/users'})
+            // }
 
           })
           .catch(errors => {
@@ -425,16 +435,29 @@ export default {
             alert("error creating user " + errors)
           });
 
-      //console.log("user added: " + userRef)
+      // add the user collection relationship
+      // this.user.collections.forEach(collection => {
+      //   body.collections.push(collection._links.self.href)
+      // })
 
-      // if (userRef) {
-      //
-      // } else {
-      //   alert("error setting user")
-      // }
-      // this.user.user = {}
-      // this.user.collections = []
-      // this.user.roles = []
+      if (userRef) {
+        // add the user collection relationship
+        await this.user.collections.forEach(collection => {
+          // let url = collection._links.users.href.replace('{?projection}', '')
+          console.log("adding user to collection", collection.name)
+          UserService.updateCollections(collection._links.users.href.replace('{?projection}', ''), userRef)
+              // .then(response => {
+              //   let data = response.data;
+              //   console.log("data", data)
+              // })
+              .catch(errors => {
+                console.log(errors);
+                this.error = errors
+              });
+        })
+      }
+
+      this.$router.push({path: '/users'})
     },
   }
 }

@@ -6,6 +6,9 @@
         v-model:tableOptions="tableOptions"
         :tableData="keymatches"
         @updateTableData="$emit('update:keymatches', $event)"
+        :isEditing="!isEditing"
+        :loading="loading"
+        :saving="saving"
     />
   </fieldset>
 </template>
@@ -15,29 +18,30 @@ import ImportAddEditCheckTable from "../forms/ImportAddEditCheckTable";
 
 export default {
   name: "Keymatch",
-  props: ['isEditing', 'collectionID', 'keymatches'],
+  props: ['isEditing', 'collectionId', 'keymatches', 'loading', 'saving'],
   components: {
     ImportAddEditCheckTable
   },
   data() {
-    let keymatchTypes = [
-          {label: 'KeywordMatch', value: 'keyword'},
-          {label: 'PhraseMatch', value: 'phrase'},
-          {label: 'ExactMatch', value: 'exact'}
-        ]
-    let columns = [
-      {label: 'Tilte for Match', name: 'titleForMatch', class: 'text-center'},
-      {label: 'Search Term', name: 'searchTerm', class: 'text-center'},
-      {label: 'Keymatch Type', name: 'keymatchType', type: 'select', options: keymatchTypes, class: 'text-center', default: 'keyword'},
-      {label: 'URL for Match', name: 'urlForMatch', class: 'text-center'},
-      {label: 'Creation Type', name: 'creationType', class: 'text-center', default: 'created', disabled: true},
-    ]
     return {
       tableOptions: {
+        id: 'keymatchTable',
         enableImport: true,
         enableAddRow: true,
         enableActions: true,
-        columns: columns
+        order: [[1, 'asc']],
+        responsive: false,
+        columns: [
+          {label: 'Search Term', name: 'searchTerm', class: 'text-center', width: '25%'},
+          {label: 'Title for Match', name: 'titleForMatch', class: 'text-center', width: '25%'},
+          {label: 'URL for Match', name: 'urlForMatch', class: 'text-center', width: this.isEditing ? '40%' : '35%'},
+          {label: 'Keymatch Type', name: 'keymatchType', type: 'select', width: this.isEditing ? '10%' : '15%', options: [
+              {label: 'KeywordMatch', value: 'keyword'},
+              {label: 'PhraseMatch', value: 'phrase'},
+              {label: 'ExactMatch', value: 'exact'}
+            ], class: 'text-center', default: 'keyword'},
+          // {label: 'Creation Type', name: 'creationType', class: 'text-center', default: 'created', disabled: true},
+        ]
       },
       keymatch: {
         titleForMatch: '',

@@ -1,0 +1,14 @@
+<div id="oss-result-wrapper" xmlns:th="http://www.thymeleaf.org">
+    <div class="oss-result-message" th:text="${message}"></div>
+    <div th:each="result:${results}" class='oss-result-set-container'>
+        <div class="oss-result-title">
+            <h3>
+                <a class="text-decoration-none" th:href="${result.url}" th:utext="${result.getOrDefault('title', 'No Title Found...')}"></a>
+            </h3>
+        </div>
+        <div class="oss-result-url">
+            <span th:utext="${result.url}"></span>
+        </div>
+        <div class="oss-result-snippet" th:utext="${result.getOrDefault('content', 'No Content Found...')}"></div>
+    </div>
+</div>

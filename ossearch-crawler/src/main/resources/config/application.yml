@@ -20,7 +20,7 @@ spring:
 
     rest:
       default-page-size: 10
-      enable-enum-translation: true
+      enable-enum-translation: false
       base-path: api
 
   datasource:
@@ -31,14 +31,22 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
+    legacy:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3309/si_search_db
+      username: root
+      password: root
+#    generate-unique-name: false
+#    name: dataSource
 
+  # JPA drop and recreate tables, show sql in logs
   jpa:
     show-sql: false
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+        dialect: org.hibernate.dialect.MySQL8Dialect #org.hibernate.dialect.MySQL5InnoDBDialect
         format_sql: false
     open-in-view: false
 
@@ -50,6 +58,16 @@ spring:
     jdbc:
       platform: mysql
       initialize-schema: never
+#    properties:
+#      org:
+#        quartz:
+#          jobStore:
+#            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+#            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+#            dataSource: dataSource
+#          scheduler:
+#            wrapJobExecutionInUserTransaction: true
+
   jackson:
     serialization:
       indent_output: true
@@ -79,7 +97,7 @@ spring:
     admin:
       client:
         enabled: true
-        url: http://localhost:8484
+        url: http://localhost:8484/admin
         username: ${spring.security.user.name}
         password: ${spring.security.user.password}
         instance:
@@ -87,6 +105,7 @@ spring:
           metadata:
             user.name: ${spring.security.user.name}
             user.password: ${spring.security.user.password}
+      context-path: /admin
 
   security:
     user:
@@ -105,9 +124,20 @@ management:
     web:
       exposure:
         include: "*"
+  trace:
+    http:
+      include: REQUEST_HEADERS,RESPONSE_HEADERS,COOKIE_HEADERS,AUTHORIZATION_HEADER,PRINCIPAL,REMOTE_ADDRESS,SESSION_ID,TIME_TAKEN
 
 server:
   port: 8484
+#  port: 8443
+#  ssl:
+#    key-store: classpath:keystore.p12
+#    key-store-password: password
+#    key-store-type: pkcs12
+#    key-alias: springboot
+#    key-password: password
+
 
 springdoc:
   swagger-ui:
@@ -126,11 +156,22 @@ ossearch:
     # Purge tokens at 5am every day
     token-purge-task:
       cron:
+        # At 05:00, every day
+        expression: 0 0 5 * * ?
+    # Refresh search fields at 5am every day
+    search-meta-field-service-task:
+      cron:
+        # At 05:00, every day
         expression: 0 0 5 * * ?
   nutch:
     pluginsDir: plugins
     confDir: conf
     crawlDir: crawls
+  edan-api:
+    url: https://edandev.si.edu
+    path: /metadata/v2.0/metadata/search.htm
+    appId: QUOTIENTTEST
+    appKey: b846922f298366c4a2c236215d28c33e622f3595
 
 logging:
   #  config: config/logback.xml

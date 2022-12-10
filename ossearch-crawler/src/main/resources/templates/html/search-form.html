@@ -1,0 +1,14 @@
+<div id="oss-form-wrapper" xmlns:th="http://www.thymeleaf.org">
+    <form id="oss-form" th:action="${action}" th:method="${method}">
+        <input type="text" name="q" th:value="${q}">
+        <input type="hidden" name="client" th:value="${client}">
+        <input type="hidden" name="site" th:value="${site}">
+        <input type="hidden" name="proxystylesheet" th:value="${proxystylesheet}">
+        <input type="hidden" name="filter" value="0">
+        <input type="hidden" name="proxyreload" value="0">
+        <input type="hidden" name="getfields" th:value="${getfields}">
+        <input type="hidden" name="num" th:value="${num}">
+        <input type="hidden" name="start" th:value="0">
+        <input id="oss-search-button" value="search" name="oss-search-button" type="submit"/>
+    </form>
+</div>

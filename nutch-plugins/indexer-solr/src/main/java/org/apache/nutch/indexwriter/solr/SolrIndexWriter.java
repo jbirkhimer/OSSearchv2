@@ -150,6 +150,7 @@ public class SolrIndexWriter implements IndexWriter {
   public void delete(String key) throws IOException {
     // escape solr hash separator
     key = key.replaceAll("!", "\\!");
+    key = TableUtil.reverseUrl(key);
 
     if (delete) {
       deleteIds.add(key);
@@ -208,6 +209,10 @@ public class SolrIndexWriter implements IndexWriter {
     if (!weightField.isEmpty()) {
       inputDoc.addField(weightField, doc.getWeight());
     }
+
+    // add timestamp when indexed
+    inputDoc.addField("_last_time_updated", DateTimeFormatter.ISO_INSTANT.format(new Date().toInstant()));
+
     inputDocs.add(inputDoc);
     totalAdds++;
 
@@ -270,7 +275,7 @@ public class SolrIndexWriter implements IndexWriter {
       try {
         LOG.info("SolrIndexer: deleting {}/{} documents", deleteIds.size(),
             totalDeletes);
-        
+
         UpdateRequest req = new UpdateRequest();
         req.deleteById(deleteIds);
         req.setAction(UpdateRequest.ACTION.OPTIMIZE, false, false);

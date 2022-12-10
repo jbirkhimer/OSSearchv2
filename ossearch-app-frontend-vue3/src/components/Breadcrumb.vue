@@ -3,8 +3,8 @@
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
       <template v-for="(path, i) in pathArray" :key="i">
-        <li class="breadcrumb-item" :class="i === pathArray.length - 1 ? 'active' : ''">
-          <a v-if="i === pathArray.length - 1 && path.indexOf('?') > 0">{{ path.substr(0, path.indexOf('?')) }}</a>
+        <li class="breadcrumb-item text-capitalize" :class="i === pathArray.length - 1 ? 'active' : ''">
+          <a v-if="i === pathArray.length - 1 && query">{{ path+'?'+query }}</a>
           <a v-else-if="i === pathArray.length - 1">{{ path }}</a>
           <a v-else :href="getHref(i)">{{ path }}</a>
         </li>
@@ -18,13 +18,29 @@ export default {
   name: "Breadcrumb",
   data() {
     return {
-      pathArray: []
+      pathArray: [],
+      query: ''
     }
   },
   created() {
-    let fullpath = this.$route.fullPath
-    this.pathArray = fullpath.split('/')
-    this.pathArray.shift()
+    // watch the params of the route to fetch the data again
+    this.$watch(
+        () => this.$route.fullPath,
+        async () => {
+          let fullpath = this.$route.fullPath
+          // this.query = fullpath.substring(0, fullpath.indexOf('?'))
+          let pathQuery = fullpath.split("?")
+          this.pathArray = pathQuery[0].split('/')
+          this.pathArray.shift()
+          this.query = pathQuery[1]
+        },
+        // fetch the data when the view is created and the data is
+        // already being observed
+        {immediate: true}
+    )
+    // let fullpath = this.$route.fullPath
+    // this.pathArray = fullpath.split('/')
+    // this.pathArray.shift()
   },
   methods: {
     getHref(i) {

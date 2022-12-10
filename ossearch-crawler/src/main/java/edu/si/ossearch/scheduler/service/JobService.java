@@ -2,9 +2,12 @@ package edu.si.ossearch.scheduler.service;
 
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
 import edu.si.ossearch.scheduler.entity.JobState;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.json.JSONArray;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerMetaData;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +33,6 @@ public interface JobService {
 
     boolean startJobNow(String jobName, String jobGroup);
 
-
     List<CrawlSchedulerJobInfo> getAllJobList();
 
     List<Map<String, Object>> getAllJobs();
@@ -42,6 +44,8 @@ public interface JobService {
     JobState getJobState(String jobName, String jobGroup);
 
     SchedulerMetaData getMetaData() throws SchedulerException;
+
+    JSONArray getCrawlLogHistoryByUser() throws IOException, SolrServerException;
 
 
 }

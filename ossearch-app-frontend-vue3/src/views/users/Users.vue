@@ -7,7 +7,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-users me-1"></i>
-        Users
+        <b>Users</b>
         <div class="float-end">
           <router-link type="button" class="btn btn-sm btn-primary bi-plus-lg float-end" to="/users/create">
             User
@@ -16,12 +16,7 @@
       </div>
 
       <div class="card-body">
-        <div v-if="tableData.length === 0" class="d-flex justify-content-center">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-        <Datatable v-if="tableData.length > 0"
+        <Datatable :loading="loading"
           :tableData="tableData"
           :tableOptions="tableOptions"
                    id="usersTable"
@@ -45,9 +40,9 @@
             <td>{{user.email}}</td>
             <td>
               <div v-for="(role, i) in user.roleList" :key="i">
-                <span v-if="role === 'ROLE_ADMIN'" class="badge rounded-pill bg-danger">{{ role }}</span>
-                <span v-else-if="role === 'ROLE_MANAGER'" class="badge rounded-pill bg-warning">{{ role }}</span>
-                <span v-else class="badge rounded-pill bg-primary">{{ role }}</span>
+                <span v-if="role === 'ROLE_ADMIN'" class="badge rounded-pill bg-danger bg-opacity-25 text-danger">{{ role }}</span>
+                <span v-else-if="role === 'ROLE_MANAGER'" class="badge rounded-pill bg-warning bg-opacity-25 text-warning">{{ role }}</span>
+                <span v-else class="badge rounded-pill bg-primary bg-opacity-25 text-primary">{{ role }}</span>
               </div>
             </td>
             <td>{{user.dateCreated}}</td>
@@ -89,6 +84,7 @@ import UserService from "../../services/user.service";
 import Breadcrumb from "../../components/Breadcrumb";
 import Datatable from "../../components/table/Datatable";
 import Modal from "../../components/Modal";
+import EventBus from "../../common/EventBus";
 
 
 export default {
@@ -98,14 +94,17 @@ export default {
     Datatable,
     Modal,
   },
-  created() {
-    this.getUsers();
+  async mounted() {
+    this.loading = true
+    await this.getUsers();
+    this.loading = false
   },
   // watch: {
   //   '$route': 'getUsers'
   // },
   data() {
     return {
+      loading: false,
       tableOptions: {
         columns: [
           {label: 'ID', name: 'ID'},
@@ -123,9 +122,22 @@ export default {
       selectedUser: {},
     }
   },
+  watch: {
+    error: {
+      deep: true,
+      handler: function () {
+        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
+        if (this.error.response && this.error.response.status === 403) {
+          EventBus.dispatch("logout");
+        } else {
+          alert("ERROR: " + content)
+        }
+      }
+    }
+  },
   methods: {
-    getUsers() {
-      UserService.getUsers("/users", {size: 100, projection: 'userInfo'})
+    async getUsers() {
+      await UserService.getUsers("/users", {size: 100, projection: 'userInfo'})
           .then(res => {
             this.tableData = res.data._embedded.users
           })
@@ -219,10 +231,6 @@ export default {
   margin: 5px 0 0;
   font-size: 24px;
 }
-
-
-
-
 
 .pagination {
   float: right;

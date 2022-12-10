@@ -1,0 +1,530 @@
+<template>
+  <div v-if="error" class="container-fluid px-4 error">
+    {{ error }}
+  </div>
+
+  <div class="card mt-4 mb-4">
+    <div class="card-header">
+      <i class="fas fa-sitemap me-1"></i>
+      <b>Search Page Results</b>
+      <div class="float-end">
+        <button type="button" class="btn btn-sm btn-primary bi-plus-lg float-end" @click="beforeEdit = JSON.parse(JSON.stringify(pageResult)); selectPageResult(pageResult, true)">Page Result</button>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <Datatable :loading="loading"
+                 :tableData="collection?.pageResults"
+                 :tableOptions="tableOptions"
+                 id="collectionSearchPageResultsTable"
+      >
+        <template v-slot:table-body>
+          <tr v-for="(pageResult, i) in collection?.pageResults" :key="i">
+            <td>{{ pageResult.name }}</td>
+            <td class="text-center">{{ getLocalDateTime(pageResult.dateCreated) }}</td>
+            <td class="justify-content-evenly text-center">
+              <div class="btn-group btn-group-sm align-items-center">
+                <a href="#" class="btn link-primary p-0 m-1" @click="beforeEdit = JSON.parse(JSON.stringify(pageResult)); selectPageResult(pageResult, false)">
+                  <i class="fa fa-edit"></i>
+                </a>
+                <a href="#" class="btn link-danger p-0" data-bs-toggle="modal" data-bs-target="#deletePageResultModal" title="Delete" @click="selectPageResult(pageResult, false)">
+                  <i class="fa fa-times-circle"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+        </template>
+      </Datatable>
+    </div>
+  </div>
+
+  <div v-if="selectedPageResult" class="card mb-4">
+    <div class="card-header">
+      <i class="fas fa-info-circle me-1"></i>
+      <b>{{ cardTitle }}</b>
+      <div class="float-end">
+        <button class="btn btn-sm btn-success me-md-2" type="button" @click="save(selectedPageResult)">Save</button>
+        <button class="btn btn-sm btn-danger float-end" type="button" @click="selectedPageResult = beforeEdit = null">Cancel</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <div class="form-floating">
+            <input v-model="selectedPageResult.name" class="form-control" id="collectionName" :class="isValid ? 'is-valid' : 'is-invalid'"  required placeholder="Collection Name" ref="selectedPageResult">
+            <label for="collectionName">Page Result Name</label>
+            <div id="validationServer03Feedback" class="invalid-feedback">
+              {{ validationMessage }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <div class="form-check">
+            <input v-model="selectedPageResult.useSearchButton" :checked="selectedPageResult.useSearchButton" type="checkbox" class="form-check-input" id="useSearchButtonCheck">
+            <label class="form-check-label" for="useSearchButtonCheck">Use Search Button?</label>
+          </div>
+        </div>
+      </div>
+      <div v-if="selectedPageResult.useSearchButton" class="row g-3 mb-3">
+        <div class="col-md-6">
+          <div class="form-floating">
+            <input v-model="selectedPageResult.buttonText" type="text"
+                   class="form-control form-control-sm"
+                   placeholder="value" aria-label="value" aria-describedby="buttonTextInput">
+            <label v-if="selectedPageResult.useSearchButton" class="form-check-label" for="buttonTextInput">Search
+              Button Text</label>
+          </div>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-12">
+          <div class="d-flex flex-column">
+            <label for="description" class="form-label text-start">Full Page HTML Editor
+              <div class="float-end">
+              <button class="btn btn-sm btn-primary me-2" data-bs-toggle="collapse" data-bs-target="#collapseTokens"
+                      aria-expanded="false" aria-controls="collapseTokens">Help<i class="fas fa-info-circle ms-2"></i></button>
+                <button class="btn btn-sm btn-primary me-2" @click.prevent="preview = !preview"><span>HTML</span><i :class="!preview ? 'fas fa-eye' : 'fas fa-eye-slash'"/></button>
+                <button class="btn btn-sm btn-primary" @click.prevent="format">Format</button>
+              </div>
+            </label>
+            <strong>Valid HTML: <span :class="isValidHTML(selectedPageResult.fullHtml) === true ? 'text-success' : 'text-danger'">{{isValidHTML(selectedPageResult.fullHtml)}}</span></strong>
+          </div>
+          <div class="collapse" id="collapseTokens">
+            <p>Using this option required minimum html knowledge, all <code>href</code> urls must be encoded (i.e. <code>&</code> encoded as <code>&amp;amp;</code> , etc.), all tags must be closed in order to render page result properly otherwise it could break the way results are displayed.</p>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead>
+                <tr>
+                  <td>Token</td>
+                  <td>Description</td>
+                  <td>HTML Element Attributes</td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="token in tokens" :key="token.name">
+                  <td><b>{{token.token}}</b></td>
+                  <td>{{token.desc}}</td>
+                  <td>
+                    <template v-if="token.attrList.ids">id's:
+                      <ul>
+                        <li v-for="attrb in token.attrList.ids" :key="attrb">{{ attrb }}</li>
+                      </ul>
+                    </template>
+                    <template v-if="token.attrList.classes">classes:
+                      <ul>
+                        <li v-for="attrb in token.attrList.classes" :key="attrb">{{ attrb }}</li>
+                      </ul>
+                    </template>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="d-inline-flex">
+          <Codemirror ref="cmEditor" class="form-control"
+                      v-model="selectedPageResult.fullHtml"
+                      :options="cmOption"
+                      :extensions="extensions"
+                      :style="{width: preview ? '50%' : '100%', height: '75vh'}"
+          />
+          <iframe v-if="preview" :style="'width: '+ (preview ? '50%' : '0px') + ';height: 75vh;'"
+                  :srcdoc="selectedPageResult.fullHtml" title="Search Page Preview" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div v-if="selectedPageResult" class="card mb-4">
+    <div class="card-header">
+      <i class="fas fa-info-circle me-1"></i>
+      <b>Preview Search Page Results</b>
+    </div>
+    <div class="card-body">
+      <!--      <div class="input-group input-group-sm">
+              <input type="text" class="form-control" placeholder="Site URL" aria-label="Preview Search" v-model="search">
+              <a class="btn btn-primary btn-sm" :href="previewSearch()" target="_blank" role="button">Preview</a>
+            </div>
+            <div class="col-md-12 mt-3">
+              <pre class="shiki" v-html="testpreview"></pre>
+            </div>-->
+
+      <strong v-if="!selectedPageResult._links" class="text-danger">To preview save first!</strong>
+      <fieldset :disabled="!selectedPageResult._links">
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control" placeholder="search string..." aria-label="Preview Search" v-model="search" @keyup.enter="searchPreview = previewSearch()">
+          <button class="btn btn-primary btn-sm" type="button" id="button-preview" @click="searchPreview = previewSearch()">Search</button>
+          <button class="btn btn-secondary btn-sm" type="button" id="button-resetPreview" @click="search = null">Reset</button>
+        </div>
+        <div v-if="searchPreview" class="col-md-12 mt-3"><b>Search URL:</b> <a class="link-primary" :href="previewSearch()" target="_blank" role="button">{{searchPreview}}</a></div>
+        <div v-if="searchPreview" class="col-md-12 mt-3">
+          <iframe type="text/plain" style="'width: 100%; height: 100vh;'" :src="searchPreview" target="_parent" title="Search Preview" allowfullscreen></iframe>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+
+  <!-- Validation Modal -->
+  <div class="modal fade" :class="{ show: validationModelShow, 'd-block': validationModelShow }" id="createValidationModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="createScheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createScheduleModalLabel">Validation Error</h5>
+          <button type="button" class="btn-close" aria-label="Close" @click="validationModelShow = !validationModelShow"></button>
+        </div>
+        <div class="modal-body" :class="{'modal-open': validationModelShow}" >
+          <ul v-if="selectedPageResult">
+            <li v-if="!isValid"><strong class="text-danger">Page Result Name is not valid!</strong></li>
+            <li v-if="isValidHTML(selectedPageResult?.fullHtml) !== true"><strong class="text-danger">HTML is not valid! {{isValidHTML(selectedPageResult?.fullHtml)}}</strong></li>
+          </ul>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="validationModelShow = !validationModelShow;">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</template>
+
+<script>
+import EventBus from "../../../../common/EventBus";
+import CollectionService from "../../../../services/collection.service";
+import Datatable from "../../../../components/table/Datatable";
+
+import { Codemirror } from 'vue-codemirror'
+import { oneDark } from '@codemirror/theme-one-dark'
+import { html } from '@codemirror/lang-html'
+
+const beautify = require('js-beautify')
+const shiki = require('shiki')
+
+export default {
+  name: "CollectionSearchPageResults",
+  props: ['name', 'tabName'],
+  components: {
+    Datatable,
+    Codemirror
+  },
+  data() {
+    return {
+      loading: false,
+      error: null,
+      showJson: true,
+      cardTitle: null,
+      tableOptions: {
+        order: [[0, "asc"]],
+        columns: [
+          {label: 'Name', name: 'name'},
+          {label: 'Created Date', name: 'dateCreated', class: 'text-center', style: 'width: 15%'},
+          {label: 'Actions', name: 'actions', class: 'text-center', sortable: false, style: 'width: 10%'},
+        ],
+      },
+      preview: false,
+      extensions: [html(), oneDark],
+      cmOption: {
+        placeholder: "Code goes here...",
+        mode: 'text/html',
+        theme: 'oneDark',
+        // style: {
+        //   width: this.preview ? '50%' : '100%',
+        //   height: '200px'
+        // },
+        tabSize: 4,
+        styleActiveLine: true,
+        line: true,
+        foldGutter: true,
+        styleSelectedText: true,
+        lineNumbers: true,
+        lineWrapping: true,
+        matchBrackets: true,
+        collapseIdentical: true,
+        showCursorWhenSelecting: true,
+      },
+      collection: null,
+      pageResults: [],
+      pageResult: {
+        logoPath: '',
+        name: '',
+        nameNoSpace: '',
+        stylesheet: '',
+        linkColor: '',
+        header: '',
+        footer: '',
+        buttonText: 'Search',
+        boxMaxChar: '',
+        includeField: [],
+        useSearchButton: false,
+        head: '',
+        fullHtml: beautify.html_beautify('<!DOCTYPEhtml><html><head><title></title></head><body></body></html>')
+      },
+      selectedPageResult: null,
+      itemIndex: null,
+      validationModelShow: false,
+      validationMessage: null,
+      beforeEdit: null,
+      search: '',
+      searchPreview: null,
+      testpreview: null,
+      tokens: [
+        {
+          token: '[[oss-pr-form]]',
+          desc: 'This token is representing form location',
+          attrList: {ids: ['oss-form', 'oss-form-wrapper']}
+        },
+        {
+          token: '[[oss-pr-pagination]]',
+          desc: 'This token is representing pagination location',
+          attrList: {classes: ['oss-pagination-link', 'oss-pagination-link-active', 'oss-pagination-next-link', 'oss-pagination-prev-link', 'oss-pagination']}
+        },
+        {
+          token: '[[oss-pr-results]]',
+          desc: 'This token is representing results location',
+          attrList: {
+            ids: ['oss-result-wrapper'],
+            classes: ['oss-result-message', 'oss-result-title', 'oss-result-url', 'oss-result-snippet', 'oss-result-set-container']
+          }
+        }
+      ]
+    }
+  },
+  created() {
+    // watch the params of the route to fetch the data again
+    this.$watch(
+        () => this.$route.params.name,
+        async () => {
+          await this.fetchData()
+        },
+        // fetch the data when the view is created and the data is
+        // already being observed
+        { immediate: true }
+    )
+    // return this.v$.$touch;
+  },
+  async mounted() {
+    this.testpreview = await this.highlighter(beautify.html_beautify('<GSP VER="3.2"><Q>test</Q><PARAM name="q" value="test" original_value="test"/><PARAM name="site" value="aaa_v2" original_value="aaa_v2"/><PARAM name="output" value="xml" original_value="xml" url_escaped_value="xml" js_escaped_value="xml"/><PARAM name="proxyreload" value="0" original_value="0"/><PARAM name="oe" value="UTF-8" original_value="UTF-8" url_escaped_value="UTF-8" js_escaped_value="UTF-8"/><PARAM name="ie" value="UTF-8" original_value="UTF-8" url_escaped_value="UTF-8" js_escaped_value="UTF-8"/><PARAM name="ip" value="160.111.100.68" original_value="160.111.100.68"/></GSP>'))
+  },
+  watch: {
+    error: {
+      deep: true,
+      handler: function () {
+        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
+        if (this.error.response && this.error.response.status === 403) {
+          EventBus.dispatch("logout");
+        } else {
+          alert("ERROR: " + content)
+        }
+      }
+    }
+  },
+  computed: {
+    isValid() {
+      // return this.checkIsValid()
+      this.setValidationMsg(null)
+      if (this.collection.pageResults) {
+        let nameChanged = this.collection.pageResults.some(pageResult => {
+          console.log("checking nameChange", pageResult.name, "=", this.selectedPageResult.name, pageResult.name === this.selectedPageResult.name)
+          if (this.beforeEdit?.name === this.selectedPageResult.name) {
+            return false
+          } else {
+            return pageResult.name === this.selectedPageResult.name
+          }
+        })
+
+        console.log("beforeName:", this.beforeEdit?.name, "selectedName:", this.selectedPageResult.name, "nameChanged:", nameChanged, "length:", this.selectedPageResult.name.length, "length=0:", this.selectedPageResult.name.length === 0)
+
+        if (this.selectedPageResult.name.length === 0) {
+          this.setValidationMsg("Must not be empty! Please provide a valid name!")
+          console.log("name: '" + this.selectedPageResult.name + "', exists already or is empty")
+          return false
+        } else if (nameChanged) {
+          this.setValidationMsg(this.selectedPageResult.name + " exists already! Please provide a valid name!")
+          console.log("name: '" + this.selectedPageResult.name + "', exists already or is empty")
+          return false
+        } else {
+          return true
+        }
+      } else {
+        return true
+      }
+    },
+  },
+  methods: {
+    async fetchData() {
+      this.loading = true
+      if (Object.keys(this.$route.params).length !== 0) {
+        this.error = this.collection = null
+        await this.getCollection()
+        // await this.getCollectionPageResults()
+      }
+      this.loading = false
+    },
+    async getCollection() {
+      await CollectionService.getCollections('/collection/search/getCollectionByName', {
+        name: this.$route.params.name,
+        projection: 'collectionSearchData',
+        // projection: 'collectionFormData'
+      })
+          .then(response => {
+            let data = response.data;
+            this.collection = data;
+            /*if (Object.keys(this.collection).includes('pageResults')) {
+              this.pageResults = this.collection.pageResults
+            } else {
+              this.pageResults = [{name: "example", useSearchButton: true, buttonText: "Search", fullHtml: this.testpreview, dateCreated: 'dateCreated'}]
+            }*/
+            console.log("data", data)
+          })
+          .catch(errors => {
+            //console.log(errors);
+            this.error = errors
+          });
+    },
+    async save(pageResult) {
+      if (!this.isValid || this.isValidHTML(pageResult.fullHtml) !== true) {
+        console.log("Not Saving...", this.isValid, this.isValidHTML(pageResult.fullHtml))
+        this.validationModelShow = !this.validationModelShow
+      } else {
+        console.log("Saving...", this.isValid, this.isValidHTML(pageResult.fullHtml))
+        let promises = []
+        let body = pageResult
+
+        if (pageResult._links && pageResult.id) {
+          promises.push(CollectionService.updateCollection(pageResult._links.self.href, JSON.stringify(body)))
+        } else {
+          body.collection = this.collection._links.self.href
+          promises.push(CollectionService.addCollection('/pageResult', JSON.stringify(body)))
+        }
+
+        await Promise.all(promises)
+            .then(results => {
+              results.forEach(response => {
+                let data = response.data;
+                console.log("save pageResult", data)
+              })
+            })
+            .catch(errors => {
+              //console.log(errors);
+              this.error = errors
+            })
+      }
+
+    },
+    selectPageResult(pageResult, isCreate) {
+      //console.log("selected collection", JSON.stringify(collection, null,2))
+      this.cardTitle = isCreate ? "Create New Search Page Result" : "Edit Search Page Result"
+      this.selectedPageResult = JSON.parse(JSON.stringify(pageResult))
+      this.selectedPageResult.fullHtml = this.decodeHtml(this.selectedPageResult.fullHtml)
+      // this.selectedPageResult.fullHtml = this.selectedPageResult.fullHtml.replace('/(href=".*)&(.*")/g', '$1!&amp!$2')
+      this.setFocus()
+
+    },
+    decodeHtml(html) {
+      let txt = document.createElement("textarea");
+      txt.innerHTML = html;
+      return txt.value;
+    },
+    isValidHTML(html) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/xml');
+      if (doc.documentElement.querySelector('parsererror')) {
+        return doc.documentElement.querySelector('parsererror').innerText;
+      } else {
+        return true;
+      }
+    },
+    previewSearch() {
+      let url = 'https://ossearch.si.edu/search'
+      let params = {
+        q: this.search ? this.search : '*',
+        client: this.selectedPageResult?.name,
+        site: this.collection?.name,
+        proxystylesheet: this.collection?.name,
+        proxyreload: 0,
+        getfields: '*',
+        btnG: 'Search'
+      }
+
+      url = new URL(url)
+      url.search = new URLSearchParams(params)
+      console.log("previewSearch", url.toString())
+
+      return url.toString()
+
+      /*const headers = { "Accept": "xml" };
+      fetch(url.toString(), headers)
+          .then(async response => {
+            const data = await response.text();
+
+            // check for error response
+            if (!response.ok) {
+              // get error message from body or default to response statusText
+              const error = (data && data.message) || response.statusText;
+              return Promise.reject(error);
+            }
+
+            this.totalVuePackages = data;
+          })
+          .catch(error => {
+            this.errorMessage = error;
+            console.error("There was an error!", error);
+          });*/
+
+      /*axios.get(url.toString())
+          .then(response => {
+            console.log(response.data)
+            this.searchPreview = response.data
+          })
+          .catch(errors => {
+            console.log(errors)
+            // this.error = errors
+          })*/
+
+      /*let xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = () => console.log(xhr.responseText)
+      xhr.open('GET', url.toString());
+      xhr.send();*/
+
+    },
+    getLocalDateTime(utc) {
+      let u = utc+'Z'
+      return new Date(u).toLocaleString()
+    },
+    print(value) {
+      return JSON.stringify(value, null, 2)
+    },
+    setValidationMsg(msg) {
+      this.validationMessage = msg
+    },
+    async highlighter(xml) {
+      let text = beautify.html_beautify(xml)
+      await shiki.setCDN('https://unpkg.com/shiki/');
+      await shiki
+          .getHighlighter({
+            theme: 'light-plus'
+          })
+          .then(highlighter => {
+            text = highlighter.codeToHtml(text, { lang: 'xml' })
+          })
+      return text
+    },
+    format() {
+      this.selectedPageResult.fullHtml = beautify.html_beautify(this.selectedPageResult.fullHtml)
+    },
+    setFocus() {
+      setTimeout(() => { this.$refs.selectedPageResult.focus() }, 200)
+      // this.$nextTick(() => this.$refs.selectedPageResult.focus())
+    }
+  }
+}
+</script>
+
+<style scoped>
+
+</style>

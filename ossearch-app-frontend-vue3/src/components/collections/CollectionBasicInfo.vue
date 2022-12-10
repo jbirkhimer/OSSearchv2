@@ -48,6 +48,7 @@
             @updateTableData="$emit('update:keywords', $event)"
             :selected="selected"
             @selected="updateSelected"
+            :isEditing="isEditing"
         />
       </div>
     </div>

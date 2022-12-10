@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head xmlns:th="http://www.thymeleaf.org">
+    <meta charset="UTF-8">
+    <title>Search</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/assets/custom/css/bootstrap-reset.css">
+    <link rel="stylesheet" type="text/css" href="/assets/custom/css/templates/page-result.css">
+</head>
+</head>
+<body>
+<div class="container-wrapper">
+    <div id="container" class="container">
+        <form action="/search" method="GET">
+            <input type="hidden" name="action" value="submit"/>
+            <div th:if="${useSearchButton}" id="page-result-search-bar" class="row">
+                <div class="col-md-10 nopadding">
+                    <input type="text" name="q" th:value="${q}">
+                    <input type="hidden" name="client" th:value="${client}">
+                    <input type="hidden" name="site" th:value="${site}">
+                    <input type="hidden" name="proxystylesheet" th:value="${proxystylesheet}">
+                    <input type="hidden" name="filter" value="0">
+                    <input type="hidden" name="proxyreload" value="0">
+                    <input type="hidden" name="getfields" th:value="${getfields}">
+                    <input type="hidden" name="num" th:value="${num}">
+                    <input type="hidden" name="start" th:value="0">
+                </div>
+                <div class="col-md-2 nopadding">
+                    <button type="submit" id="btn-search-page-result" name="submit" class="btn btn-secondary btn-block"
+                            th:text="${btnG}?: 'Search'">
+                    </button>
+                </div>
+            </div>
+            <hr>
+            <div th:if="${results.size()} > 0" id="page-result-results">
+
+                <div><p th:text="${message}"></p></div>
+
+                <div th:if="${keymatch.size()} > 0" id="keymatch">
+                    <table th:each="key:${keymatch}" cellpadding="4" cellspacing="0" border="0" height="40" width="100%">
+                        <tbody>
+                            <tr>
+                                <td nowrap="0" class="url_keymatch">
+                                    <a th:ctype="${key.type}" th:uhref="${key.GL}" th:text="${key.GD.get(0)}"></a>
+                                    <br>
+                                    <font size="-1" class="font_keymatch">
+                                        <span class="a" th:text="${key.GL}"></span>
+                                    </font>
+                                </td>
+                                <td class="keymatch_term" th:switch="${key.type}">
+                                    <b th:case="'keyword'">
+                                        <font size="-1" class="keymatch_term_font">KeywordMatch</font>
+                                    </b>
+                                    <b th:case="'phrase'">
+                                        <font size="-1" class="keymatch_term_font">PhraseMatch</font>
+                                    </b>
+                                    <b th:case="'exact'">
+                                        <font size="-1" class="keymatch_term_font">ExactMatch</font>
+                                    </b>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:each="result:${results}">
+                    <div>
+                        <h3>
+                            <a class="text-decoration-none" th:href="${result.url}" th:utext="${result.getOrDefault('title', 'No Title Found...')}"></a>
+                        </h3>
+                    </div>
+                    <div th:if="${urls_include}">
+                        <span th:style="${#strings.isEmpty(linkColor)}? '' : 'color:' + ${linkColor}" th:utext="${result.url}"></span>
+                    </div>
+                    <div th:if="${snippet_include}">
+                        <p th:utext="${result.getOrDefault('content', 'No Content Found...')}"></p>
+                    </div>
+                </div>
+            </div>
+
+            <nav th:if="${results.size()} > 1">
+                <ul class="pagination justify-content-center" >
+                    <li th:if="${pagination.currentPage} > 1" class="page-item">
+                        <input type="submit" class="page-link" name="submit" value="< Prev"/>
+                    </li>
+                    <th:block th:each="page,iter:${#numbers.sequence(pagination.start, pagination.end)}">
+                        <li th:class="'page-item ' + (${pagination.currentPage} == ${page}? 'active' : '')">
+                            <input type="submit" class="page-link inputclicked" th:value="${page}" name="submit"/>
+                        </li>
+                    </th:block>
+                    <li class="page-item">
+                        <input type="submit" class="page-link" name="submit" value="Next >"/>
+                    </li>
+                </ul>
+            </nav>
+
+        </form>
+
+    </div>
+</div>
+
+<!-- Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+</body>
+</html>

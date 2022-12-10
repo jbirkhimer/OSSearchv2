@@ -4,20 +4,26 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import edu.si.ossearch.OSSearchException;
-import edu.si.ossearch.dao.entity.Collection;
-import edu.si.ossearch.dao.entity.CrawlConfig;
-import edu.si.ossearch.dao.entity.UrlExclusionPattern;
-import edu.si.ossearch.dao.repository.CollectionRepository;
-import edu.si.ossearch.dao.repository.CrawlConfigRepository;
+import edu.si.ossearch.collection.entity.Collection;
+import edu.si.ossearch.collection.entity.CrawlConfig;
+import edu.si.ossearch.collection.entity.UrlExclusionPattern;
+import edu.si.ossearch.collection.repository.CollectionRepository;
+import edu.si.ossearch.collection.repository.CrawlConfigRepository;
+import edu.si.ossearch.nutch.entity.Webpage;
+import edu.si.ossearch.nutch.repository.CrawlDbRepository;
+import edu.si.ossearch.nutch.repository.WebpageRepository;
 import edu.si.ossearch.scheduler.entity.CrawlLog;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
+import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType;
 import edu.si.ossearch.scheduler.entity.CrawlStepLog;
 import edu.si.ossearch.scheduler.repository.CrawlLogRepository;
 import edu.si.ossearch.scheduler.repository.CrawlSchedulerJobInfoRepository;
 import edu.si.ossearch.scheduler.repository.CrawlStepLogRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.nutch.crawl.*;
@@ -35,6 +41,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.quartz.JobKey;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Scope;
@@ -42,6 +49,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -59,6 +67,7 @@ import java.util.stream.Collectors;
 
 import static edu.si.ossearch.scheduler.entity.CrawlLog.State.*;
 import static edu.si.ossearch.scheduler.entity.CrawlLog.StepType.*;
+import static edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType.SCHEDULED_CRAWL;
 import static org.apache.nutch.crawl.CrawlDb.CRAWLDB_ADDITIONS_ALLOWED;
 
 /**
@@ -100,7 +109,14 @@ public class Crawler {
     private CollectionRepository collectionRepository;
 
     @Autowired
+    @Qualifier("master")
     private SolrClient solrClient;
+
+    @Autowired
+    private CrawlDbRepository crawlDbRepository;
+
+    @Autowired
+    private WebpageRepository webpageRepository;
 
     protected AtomicBoolean stopFlag = new AtomicBoolean(false);
     protected AtomicBoolean errorFlag = new AtomicBoolean(false);
@@ -152,6 +168,8 @@ public class Crawler {
 
     private boolean dump = false;
 
+    private Date startSegmentGenerateDate;
+
     /**
      * Nutch crawl script workflow
      * 1) inject
@@ -172,9 +190,15 @@ public class Crawler {
             // text file and let it "inject" our URLs into its database:
             inject();
 
-            // Performs Sitemap processing by fetching sitemap links, parsing the content and merging the urls from Sitemap (with the metadata) with the existing crawldb.
-            if (sitemapDir != null && crawlConfig.getUseSitemap() && !crawlConfig.getSitemapUrls().isEmpty()) {
-                sitemap(null, sitemapDir);
+            if (sitemaps_from_hostdb.equals(SitemapFromHostDb.ALWAYS) || sitemaps_from_hostdb.equals(SitemapFromHostDb.ONCE)) {
+                // Performs Sitemap processing by fetching sitemap links, parsing the content and merging the urls from Sitemap (with the metadata) with the existing crawldb.
+                if (crawlConfig.getUseSitemap() && sitemapDir != null && !crawlConfig.getSitemapUrls().isEmpty()) {
+                    hostdbUpdate();
+                    sitemap(hostdb, sitemapDir);
+                } else if (crawlConfig.getUseSitemap()) {
+                    hostdbUpdate();
+                    sitemap(hostdb, null);
+                }
             }
 
             // Now, it's time to do a few cycles of fetching, parsing, and
@@ -197,16 +221,39 @@ public class Crawler {
                 currentRound++;
             }
 
+            currentRound--;
+
+            deleteSegmentDirsOlderThanFetchInterval();
+
             if (!stopFlag.get()) {
                 log.info("Crawl loop finished with {} iterations", currentRound);
-                getStats();
+
+                CrawlStepLog crawlStepLog = createCrawlStepLog(REPORTS, RUNNING);
+
+                try {
+                    crawlStepLogRepository.saveAndFlush(crawlStepLog);
+
+                    getStats();
+                    updateCrawldbWebpagesDb();
+
+                    //TODO: update database with linkDb anchors/inlinks/outlinks
+
+                    crawlStepLog.setState(FINISHED);
+                    crawlStepLogRepository.saveAndFlush(crawlStepLog);
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                    crawlLog.setState(FAILED);
+                    crawlLog.setErrors(e.getMessage());
+                    crawlLogRepository.saveAndFlush(crawlLog);
+                    errorFlag.set(true);
+                    throw new OSSearchException(e);
+                }
                 crawlLog.setState(CrawlLog.State.FINISHED);
             } else {
                 crawlLog.setState(STOPPED);
             }
 
             crawlLogRepository.save(crawlLog);
-
 
             if (dump && !stopFlag.get()) {
                 // where to dump
@@ -229,7 +276,64 @@ public class Crawler {
         }
     }
 
-    private void getStats() throws Exception {
+    /**
+     * Cleanup segments older than db.fetch.interval.default [default: 2592000 sec (30 days)] or db.fetch.interval.max [default: 7776000 sec (90 days)]
+     * @throws OSSearchException
+     */
+    private void deleteSegmentDirsOlderThanFetchInterval() throws OSSearchException {
+        Integer fetchInterval = conf.getInt("db.fetch.interval.default", 2592000);
+
+        log.info("Crawl removing segments older than fetch interval = {} sec");
+
+        CrawlStepLog crawlStepLog = createCrawlStepLog(CLEANUP, RUNNING);
+
+        try {
+
+            Date startDateMinusFetchInterval = DateUtils.addSeconds(startSegmentGenerateDate, -fetchInterval);
+
+            File folder =  new File(segmentsDir.toString());
+            String[] directories = folder.list((current, name) -> new File(current, name).isDirectory());
+
+            JSONArray segmentsDeleted = new JSONArray();
+            JSONArray errors = new JSONArray();
+
+            for (String dir : directories) {
+                log.debug("checking segment dir older than fetch interval: {}", dir);
+
+                Date segmentDate = new SimpleDateFormat("yyyyMMddHHmmss").parse(dir);
+
+                if (segmentDate.compareTo(startDateMinusFetchInterval) < 0) {
+                    File directory = new File(folder + "/" +dir);
+                    log.debug("deleting old segment dir: {}", directory.getAbsolutePath());
+                    try {
+                        FileUtils.deleteDirectory(directory);
+                        segmentsDeleted.put(directory.getName());
+                    } catch (IOException e) {
+                        errors.put(directory.getName() + " Error: "+e.getMessage());
+                        log.error("Problem deleting old segment dir: {}", directory, e);
+                    }
+                }
+            }
+
+            StringJoiner sj = new StringJoiner(", ");
+            sj.add("segmentDir: " + segmentsDir.toString());
+            sj.add("segmentsDeleted: " + segmentsDeleted);
+            crawlStepLog.setArgs(sj.toString());
+            if (!errors.isEmpty()) {
+                crawlStepLog.setErrors("Problem deleting old segment dir(s): " + errors);
+            }
+            crawlStepLog.setState(FINISHED);
+            crawlStepLogRepository.saveAndFlush(crawlStepLog);
+
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            updateCrawlStepLogError(crawlStepLog, e.getMessage());
+            throw new OSSearchException(e);
+        }
+    }
+
+    private void getStats() throws Exception, OSSearchException {
+
         Map<String, String> args = new HashMap<>();
         args.put("sort", "false");
 
@@ -241,7 +345,7 @@ public class Crawler {
 
         SolrQuery query = new SolrQuery();
         query.setQuery("*:*");
-        query.setFilterQueries("collectionID:"+jobInfo.getCollectionId());
+        query.setFilterQueries("collectionID:" + jobInfo.getCollectionId());
         query.setRows(0);
         QueryResponse rsp = solrClient.query(solrCollection, query);
         crawlLog.setSolrCount(rsp.getResults().getNumFound());
@@ -265,6 +369,32 @@ public class Crawler {
         crawlStepLog.setSolrCount(rsp.getResults().getNumFound());
     }
 
+    private void updateCrawldbWebpagesDb() {
+
+        edu.si.ossearch.nutch.entity.CrawlDb savedCrawldb = crawlDbRepository.findCrawlDbByCollectionId(Integer.valueOf(jobInfo.getCollectionId()))
+                .orElseGet(() -> {
+                    edu.si.ossearch.nutch.entity.CrawlDb crawlDb = new edu.si.ossearch.nutch.entity.CrawlDb();
+                    crawlDb.setCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
+                    edu.si.ossearch.nutch.entity.CrawlDb newCrawldb = crawlDbRepository.saveAndFlush(crawlDb);
+                    return newCrawldb;
+                });
+
+        NutchCrawldbUtils crawldbUtils = new NutchCrawldbUtils();
+
+        List<Webpage> webpageList = crawldbUtils.dumpCrawlDatumEntityList(crawldbDir, conf, savedCrawldb);
+
+        List<String> newUUIDList = new ArrayList<>();
+        webpageList.stream().forEach(webpage -> newUUIDList.add(webpage.getId()));
+
+        Optional<List<String>> currentUUIDsInDb = webpageRepository.findAllUrlUuidsByCrawlDb_CollectionId(Integer.valueOf(jobInfo.getCollectionId()));
+
+        List<String> webpageIdsForDelete = new ArrayList<>((CollectionUtils.removeAll(currentUUIDsInDb.get(), newUUIDList)));
+
+        webpageRepository.deleteAllById(webpageIdsForDelete);
+
+        webpageRepository.saveAll(webpageList);
+    }
+
     /**
      * One Crawl Cycle.
      *
@@ -278,6 +408,8 @@ public class Crawler {
         if (sitemaps_from_hostdb.equals(SitemapFromHostDb.ALWAYS) || (sitemaps_from_hostdb.equals(SitemapFromHostDb.ONCE) && currentRound == 1)) {
             sitemapsFromHostDb();
         }
+
+        startSegmentGenerateDate = new Date(System.currentTimeMillis());
 
         if (hostdbgenerate) {
             sgmt = generate(hostdb);
@@ -346,6 +478,11 @@ public class Crawler {
 
         if (!stopFlag.get()) {
             try {
+
+                // clone configuration for injector
+                Configuration injectConf = new Configuration(conf);
+                injectConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
                 //cmd line: /opt/nutch/runtime/local/bin/nutch inject -Dmapreduce.job.reduces=2 -Dmapreduce.reduce.speculative=false -Dmapreduce.map.speculative=false -Dmapreduce.map.output.compress=true /opt/nutch/seeds/siarchives/crawl/crawldb /opt/nutch/seeds/siarchives/seed.txt
 
                 // full args inject(Path crawlDb, Path urlDir, boolean overwrite, boolean update, boolean normalize, boolean filter, boolean filterNormalizeAll)
@@ -369,7 +506,8 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                new Injector(conf).inject(crawldbDir, seedDir, overwrite, update, normalize, filter, filterNormalizeAll);
+
+                new Injector(injectConf).inject(crawldbDir, seedDir, overwrite, update, normalize, filter, filterNormalizeAll);
 
                 crawlStepLog.setState(FINISHED);
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
@@ -414,10 +552,14 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
+                // clone configuration for sitemap
+                Configuration sitemapConf = new Configuration(conf);
+                sitemapConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
                 //cmd line: /opt/nutch-1.18/bin/nutch sitemap -Dmapreduce.job.reduces=2 -Dmapreduce.reduce.speculative=false -Dmapreduce.map.speculative=false -Dmapreduce.map.output.compress=true /opt/nutch-1.18/seeds/aaa_v2/db/crawldb -sitemapUrls /opt/nutch-1.18/seeds/aaa_v2/sitemap_urls -threads 150
 
                 SitemapProcessor sitemapProcessor = new SitemapProcessor();
-                sitemapProcessor.setConf(conf);
+                sitemapProcessor.setConf(sitemapConf);
                 sitemapProcessor.sitemap(crawldbDir, hostdb, sitemapDir, strict, filter, normalize, threads);
 
                 crawlStepLog.setState(FINISHED);
@@ -492,8 +634,12 @@ public class Crawler {
 
                 // Usage: UpdateHostDb -hostdb <hostdb> [-tophosts <tophosts>] [-crawldb <crawldb>] [-checkAll] [-checkFailed] [-checkNew] [-checkKnown] [-force] [-filter] [-normalize]
 
+                // clone configuration for updateHostDb
+                Configuration updateHostDbConf = new Configuration(conf);
+                updateHostDbConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
                 UpdateHostDb updateHostDb = new UpdateHostDb();
-                updateHostDb.setConf(conf);
+                updateHostDb.setConf(updateHostDbConf);
                 int updateHostDbResult = updateHostDb.run(updateHostDb_args.toArray(new String[updateHostDb_args.size()]));
 
                 if (updateHostDbResult == 0) {
@@ -571,7 +717,11 @@ public class Crawler {
 
                 // generate(Path dbDir, Path segments, int numFetchers, long topN, long curTime, boolean filter, boolean norm, boolean force, int maxNumSegments, String expr, String hostdb)
 
-                sgmt = new Generator(conf).generate(crawldbDir, segmentsDir, numFetchers, topN, curTime, filter, norm, force, maxNumSegments, expr, hostdb != null ? hostdb.toString() : null);
+                // clone configuration for generator
+                Configuration generatorConf = new Configuration(conf);
+                generatorConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
+                sgmt = new Generator(generatorConf).generate(crawldbDir, segmentsDir, numFetchers, topN, curTime, filter, norm, force, maxNumSegments, expr, hostdb != null ? hostdb.toString() : null);
 
                 crawlStepLog.setState(FINISHED);
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
@@ -600,17 +750,26 @@ public class Crawler {
 
                 Map<String, String> fetchArgs = jobInfo.getNutchStepArgs().getFetch();
 
+                // clone configuration for fetcher
+                Configuration fetcherConf = new Configuration(conf);
+                fetcherConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
                 int threads = num_threads;
 
                 if (fetchArgs.containsKey("threads")) {
                     threads = Integer.parseInt(fetchArgs.get("threads"));
-                    conf.setInt("fetcher.threads.fetch", threads);
+                    fetcherConf.setInt("fetcher.threads.fetch", threads);
                 }
 
-                crawlStepLog.setArgs(fetchArgs.toString());
+                StringJoiner sj = new StringJoiner(", ");
+                sj.add("segments: " + Arrays.asList(sgmt));
+                sj.add("threads: " + threads);
+                sj.add("params: " + fetchArgs);
+
+                crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                new Fetcher(conf).fetch(sgmt[0], threads);
+                new Fetcher(fetcherConf).fetch(sgmt[0], threads);
 
                 crawlStepLog.setState(FINISHED);
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
@@ -651,7 +810,11 @@ public class Crawler {
                     parseConf.setBoolean("parse.normalize.urls", false);
                 }
 
-                crawlStepLog.setArgs(parseArgs.toString());
+                StringJoiner sj = new StringJoiner(", ");
+                sj.add("segments: " + Arrays.asList(sgmt));
+                sj.add("params: " + parseArgs);
+
+                crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
                 new ParseSegment(parseConf).parse(sgmt[0]);
@@ -679,9 +842,13 @@ public class Crawler {
 
                 Map<String, String> updatedbArgs = jobInfo.getNutchStepArgs().getUpdatedb();
 
-                boolean normalize = conf.getBoolean(CrawlDbFilter.URL_NORMALIZING, false);
-                boolean filter = conf.getBoolean(CrawlDbFilter.URL_FILTERING, false);
-                boolean additionsAllowed = conf.getBoolean(CRAWLDB_ADDITIONS_ALLOWED, true);
+                // clone configuration for crawlDb
+                Configuration crawlDbConf = new Configuration(conf);
+                crawlDbConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
+                boolean normalize = crawlDbConf.getBoolean(CrawlDbFilter.URL_NORMALIZING, false);
+                boolean filter = crawlDbConf.getBoolean(CrawlDbFilter.URL_FILTERING, false);
+                boolean additionsAllowed = crawlDbConf.getBoolean(CRAWLDB_ADDITIONS_ALLOWED, true);
                 boolean force = false;
 
                 if (updatedbArgs.containsKey("normalize")) {
@@ -699,7 +866,7 @@ public class Crawler {
 
                 StringJoiner sj = new StringJoiner(", ");
                 sj.add("crawldbDir:" + crawldbDir);
-                sj.add("sgmt:" + sgmt);
+                sj.add("sgmt:" + Arrays.asList(sgmt).toString());
                 sj.add("normalize:" + normalize);
                 sj.add("filter:" + filter);
                 sj.add("additionsAllowed:" + additionsAllowed);
@@ -711,7 +878,7 @@ public class Crawler {
                 //new CrawlDb(conf).update(crawldbDir, Files.list(Paths.get(segmentsDir.toString())).map(p -> new Path(p.toString())).toArray(Path[]::new), false, false);
 
                 //TODO: update to use -dir <segments> | <seg1>...<segN>
-                new CrawlDb(conf).update(crawldbDir, sgmt, normalize, filter, additionsAllowed, force);
+                new CrawlDb(crawlDbConf).update(crawldbDir, sgmt, normalize, filter, additionsAllowed, force);
 
                 crawlStepLog.setState(FINISHED);
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
@@ -742,7 +909,7 @@ public class Crawler {
 
                 StringJoiner sj = new StringJoiner(", ");
                 sj.add("linkdb: " + linkdb);
-                sj.add("segments: " + sgmt);
+                sj.add("segments: " + Arrays.asList(sgmt).toString());
                 sj.add("normalize: " + normalize);
                 sj.add("filter: " + filter);
                 sj.add("force: " + force);
@@ -750,8 +917,12 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
+                // clone configuration for linksDb
+                Configuration linksDbConf = new Configuration(conf);
+                linksDbConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
                 //TODO: update to use -dir <segments> | <seg1>...<segN>
-                new LinkDb(conf).invert(linkdb, sgmt, normalize, filter, force);
+                new LinkDb(linksDbConf).invert(linkdb, sgmt, normalize, filter, force);
 
                 crawlStepLog.setState(FINISHED);
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
@@ -795,11 +966,18 @@ public class Crawler {
                     dedup_args.add(compareOrder);
                 }
 
-                crawlStepLog.setArgs(dedup_args.toString());
+                StringJoiner sj = new StringJoiner(", ");
+                sj.add("params: " + dedup_args);
+
+                crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
+                // clone configuration for dedupJob
+                Configuration dedupJobConf = new Configuration(conf);
+                dedupJobConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
                 DeduplicationJob deduplicationJob = new DeduplicationJob();
-                deduplicationJob.setConf(conf);
+                deduplicationJob.setConf(dedupJobConf);
                 deduplicationJob.run(dedup_args.toArray(new String[dedup_args.size()]));
 
                 crawlStepLog.setState(FINISHED);
@@ -848,6 +1026,12 @@ public class Crawler {
                 Configuration indexConf = new Configuration(conf);
                 indexConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
 
+                // Seems to cause issues when indexing to solr failing on commit
+                //conf.set("mapreduce.local.map.tasks.maximum", "1");
+                //conf.set("mapreduce.local.reduce.tasks.maximum", "1");
+
+                //TODO: merge default regex-urlfilter.txt with url exclusion rules and edan search exclusion rules and use the merged output for url filtering during all crawling steps that use filtering
+
                 if (regexUrlFilterFile != null) {
                     indexConf.set("urlfilter.regex.file", "regexUrlFilters/"+regexUrlFilterFile.getName());
                     filter = true;
@@ -867,6 +1051,8 @@ public class Crawler {
                     //Set the collecitionIds for indexing
                     indexConf.set("moreIndexingFilter.collectionIDs", StringUtils.join(collectionIds, ","));
                 }
+
+                sj.add("moreIndexingFilter.collectionIDs: " + indexConf.get("moreIndexingFilter.collectionIDs"));
 
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
@@ -904,13 +1090,15 @@ public class Crawler {
                 index(list.toArray(new Path[list.size()]));
 //                index(new Path[]{list.get(list.size() - 1)});
 
-                jobInfo.setReindex(false);
-                schedulerRepository.save(jobInfo);
+//                jobInfo.setReindex(false);
+//                jobInfo.setJobType(SCHEDULED_CRAWL);
+//                schedulerRepository.save(jobInfo);
 
                 crawlStepLog.setState(FINISHED);
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
                 getStats();
+                updateCrawldbWebpagesDb();
 
                 crawlLog.setState(CrawlLog.State.FINISHED);
                 crawlLogRepository.saveAndFlush(crawlLog);
@@ -918,8 +1106,9 @@ public class Crawler {
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 updateCrawlStepLogError(crawlStepLog, e.getMessage());
-                jobInfo.setReindex(false);
-                schedulerRepository.save(jobInfo);
+//                jobInfo.setReindex(false);
+//                jobInfo.setJobType(SCHEDULED_CRAWL);
+//                schedulerRepository.save(jobInfo);
                 throw new OSSearchException(e);
             }
         } else {
@@ -933,16 +1122,21 @@ public class Crawler {
 
         if (!stopFlag.get()) {
             try {
-                solrClient.deleteByQuery(solrCollection, "collectionID:" + jobInfo.getCollectionId(), 30000);
+                //solrClient.deleteByQuery(solrCollection, "collectionID:" + jobInfo.getCollectionId(), 30000);
 
                 if (new File(dbDir.toString()).exists()) {
                     FileUtils.moveDirectory(new File(dbDir.toString()), new File(dbDir + "_backup_" + new Date().getTime()));
                 }
 
+                Optional<List<Webpage>> webpages = webpageRepository.findAllByCrawlDb_CollectionId(Integer.valueOf(jobInfo.getCollectionId()));
+
+                webpageRepository.deleteAll(webpages.get());;
+
                 crawl();
 
-                jobInfo.setRecrawl(false);
-                schedulerRepository.save(jobInfo);
+//                jobInfo.setRecrawl(false);
+//                jobInfo.setJobType(SCHEDULED_CRAWL);
+//                schedulerRepository.save(jobInfo);
 
                 crawlStepLog.setState(FINISHED);
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
@@ -950,8 +1144,9 @@ public class Crawler {
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 updateCrawlStepLogError(crawlStepLog, e.getMessage());
-                jobInfo.setRecrawl(false);
-                schedulerRepository.save(jobInfo);
+//                jobInfo.setRecrawl(false);
+//                jobInfo.setJobType(SCHEDULED_CRAWL);
+//                schedulerRepository.save(jobInfo);
                 throw new OSSearchException(e);
             }
         } else {
@@ -1018,11 +1213,12 @@ public class Crawler {
         stopFlag.set(stop);
     }
 
-    public void config(String jobId, JobKey jobKey) throws OSSearchException {
+    public void config(String jobId, JobKey jobKey, JobType jobType) throws OSSearchException {
 
         crawlLog = new CrawlLog();
         crawlLog.setJobKey(jobKey.toString());
         crawlLog.setJobId(jobId);
+        crawlLog.setJobType(jobType);
 
         CrawlStepLog crawlStepLog = createCrawlStepLog(INITIALIZE, RUNNING);
 
@@ -1033,7 +1229,10 @@ public class Crawler {
 
             crawlLog.setRounds(maxNumRounds);
             crawlLog.setJobConfig(getJsonString(jobInfo));
-            crawlLog.setCrawlConfig(getJsonString(crawlConfig));
+            JSONObject crawlConfigJson = new JSONObject(getJsonString(crawlConfig));
+            crawlConfigJson.remove("includeSiteUrls");
+            crawlConfigJson.remove("excludeSiteUrls");
+            crawlLog.setCrawlConfig(crawlConfigJson.toString());
             crawlLogRepository.saveAndFlush(crawlLog);
 
             setUpDirectories();
@@ -1083,6 +1282,10 @@ public class Crawler {
             conf.set("hadoop.tmp.dir", "hadoop_tmp");
             conf.set("hadoop.log.file", "logs/hadoop.log");
 
+            // the directory for screenshot files
+            Path screenshotDir = new Path("screenshots", "collectionID_"+jobInfo.getCollectionId());
+            conf.set("screenshot.location", String.valueOf(screenshotDir));
+
             // note that some of the options listed here could be set in the
             // corresponding hadoop site xml param file
             //common options
@@ -1105,6 +1308,10 @@ public class Crawler {
                 throw new OSSearchException("Nutch Plugins directory " + pluginDir.getCanonicalPath() + " does not exist! Make sure to build nutch-plugins module first");
             }
             conf.set("plugin.folders", pluginDir.getCanonicalPath());
+
+            // Seems to cause issues when indexing to solr failing on commit
+            //conf.set("mapreduce.local.map.tasks.maximum", "2");
+            //conf.set("mapreduce.local.reduce.tasks.maximum", "2");
 
             //Name of file on CLASSPATH containing regular expressions used by urlfilter-regex (RegexURLFilter) plugin. Can also use urlfilter.regex.file property
 //            conf.set("urlfilter.regex.file", "conf/regex-urlfilter.txt");
@@ -1263,7 +1470,7 @@ public class Crawler {
             String rule = urlExclusionPattern.getExpression().trim();
 
             if (urlExclusionPattern.getType() == UrlExclusionPattern.Type.contains) {
-             rule = "^.*"+Pattern.quote(urlExclusionPattern.getExpression().trim())+".*$";
+             rule = "^.*"+Pattern.quote(rule)+".*$";
             }
 
             if (urlExclusionPattern.getIgnoreCase()) {

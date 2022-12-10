@@ -5,12 +5,14 @@
         :tableData="userList"
         :selected="users"
         @selected="addCollectionManagers"
-        uniqueCheckField="id">
+        uniqueCheckField="id"
+        :isEditing="isEditing"
+    >
       <template v-slot:roleList="slotProps">
         <div v-for="(role, i) in slotProps.entry" :key="i">
-          <span v-if="role === 'ROLE_ADMIN'" class="badge rounded-pill bg-danger">{{ role }}</span>
-          <span v-else-if="role === 'ROLE_MANAGER'" class="badge rounded-pill bg-warning">{{ role }}</span>
-          <span v-else class="badge rounded-pill bg-primary">{{ role }}</span>
+          <span v-if="role === 'ROLE_ADMIN'" class="badge rounded-pill bg-danger bg-opacity-25 text-danger">{{ role }}</span>
+          <span v-else-if="role === 'ROLE_MANAGER'" class="badge rounded-pill bg-warning bg-opacity-25 text-warning">{{ role }}</span>
+          <span v-else class="badge rounded-pill bg-primary bg-opacity-25 text-primary">{{ role }}</span>
         </div>
       </template>
     </ImportAddEditCheckTable>
@@ -46,14 +48,14 @@ export default {
     }
   },
   methods: {
-    async getUsers(url = '/users', params = {projection: 'userIdNameEmailRoles'}) {
+    async getUsers() {
       //console.log("[getUsers] url: " + url + ", prams: " + JSON.stringify(params, null, 2))
-      await UserService.getUsers(url, params)
+      await UserService.getUsers('/users', {projection: 'userIdNameEmailRoles', size: 1000})
           .then(response => {
             let data = response.data;
-            if (data.page.totalElements > data.page.size) {
+            /*if (data.page.totalElements > data.page.size) {
               this.getUsers('/users', {size: data.page.totalElements, projection: 'userIdNameEmailRoles'})
-            }
+            }*/
             this.userList = data._embedded.users;
             //console.log("[getUsers] users",JSON.stringify(this.userList, null, 2))
           })
@@ -65,10 +67,10 @@ export default {
       //console.log("[addCollectionManagers] users",JSON.stringify(users))
 
       // let newArray = []
-      users.forEach(e => {
-        // newArray.push({id: e.id, username: e.username})
-        delete e._links
-      })
+      // users.forEach(e => {
+      //   // newArray.push({id: e.id, username: e.username})
+      //   delete e._links
+      // })
       //console.log("[addCollectionManagers] newArray",JSON.stringify(users))
       this.$emit('update:users', users)
     }

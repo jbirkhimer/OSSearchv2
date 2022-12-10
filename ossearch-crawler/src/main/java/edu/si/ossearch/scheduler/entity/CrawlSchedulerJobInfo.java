@@ -1,9 +1,8 @@
 package edu.si.ossearch.scheduler.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import edu.si.ossearch.dao.entity.CrawlConfig;
-import edu.si.ossearch.dao.entity.DynamicNavigation;
-import lombok.AccessLevel;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+//import edu.si.ossearch.scheduler.entity.converter.JobTypeConverter;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -15,7 +14,8 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+
+import static edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType.SCHEDULED_CRAWL;
 
 /**
  * @author jbirkhimer
@@ -26,11 +26,15 @@ import java.util.Set;
 @ToString//(onlyExplicitlyIncluded = true)
 @Entity
 @Table(name = "scheduler_job_info", uniqueConstraints = {
-        @UniqueConstraint(name = "UniqueJobName", columnNames = {"jobName"})
+        @UniqueConstraint(name = "UniqueJobNameAndJobGroup", columnNames = {"jobName", "jobGroup"})
 })
 public class CrawlSchedulerJobInfo implements Serializable {
 
     private static final long serialVersionUID = -747244979496943067L;
+
+    public enum JobType {
+        REINDEX, RECRAWL, SCHEDULED_CRAWL, CUSTOM_CRAWL, ONE_TIME_CRAWL, ADD_URLS, CRAWL_NOW
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -61,6 +65,10 @@ public class CrawlSchedulerJobInfo implements Serializable {
     private boolean reindex = false;
     private boolean recrawl = false;
 
+//    @JsonSerialize(converter = JobTypeConverter.class)
+    @Enumerated(EnumType.STRING)
+    private JobType jobType = SCHEDULED_CRAWL;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "scheduler_job_info_crawl_option_mapping",
             joinColumns = {@JoinColumn(name = "scheduler_job_info_id", referencedColumnName = "id")})
@@ -68,6 +76,7 @@ public class CrawlSchedulerJobInfo implements Serializable {
     private Map<String, String> crawlOptions = new HashMap<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
+    @Column(columnDefinition="TEXT")
     @CollectionTable(name = "scheduler_job_info_nutch_property_mapping",
             joinColumns = {@JoinColumn(name = "scheduler_job_info_id", referencedColumnName = "id")})
     @MapKeyColumn(name = "nutch_property_name")

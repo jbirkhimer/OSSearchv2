@@ -34,7 +34,7 @@ public class SpaRedirectFilterConfiguration {
     private OncePerRequestFilter createRedirectFilter() {
         return new OncePerRequestFilter() {
             // Forwards all routes except '/index.html', '/200.html', '/favicon.ico', '/sw.js' '/api/', '/api/**'
-            private final String REGEX = "(?!/actuator|/api|/swagger-ui|/v3|/_nuxt|/static|/swagger-ui\\.html|/index\\.html|/200\\.html|/favicon\\.ico|/sw\\.js).*$";
+            private final String REGEX = "(?!/actuator|/admin|/search|/api|/swagger-ui|/v3|/_nuxt|/static|/assets|/swagger-ui\\.html|/index\\.html|/200\\.html|/favicon\\.ico|/sw\\.js).*$";
             private Pattern pattern = Pattern.compile(REGEX);
             @Override
             protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException {

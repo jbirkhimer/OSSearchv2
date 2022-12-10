@@ -1,13 +1,8 @@
 package edu.si.ossearch.scheduler.job;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import edu.si.ossearch.OSSearchException;
 import edu.si.ossearch.nutch.Crawler;
-import edu.si.ossearch.scheduler.entity.CrawlLog;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
-import edu.si.ossearch.scheduler.entity.CrawlStepLog;
 import edu.si.ossearch.scheduler.repository.CrawlLogRepository;
 import edu.si.ossearch.scheduler.repository.CrawlSchedulerJobInfoRepository;
 import edu.si.ossearch.scheduler.repository.CrawlStepLogRepository;
@@ -18,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType.*;
 
 /**
  * @author jbirkhimer
@@ -72,19 +69,42 @@ public class CrawlCollectionJob implements InterruptableJob {
 
         log.info("Job ** jobKey, {}, jobId: {} ** fired @ {}, jobDataMap: {}", jobId, context.getJobDetail().getKey(), context.getFireTime(), jobDataMap.getWrappedMap());
 
+        CrawlSchedulerJobInfo job = schedulerRepository.findByJobNameAndJobGroup(context.getJobDetail().getKey().getName(), context.getJobDetail().getKey().getGroup());
+
         try {
-            CrawlSchedulerJobInfo job = schedulerRepository.findByJobNameAndJobGroup(context.getJobDetail().getKey().getName(), context.getJobDetail().getKey().getGroup());
-            crawler.config(jobId, context.getJobDetail().getKey());
-            if (job.isReindex()) {
+
+            crawler.config(jobId, context.getJobDetail().getKey(), job.getJobType());
+
+            if (job.isReindex() || job.getJobType() == REINDEX) {
                 crawler.reindex();
-            } else if (job.isRecrawl()) {
+                resetJob(job);
+            } else if (job.isRecrawl() || job.getJobType() == RECRAWL) {
                 crawler.reCrawl();
+                resetJob(job);
+                schedulerRepository.save(job);
+            } else if (job.getJobType() == ADD_URLS) {
+                crawler.crawl();
+                schedulerRepository.delete(job);
             } else {
                 crawler.crawl();
+                resetJob(job);
             }
+
             log.info("Job ** jobKey, {}, jobId: {} ** Finished................", jobId, context.getJobDetail().getKey());
-        } catch (OSSearchException e) {
+        } catch (Exception | OSSearchException e) {
             log.error("Job ** jobKey, {}, jobId: {} ** FAILED !!!", jobId, context.getJobDetail().getKey(), e);
+            resetJob(job);
+        }
+    }
+
+    private void resetJob(CrawlSchedulerJobInfo job) {
+        if (job.getJobType() != ADD_URLS) {
+
+            job.setJobType(SCHEDULED_CRAWL);
+            job.setReindex(false);
+            job.setRecrawl(false);
+
+            schedulerRepository.save(job);
         }
     }
 

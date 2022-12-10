@@ -122,6 +122,7 @@ export default {
       return false
     },
     updateCheckBox(key, value) {
+      // console.log("????????????", key, value, data)
       let data = {}
       if (this.formData) {
         data = JSON.parse(JSON.stringify(this.formData))

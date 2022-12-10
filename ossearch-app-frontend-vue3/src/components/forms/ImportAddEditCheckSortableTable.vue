@@ -1,9 +1,9 @@
 <template>
   <!-- Check/Select All/None -->
-  <div class="btn-toolbar" role="toolbar">
+  <div class="btn-toolbar mb-2" role="toolbar">
     <div class="btn-group btn-group-sm align-items-center me-2" role="group">
       <div class="btn btn-primary btn-checkbox">
-        <input type="checkbox" :checked="tableData.length === selectedLocal.length && tableData.length > 0" @change.prevent="toggleAll"
+        <input type="checkbox" :checked="selectedLocal.length > 0" @change.prevent="toggleAll"
                class="checkbox-inline"/>
       </div>
       <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
@@ -29,7 +29,7 @@
     </div>
   </div>
 
-  <div class="tableFixHead">
+  <div class="tableFixHead" :style="'max-height: '+height+'px'">
     <table class="table table-sm table-bordered">
       <thead class="table-primary">
         <!-- Column Headers -->
@@ -57,12 +57,12 @@
             <template v-for="(key, j) in tableOptions.columns" :key="j">
 
               <!-- Checkbox -->
-              <template v-if="key.type == 'checkbox'">
+              <template v-if="key.type === 'checkbox'">
                 <td class="text-center" :class="key.class" :style="{width: key.width}">
                   <input v-if="tableOptions.columns.length > 1" v-model="element[key.name]" type="checkbox"
-                         :checked="element[key.name]" :disabled="!isEditMode(index)">
+                         :checked="element[key.name]" :disabled="!isEditMode(index)" :ref="'row_' + index +'col_' + j">
                   <input v-else :value="element" @change="updateSingleValue($event.target.value, index)" type="checkbox"
-                         :checked="element" :disabled="!isEditMode(index)">
+                         :checked="element" :disabled="!isEditMode(index)" :ref="'row_' + index +'col_' + j">
                 </td>
               </template>
 
@@ -70,7 +70,7 @@
               <template v-if="key.type === 'select'">
                 <td :class="key.class" :style="{width: key.width}">
                   <template v-if="isEditMode(index)">
-                    <select v-model="element[key.name]" class="form-control-sm">
+                    <select v-model="element[key.name]" class="form-control-sm" :ref="'row_' + index +'col_' + j">
                       <option v-for="(option, i) in key.options" :key="i" :value="option.value">{{ option.label }}
                       </option>
                     </select>
@@ -93,9 +93,9 @@
                 <td :class="key.class" :style="{width: key.width}">
                   <template v-if="isEditMode(index)">
                     <input v-if="tableOptions.columns.length > 1" v-model="element[key.name]" type="text"
-                           class="form-control form-control-sm" :id="element[key.name]" :disabled="isDisabled(element, key)">
+                           class="form-control form-control-sm" :id="element[key.name]" :disabled="isDisabled(element, key)" :ref="'row_' + index +'col_' + j" @keyup.enter="saveRow(element, index)">
                     <input v-else :value="element[key.name]" @input="updateSingleValue($event.target.value, index, key.name)" type="text"
-                           class="form-control form-control-sm" :id="element" :disabled="isDisabled(element, key)">
+                           class="form-control form-control-sm" :id="element" :disabled="isDisabled(element, key)" :ref="'row_' + index +'col_' + j" @keyup.enter="saveRow(element, index)">
                   </template>
                   <template v-if="!isEditMode(index)">
                     <span v-if="tableOptions.columns.length > 1">{{ element[key.name] }}</span>
@@ -110,15 +110,15 @@
               <td v-if="tableOptions.actionDisabledDefaultValues ? !tableOptions.actionDisabledDefaultValues.includes(element) : true" class="justify-content-evenly text-center" style="width: 5%">
                 <div class="btn-group btn-group-sm align-items-center">
                   <template v-if="!isEditMode(index)">
-                    <a href="#" class="btn link-primary p-0 m-1" title="Edit" @click.prevent="editRow(element, index)"><i
-                        class="fas fa-edit text-primary"></i></a>
+                    <a href="#" class="btn btn-outline-light p-0 m-1" :class="isEditing ? 'link-secondary' : 'link-primary'" title="Edit" @click.prevent="editRow(element, index)"><i
+                        class="fas fa-edit"></i></a>
                   </template>
                   <template v-else>
-                    <a href="#" class="btn link-success p-0 m-1" title="Save" @click.prevent="saveRow(element, index)"><i
+                    <a href="#" class="btn btn-outline-light p-0 m-1" :class="isEditing ? 'link-secondary' : 'link-success'" title="Save" @click.prevent="saveRow(element, index)"><i
                         class="fas fa-check text-success"></i></a>
                   </template>
-                  <a class="btn link-danger p-0" title="Delete" @click.prevent="deleteRow(element, index)"><i
-                      class="fas fa-times-circle text-danger"></i></a>
+                  <a class="btn btn-outline-light p-0" :class="isEditing ? 'link-secondary' : 'link-danger'" title="Delete" @click.prevent="deleteRow(element, index)"><i
+                      class="fas fa-times-circle"></i></a>
                 </div>
               </td>
             </template>
@@ -149,6 +149,10 @@ export default {
     tableData: {
       type: Object,
       required: true
+    },
+    height: {
+      type: Number,
+      default: 300
     },
     selected: {
       type: Array,
@@ -215,8 +219,8 @@ export default {
       }
       this.$emit('selected', this.selectedLocal)
     },
-    toggleAll() {
-      if (this.tableData.length > this.selectedLocal.length) {
+    toggleAll(event) {
+      if (event.target.checked) {
         this.selectAll(true)
       } else {
         this.selectAll(false)
@@ -280,7 +284,11 @@ export default {
           if (column.default) {
             rowObject[column.name] = column.default
           } else {
-            rowObject[column.name] = ''
+            if (column.type === 'checkbox') {
+              rowObject[column.name] = false
+            } else {
+              rowObject[column.name] = ''
+            }
           }
         }
         rowObject[this.tableOptions.itemKey] = merged.length + 1
@@ -291,6 +299,9 @@ export default {
       }
       this.editList[merged.length - 1] = {editMode: true}
       this.$emit('updateTableData', merged)
+
+      let refName = 'row_' + (merged.length - 1) + 'col_0'
+      this.$nextTick(() => this.$refs[refName][0].focus())
     },
     deleteSelected(event) {
       event = JSON.parse(JSON.stringify(event))
@@ -356,7 +367,7 @@ export default {
 
 /* Set a fixed scrollable wrapper */
 .tableFixHead {
-  max-height: 300px;
+  //max-height: 300px;
   overflow-y: auto;
   width: 100%;
 

@@ -82,6 +82,59 @@
       </remove>
     </mapping>
   </writer>
+  <writer id="indexer_jsonbatch_1" class="org.apache.nutch.indexwriter.jsonbatch.JsonBatchIndexWriter">
+    <parameters>
+      <param name="delete" value="true"/>
+      <param name="path" value="./index_logs"/>
+      <param name="batchSize" value="5000"/>
+    </parameters>
+    <mapping>
+      <copy />
+      <rename>
+        <!--<field source="meta_description" dest="description"/>-->
+        <!--<field source="meta_keywords" dest="keywords"/>-->
+        <field source="meta_topicids" dest="topicids"/>
+        <field source="meta_content-type" dest="meta_Content-Type"/>
+        <field source="meta_contenttype" dest="meta_ContentType"/>
+        <field source="meta_gera" dest="meta_gEra"/>
+        <field source="meta_handheldfriendly" dest="meta_HandheldFriendly"/>
+        <field source="meta_language" dest="meta_Language"/>
+        <field source="meta_mobileoptimized" dest="meta_MobileOptimized"/>
+        <field source="meta_source" dest="meta_Source"/>
+        <field source="meta_subject" dest="meta_Subject"/>
+        <field source="meta_x-ua-compatible" dest="meta_X-UA-Compatible"/>
+        <field source="meta_albumtitle" dest="meta_AlbumTitle"/>
+        <field source="meta_artist" dest="meta_Artist"/>
+        <field source="meta_catalognumber" dest="meta_CatalogNumber"/>
+        <field source="meta_category" dest="meta_Category"/>
+        <field source="meta_content__type" dest="meta_Content__Type"/>
+        <field source="meta_country" dest="meta_Country"/>
+        <field source="meta_culture" dest="meta_Culture"/>
+        <field source="meta_decade" dest="meta_Decade"/>
+        <field source="meta_era" dest="meta_Era"/>
+        <field source="meta_format" dest="meta_Format"/>
+        <field source="meta_genre" dest="meta_Genre"/>
+        <field source="meta_imageurl" dest="meta_ImageURL"/>
+        <field source="meta_infotext" dest="meta_InfoText"/>
+        <field source="meta_instrument" dest="meta_Instrument"/>
+        <field source="meta_isrc" dest="meta_Isrc"/>
+        <field source="meta_label" dest="meta_Label"/>
+        <field source="meta_pricetrackdownload" dest="meta_PriceTrackDownload"/>
+        <field source="meta_program" dest="meta_Program"/>
+        <field source="meta_region" dest="meta_Region"/>
+        <field source="meta_release__decade" dest="meta_Release__Decade"/>
+        <field source="meta_sampleaudio" dest="meta_SampleAudio"/>
+        <field source="meta_sortdate" dest="meta_SortDate"/>
+        <field source="meta_subregion" dest="meta_SubRegion"/>
+        <field source="meta_theme" dest="meta_Theme"/>
+        <field source="meta_title" dest="meta_Title"/>
+        <field source="meta_year" dest="meta_Year"/>
+      </rename>
+      <remove>
+        <field source="segment"/>
+      </remove>
+    </mapping>
+  </writer>
   <writer id="indexer_dummy_1" class="org.apache.nutch.indexwriter.dummy.DummyIndexWriter">
     <parameters>
       <param name="delete" value="true"/>

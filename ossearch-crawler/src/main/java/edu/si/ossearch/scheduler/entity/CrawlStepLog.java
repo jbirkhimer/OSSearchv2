@@ -3,7 +3,6 @@ package edu.si.ossearch.scheduler.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import edu.si.ossearch.dao.entity.JobInfo;
 import edu.si.ossearch.scheduler.entity.converter.StateConverter;
 import edu.si.ossearch.scheduler.entity.converter.StepTypeConverter;
 import lombok.Getter;

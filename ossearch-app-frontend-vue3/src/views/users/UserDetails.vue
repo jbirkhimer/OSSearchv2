@@ -13,11 +13,11 @@
     <h1 class="mt-4">{{ user.username }}</h1>
     <Breadcrumb/>
 
+    <!-- Basic Information -->
     <div class="card mb-4">
-
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        Basic Information
+        <b>Basic Information</b>
         <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = {...user}; isEditBasicInfo = !isEditBasicInfo" v-if="!isEditBasicInfo">Edit</button>
           <button v-if="isEditBasicInfo" class="btn btn-sm btn-success me-md-2" type="button" @click="saveBasicInfo()">Save</button>
@@ -73,13 +73,14 @@
 
     </div>
 
+    <!-- Password Information -->
     <div class="card mb-4">
 
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        Password Information
+        <b>Password Information</b>
         <div class="float-end">
-          <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = user.password; isEditPassword = !isEditPassword" v-if="!isEditPassword">Edit</button>
+          <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = {...user}; isEditPassword = !isEditPassword" v-if="!isEditPassword">Edit</button>
           <button v-if="isEditPassword" class="btn btn-sm btn-success me-md-2" type="button" @click="savePassword()">Save</button>
           <button v-if="isEditPassword" class="btn btn-sm btn-danger float-end" type="button" @click="user.password = beforeEdit; confirmPassword = ''; isEditPassword = false">Cancel</button>
         </div>
@@ -165,20 +166,21 @@
       </div>
     </div>
 
+    <!-- Roles and Permissions -->
     <div class="card mb-4">
 
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        Roles and Permissions
+        <b>Roles and Permissions</b>
         <div class="float-end">
-          <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = user.roles; isEditRolesPermissions = !isEditRolesPermissions" v-if="!isEditRolesPermissions">Edit</button>
+          <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = {...user}; isEditRolesPermissions = !isEditRolesPermissions" v-if="!isEditRolesPermissions">Edit</button>
           <button v-if="isEditRolesPermissions" class="btn btn-sm btn-success me-md-2" type="button" @click="saveRolesPermissions()">Save</button>
           <button v-if="isEditRolesPermissions" class="btn btn-sm btn-danger float-end" type="button" @click="user.roles = beforeEdit; isEditRolesPermissions = false">Cancel</button>
         </div>
       </div>
 
       <div class="card-body">
-        <fieldset :disabled="!isEditRolesPermissions">
+<!--        <fieldset :disabled="!isEditRolesPermissions">-->
           <div class="row g-3">
             <div class="col-md-6">
               <div id="rolesSelect" class="form-floating">
@@ -201,21 +203,23 @@
                              :searchable="false"
                              :placeholder="'Select Role(s)'"
                              :allowEmpty="false"
+                             :disabled="!isEditRolesPermissions"
                 />
                 <!--            <label for="roleMultiselect" class="form-label">Role(s)</label>-->
               </div>
             </div>
           </div>
-        </fieldset>
+<!--        </fieldset>-->
       </div>
     </div>
 
+    <!-- Collection Access -->
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-search me-1"></i>
-        Collection Access
+        <b>Collection Access</b>
         <div class="float-end">
-          <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = user.collections; isEditCollections = !isEditCollections" v-if="!isEditCollections">Edit</button>
+          <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = {...user}; isEditCollections = !isEditCollections" v-if="!isEditCollections">Edit</button>
           <button v-if="isEditCollections" class="btn btn-sm btn-success me-md-2" type="button" @click="saveCollections">Save</button>
           <button v-if="isEditCollections" class="btn btn-sm btn-danger float-end" type="button" @click="user.collections = beforeEdit; isEditCollections = false">Cancel</button>
         </div>
@@ -234,7 +238,8 @@
       </div>
     </div>
 
-    <div class="accordion" id="accordionExample">
+    <!-- JSON Review -->
+<!--    <div class="accordion" id="accordionExample">
       <div class="accordion-item">
         <h2 class="accordion-header" id="headingOne">
           <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
@@ -247,7 +252,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div>-->
   </div>
 
 </template>
@@ -261,6 +266,7 @@ import Multiselect from "vue-multiselect";
 import RoleService from "../../services/role.service";
 import CollectionService from "../../services/collection.service";
 import Breadcrumb from "../../components/Breadcrumb";
+import EventBus from "../../common/EventBus";
 
 export default {
   name: "UserDetails",
@@ -284,6 +290,19 @@ export default {
       isEditRolesPermissions: false,
       isEditCollections: false,
       beforeEdit: null
+    }
+  },
+  watch: {
+    error: {
+      deep: true,
+      handler: function () {
+        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
+        if (this.error.response && this.error.response.status === 403) {
+          EventBus.dispatch("logout");
+        } else {
+          alert("ERROR: " + content)
+        }
+      }
     }
   },
   validations () {
@@ -315,36 +334,38 @@ export default {
     this.$watch(
         () => this.$route.params.name,
         async () => {
-          await this.fetchData()
-          await this.$nextTick(() => {
+          if (Object.keys(this.$route.params).length !== 0) {
+            await this.fetchData()
+            await this.$nextTick(() => {
 
-            const input = this.$refs["passwordInput"]
-            const tooltip = this.$refs["passwordValidationPopover"]
+              const input = this.$refs["passwordInput"]
+              const tooltip = this.$refs["passwordValidationPopover"]
 
-            //Using Poperjs
-            createPopper(input, tooltip, {
-              placement: "right",
-              // strategy: "absolute",
-              // modifiers: [
-              //   // applyStyle: {enabled: false},
-              //   // {
-              //   //   name: 'offset',
-              //   //   options: {
-              //   //     offset: [-150, 0],
-              //   //   },
-              //   // }
-              // ]
-            });
+              //Using Poperjs
+              createPopper(input, tooltip, {
+                placement: "right",
+                // strategy: "absolute",
+                // modifiers: [
+                //   // applyStyle: {enabled: false},
+                //   // {
+                //   //   name: 'offset',
+                //   //   options: {
+                //   //     offset: [-150, 0],
+                //   //   },
+                //   // }
+                // ]
+              });
 
-            // Using Bootstrap Popover
-            // new Popover(input, {
-            //   placement: "right",
-            //   animation: false,
-            //   content: tooltip.innerHTML,
-            //   html: true
-            // })
+              // Using Bootstrap Popover
+              // new Popover(input, {
+              //   placement: "right",
+              //   animation: false,
+              //   content: tooltip.innerHTML,
+              //   html: true
+              // })
 
-          })
+            })
+          }
         },
         // fetch the data when the view is created and the data is
         // already being observed
@@ -382,6 +403,8 @@ export default {
             this.collections.forEach(collection => {
               delete collection._links.collection
             })
+
+            this.collections.sort((a, b) => a.name.localeCompare(b.name));
 
           })
           .catch(errors => {
@@ -423,54 +446,124 @@ export default {
             this.user.password = ''
             //console.log("data", data)
             this.$store.commit('auth/updateUsername', this.user.username)
+            EventBus.dispatch('toast', {
+              type: 'success',
+              msg: 'User Updated!'
+            })
           })
           .catch(errors => {
             //console.log(errors);
-            this.error = errors
+            // this.error = errors
+            let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+            EventBus.dispatch('toast', {
+              type: 'danger',
+              msg: 'User Update Failed! ' + content
+            })
           });
 
       await this.$router.push({ name: 'userDetails', params: { name: this.user.username, id: this.user.id }})
       this.isEditBasicInfo = false
     },
     async saveBasicInfo() {
-      let url = '/users/'+this.user.id
+      // let url = '/users/'+this.user.id
       let body = {
         firstName: this.user.firstName,
         lastName: this.user.lastName,
         username: this.user.username,
         email: this.user.email
       }
-      await this.updateUser(url, body)
+      await this.updateUser('/users/'+this.user.id, body)
       this.isEditBasicInfo = false
     },
     async savePassword() {
-      let url = '/users/'+this.user.id
+      // let url = '/users/'+this.user.id
       let body = {
         password: this.user.password,
       }
-      await this.updateUser(url, body)
+      await this.updateUser('/users/'+this.user.id, body)
       this.isEditPassword = false
     },
     async saveRolesPermissions() {
-      let url = '/users/'+this.user.id+'/roles'
+      // let url = '/users/'+this.user.id+'/roles'
       let body = []
 
       // add the user role relationship
       this.user.roles.forEach(role => {
         body.push(role._links.self.href.replace('{?projection}',''))
       })
-      await UserService.updateRoles(url, body.join("\n"))
+      await UserService.updateRoles('/users/'+this.user.id+'/roles', body.join("\n"))
+          .then(response => {
+            let data = response.data;
+            console.log("data", data)
+            EventBus.dispatch('toast', {
+              type: 'success',
+              msg: 'User Roles Updated!'
+            })
+          })
+          .catch(errors => {
+            // console.log(errors);
+            // this.error = errors
+            let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+            EventBus.dispatch('toast', {
+              type: 'danger',
+              msg: 'User Roles Update Failed! ' + content
+            })
+          });
       this.isEditRolesPermissions = false
     },
     async saveCollections() {
-      let url = '/users/'+this.user.id+'/collections'
-      let body = []
-
-      // add the user role relationship
-      this.user.collections.forEach(collection => {
-        body.push(collection._links.self.href.replace('{?projection}',''))
+      // add the user collection relationship
+      await this.user.collections.forEach(collection => {
+        // let url = collection._links.users.href.replace('{?projection}','')
+        let body = this.user._links.self.href
+        console.log("adding user to collection", collection.name)
+        UserService.updateCollections(collection._links.users.href.replace('{?projection}',''), body)
+            .then(response => {
+              let data = response.data;
+              console.log("data", data)
+              EventBus.dispatch('toast', {
+                type: 'success',
+                msg: 'User Add Collections Updated!'
+              })
+            })
+            .catch(errors => {
+              // console.log(errors);
+              // this.error = errors
+              let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+              EventBus.dispatch('toast', {
+                type: 'danger',
+                msg: 'User Add Collections Failed! ' + content
+              })
+            });
       })
-      await UserService.updateCollections(url, body.join("\n"))
+
+      // remove the user collection relationship
+      let removeCollection = await this.beforeEdit.collections.filter( oldCollection => !this.user.collections.some( newCollection => newCollection.id === oldCollection.id ) );
+      // console.log("removeCollection", JSON.stringify(removeCollection,null,2))
+
+      await removeCollection.forEach(collection => {
+        // let url = collection._links.users.href.replace('{?projection}','')+"/"+this.user.id
+        console.log("removing user from collection", collection.name)
+        UserService.removeUserFromCollections(collection._links.users.href.replace('{?projection}','')+"/"+this.user.id)
+            .then(response => {
+              let data = response.data;
+              console.log("data", data)
+              EventBus.dispatch('toast', {
+                type: 'success',
+                msg: 'User Remove Collections Updated!'
+              })
+            })
+            .catch(errors => {
+              // console.log(errors);
+              // this.error = errors
+              let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+              EventBus.dispatch('toast', {
+                type: 'danger',
+                msg: 'User Remove Collections Failed! ' + content
+              })
+            });
+      })
+
       this.isEditCollections = false
     }
   }
@@ -515,8 +608,8 @@ export default {
 </style>
 
 <style lang="scss">
-@import '../../../node_modules/bootstrap/scss/functions';
-@import '../../../node_modules/bootstrap/scss/variables';
-@import '../../../node_modules/bootstrap/scss/mixins/breakpoints';
-@import "../../assets/styles/scss/v-multiselect-bs5";
+@import '~bootstrap/scss/_functions';
+@import '~bootstrap/scss/_variables';
+@import '~bootstrap/scss/mixins/_breakpoints';
+@import "@/assets/styles/scss/v-multiselect-bs5";
 </style>

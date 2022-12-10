@@ -19,6 +19,7 @@ class ServerStatusService {
     }
     getSolr() {
         return api.get('/utils/solr/count', {
+            params: {all: false},
             validateStatus: function (status) {
                 return (status >= 200 && status < 300) || status === 503;
             }

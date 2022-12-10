@@ -20,7 +20,6 @@ class UserService {
 
   getUsers(url, params) {
     //console.log('[userService] url: '+url+',\nparams: ' + JSON.stringify(params, null, 2))
-    // console.log("getUsers: " + url + ", " + params)
     return api.get(url, {params: params});
   }
 
@@ -36,11 +35,6 @@ class UserService {
 
   addRole(url, body) {
     //console.log('[userService] PATCH url: '+url+',\nbody: ' + JSON.stringify(body, null, 2))
-    // let config = {
-    //   headers: {
-    //     "Content-Type": "text/uri-list"
-    //   }
-    // }
     return api.patch(url, body, {headers: {"Content-Type": "text/uri-list"}});
   }
 
@@ -65,8 +59,13 @@ class UserService {
   }
 
   updateCollections(url, body) {
-    //console.log('[userService] PUT url: '+url+',\nbody: ' + body)
-    return api.put(url, body, {headers: {"Content-Type": "text/uri-list"}});
+    // console.log('[userService] PATCH url: '+url+',\nbody: ' + body)
+    return api.patch(url, body, {headers: {"Content-Type": "text/uri-list"}});
+  }
+
+  removeUserFromCollections(url) {
+    // console.log('[userService] DELETE url: '+url)
+    return api.delete(url, {headers: {"Content-Type": "text/uri-list"}});
   }
 }
 

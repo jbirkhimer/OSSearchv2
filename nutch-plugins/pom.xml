@@ -24,6 +24,7 @@
         <module>index-metadata</module>
         <module>index-more</module>
         <module>indexer-dummy</module>
+        <module>indexer-jsonbatch</module>
         <module>indexer-kafka</module>
         <module>indexer-solr</module>
         <module>parse-html</module>

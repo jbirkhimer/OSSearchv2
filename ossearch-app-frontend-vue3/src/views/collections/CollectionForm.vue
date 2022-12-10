@@ -1,16 +1,16 @@
 <template>
 
-  <div v-if="loading" class="container-fluid px-4 loading">
+<!--  <div v-if="loading" class="container-fluid px-4 loading">
     Loading...
-<!--    <h2>Name: {{ $route.params.name }}</h2>
-    <h2>Id: {{ $route.params.id }}</h2>-->
-  </div>
+&lt;!&ndash;    <h2>Name: {{ $route.params.name }}</h2>
+    <h2>Id: {{ $route.params.id }}</h2>&ndash;&gt;
+  </div>-->
 
   <div v-if="error" class="container-fluid px-4 error">
     {{ error }}
   </div>
 
-  <div v-if="collection" class="container-fluid px-4">
+  <div v-if="!loading" class="container-fluid px-4">
     <h1 class="mt-4">Create New Collection</h1>
     <Breadcrumb :path="$route.fullPath"/>
 
@@ -23,7 +23,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        Basic Information
+        <b>Basic Information</b>
       </div>
       <div class="card-body">
         <CollectionBasicInfo
@@ -38,7 +38,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-search me-1"></i>
-        Search Configuration
+        <b>Search Configuration</b>
       </div>
       <div class="card-body">
         <SearchConfigurationForm
@@ -53,7 +53,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-search me-1"></i>
-        Search Dynamic Navigation Configuration
+        <b>Search Dynamic Navigation Configuration</b>
       </div>
       <div class="card-body">
         <DynamicNavigation
@@ -67,7 +67,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-search me-1"></i>
-        Search Keymatch Configuration
+        <b>Search Keymatch Configuration</b>
       </div>
       <div class="card-body">
         <Keymatch
@@ -80,7 +80,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-search me-1"></i>
-        Search Include Other Collections
+        <b>Search Include Other Collections</b>
       </div>
       <div class="card-body">
         <p class="text-danger"><b>Note: This may require the included collection(s) to be re-indexed to take effect</b></p>
@@ -94,7 +94,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-search me-1"></i>
-        Search Part Of Other Collections
+        <b>Search Part Of Other Collections</b>
       </div>
       <div class="card-body">
         <p class="text-danger"><b>Note: This may require this collection to be re-indexed to take effect</b></p>
@@ -108,7 +108,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-spider me-1"></i>
-        Crawl Configuration
+        <b>Crawl Configuration</b>
       </div>
       <div class="card-body">
         <CollectionCrawlConfigurationForm
@@ -118,6 +118,7 @@
             v-model:seedUrls="collection.crawlConfig.seedUrls"
             v-model:crawlDbPath="collection.crawlConfig.crawlDbPath"
             v-model:crawlSeedPath="collection.crawlConfig.crawlSeedPath"
+            v-model:includeSiteUrls="collection.crawlConfig.includeSiteUrls"
             v-model:excludeSiteUrls="collection.crawlConfig.excludeSiteUrls"
             v-model:useSitemap="collection.crawlConfig.useSitemap"
             v-model:sitemapUrls="collection.crawlConfig.sitemapUrls"
@@ -131,7 +132,7 @@
 <!--    <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-clock me-1"></i>
-        Crawl Schedule
+        <b>Crawl Schedule</b>
       </div>
       <div class="card-body">
         <CollectionCrawlScheduleForm
@@ -148,7 +149,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-users me-1"></i>
-        Managers
+        <b>Managers</b>
       </div>
       <div class="card-body">
         <CollectionManagers
@@ -159,10 +160,10 @@
         />
       </div>
     </div>
-    <div class="card mb-4">
+<!--    <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        JSON Review
+        <b>JSON Review</b>
         <div class="form-check form-switch float-end">
           <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_collectionFormShowJson'" v-model="showJson">
         </div>
@@ -170,7 +171,7 @@
       <div class="card-body" v-if="showJson">
         <pre>{{ print(collection) }}</pre>
       </div>
-    </div>
+    </div>-->
   </div>
 
   <!-- Modal -->
@@ -206,6 +207,7 @@ import Breadcrumb from "../../components/Breadcrumb";
 import CollectionService from "../../services/collection.service";
 import TokenService from "../../services/token.service";
 import UserService from "../../services/user.service";
+import EventBus from "../../common/EventBus";
 
 export default {
   name: "CollectionForm",
@@ -235,6 +237,7 @@ export default {
           crawlDbPath: '',
           crawlSeedPath: '',
           seedUrls: [],
+          includeSiteUrls: [],
           excludeSiteUrls: [],
           urlExclusionPatterns: [],
           regexUrlFilters: [],
@@ -270,6 +273,19 @@ export default {
       createdCollectionLink: null
     }
   },
+  watch: {
+    error: {
+      deep: true,
+      handler: function () {
+        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
+        if (this.error.response && this.error.response.status === 403) {
+          EventBus.dispatch("logout");
+        } else {
+          alert("ERROR: " + content)
+        }
+      }
+    }
+  },
   // watch: {
   //   collection: {
   //     deep: true,
@@ -288,23 +304,33 @@ export default {
   //     }
   //   },
   // },
-  mounted() {
+  async mounted() {
+    this.loading = true
     let loggedInUser = TokenService.getUser()
-    UserService.getUserByUserName(loggedInUser.username)
+    await UserService.getUserByUserName(loggedInUser.username)
         .then(response => {
           let data = response.data;
           //console.log("loggedInUser", loggedInUser, "owner", data)
           this.collection.owner = data
           delete this.collection.owner._links
           //console.log("collection owner", this.collection.owner)
+          this.loading = false
         })
         .catch(errors => {
           //console.log(errors);
           this.error = errors
         });
+
   },
   methods: {
     async addCollection() {
+
+      this.collection.users.forEach(user => {
+        delete user._links
+      })
+
+      console.log("addCollection body:",JSON.stringify(this.collection,null,2))
+
       await CollectionService.addCollection("/collection2", JSON.stringify(this.collection))
           .then(response => {
             let data = response.data;
@@ -314,9 +340,12 @@ export default {
             // this.$router.push({path: '/collections'})
           })
           .catch(errors => {
-            //console.log(errors);
+            console.log(errors);
             this.error = errors
           });
+
+      console.log("createdCollectionLink", this.createdCollectionLink)
+      console.log("collection", this.collection)
 
       this.toggleModal = !this.toggleModal
     },
