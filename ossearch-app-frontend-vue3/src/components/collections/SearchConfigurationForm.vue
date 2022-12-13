@@ -168,7 +168,7 @@
             @updateTableData="$emit('update:includeFields', $event)"
             :selected="selected"
             @selected="updateSelected"
-            :isEditing="isEditing"
+            :isEditing="!isEditing"
         />
       </div>
     </div>
@@ -192,7 +192,7 @@ export default {
         enableActions: true,
         actionDisabledDefaultValues: ['title', 'content', 'url'],
         columns: [
-          {label: 'Include Response Fields', class: 'text-center', width: '33%'}
+          {label: 'Include Response Fields', class: 'text-center', width: '80%'}
         ]
       },
       selected: []
