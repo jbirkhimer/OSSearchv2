@@ -60,24 +60,24 @@
               <template v-if="key.type === 'checkbox'">
                 <td class="text-center" :class="key.class" :style="{width: key.width}">
                   <input v-if="tableOptions.columns.length > 1" v-model="element[key.name]" type="checkbox"
-                         :checked="element[key.name]" :disabled="!isEditMode(index)" :ref="'row_' + index +'col_' + j">
+                         :checked="element[key.name]" :disabled="isEditing" :ref="'row_' + index +'col_' + j">
                   <input v-else :value="element" @change="updateSingleValue($event.target.value, index)" type="checkbox"
-                         :checked="element" :disabled="!isEditMode(index)" :ref="'row_' + index +'col_' + j">
+                         :checked="element" :disabled="isEditing" :ref="'row_' + index +'col_' + j">
                 </td>
               </template>
 
               <!-- Select -->
               <template v-if="key.type === 'select'">
                 <td :class="key.class" :style="{width: key.width}">
-                  <template v-if="isEditMode(index)">
+                  <template v-if="!isEditing">
                     <select v-model="element[key.name]" class="form-control-sm" :ref="'row_' + index +'col_' + j">
                       <option v-for="(option, i) in key.options" :key="i" :value="option.value">{{ option.label }}
                       </option>
                     </select>
                   </template>
-                  <template v-if="!isEditMode(index)">
-                    <span v-if="tableOptions.columns.length > 1">{{ element[key.name] }}</span>
-                    <span v-else>{{ element[key.name] }}</span>
+                  <template v-if="isEditing">
+                    <span v-if="tableOptions.columns.length > 1">{{ getLabelByValue(key.options, element[key.name]) }}</span>
+                    <span v-else>{{ getLabelByValue(key.options, element[key.name]) }}</span>
                   </template>
                 </td>
               </template>
@@ -91,13 +91,13 @@
               <!-- Text -->
               <template v-else-if="!['checkbox', 'select'].includes(key.type)">
                 <td :class="key.class" :style="{width: key.width}">
-                  <template v-if="isEditMode(index)">
+                  <template v-if="!isEditing">
                     <input v-if="tableOptions.columns.length > 1" v-model="element[key.name]" type="text"
-                           class="form-control form-control-sm" :id="element[key.name]" :disabled="isDisabled(element, key)" :ref="'row_' + index +'col_' + j" @keyup.enter="saveRow(element, index)">
+                           class="form-control form-control-sm" :id="element[key.name]" :disabled="isEditing" :ref="'row_' + index +'col_' + j" @keyup.enter="saveRow(element, index)">
                     <input v-else :value="element[key.name]" @input="updateSingleValue($event.target.value, index, key.name)" type="text"
-                           class="form-control form-control-sm" :id="element" :disabled="isDisabled(element, key)" :ref="'row_' + index +'col_' + j" @keyup.enter="saveRow(element, index)">
+                           class="form-control form-control-sm" :id="element" :disabled="isEditing" :ref="'row_' + index +'col_' + j" @keyup.enter="saveRow(element, index)">
                   </template>
-                  <template v-if="!isEditMode(index)">
+                  <template v-if="isEditing">
                     <span v-if="tableOptions.columns.length > 1">{{ element[key.name] }}</span>
                     <span v-else>{{ element }} index: {{ index }}</span>
                   </template>
@@ -109,15 +109,7 @@
             <template v-if="tableOptions.enableActions">
               <td v-if="tableOptions.actionDisabledDefaultValues ? !tableOptions.actionDisabledDefaultValues.includes(element) : true" class="justify-content-evenly text-center" style="width: 5%">
                 <div class="btn-group btn-group-sm align-items-center">
-                  <template v-if="!isEditMode(index)">
-                    <a href="#" class="btn btn-outline-light p-0 m-1" :class="isEditing ? 'link-secondary' : 'link-primary'" title="Edit" @click.prevent="editRow(element, index)"><i
-                        class="fas fa-edit"></i></a>
-                  </template>
-                  <template v-else>
-                    <a href="#" class="btn btn-outline-light p-0 m-1" :class="isEditing ? 'link-secondary' : 'link-success'" title="Save" @click.prevent="saveRow(element, index)"><i
-                        class="fas fa-check text-success"></i></a>
-                  </template>
-                  <a class="btn btn-outline-light p-0" :class="isEditing ? 'link-secondary' : 'link-danger'" title="Delete" @click.prevent="deleteRow(element, index)"><i
+                  <a class="btn btn-outline-light p-0" :class="isEditing ? 'link-secondary' : 'link-danger'" title="Delete" @click.prevent="deleteRow(element)"><i
                       class="fas fa-times-circle"></i></a>
                 </div>
               </td>
@@ -226,12 +218,6 @@ export default {
         this.selectAll(false)
       }
     },
-    isEditMode(i) {
-      if (!this.editList[i]) {
-        return false
-      }
-      return this.editList[i].editMode
-    },
     isDisabled(entry, key) {
       if (key.disabled) {
         return true
@@ -254,25 +240,12 @@ export default {
       merged[index][key] = value
       this.$emit('updateTableData', merged)
     },
-    editRow(entry, i) {
-      console.log("editRow index", i)
-      for (let row in this.editList) {
-        if (row !== i) {
-          delete this.editList[row]
-        }
-      }
-      this.editList[i] = {editMode: true}
-    },
     saveRow(entry, i) {
-      this.editList[i].editMode = false
       let merged = JSON.parse(JSON.stringify(this.tableData))
       merged[i] = entry
       this.$emit('updateTableData', merged)
     },
-    deleteRow(entry, i) {
-      if (this.editList[i]) {
-        this.editList[i].editMode = false
-      }
+    deleteRow(entry) {
       this.deleteSelected([entry])
     },
     addRow() {
@@ -297,7 +270,6 @@ export default {
       } else {
         merged.push('')
       }
-      this.editList[merged.length - 1] = {editMode: true}
       this.$emit('updateTableData', merged)
 
       let refName = 'row_' + (merged.length - 1) + 'col_0'
@@ -343,8 +315,6 @@ export default {
 
         if (!merged.some(x => JSON.stringify(x) === JSON.stringify(rowObject))) {
           merged.push(rowObject)
-          let index = merged.findIndex(x => JSON.stringify(x) === JSON.stringify(rowObject));
-          this.editList[index] = {editMode: false}
         }
       }
       // console.log('import merged: ' + JSON.stringify(merged, null, 2))
@@ -358,6 +328,10 @@ export default {
         item.orderId = i + 1;
       });
       this.$emit('updateTableData', regexUrlFiltersCopy)
+    },
+    getLabelByValue(options, value) {
+      let optObj = options.find(o => o.value === value)
+      return optObj.label
     }
   }
 }

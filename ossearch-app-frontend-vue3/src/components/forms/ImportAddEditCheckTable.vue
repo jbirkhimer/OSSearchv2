@@ -35,9 +35,9 @@
       <thead class="table-primary">
         <!-- Column Headers -->
         <tr class="text-center">
-          <th v-if="!isEditing" style="width: 5%">Select</th>
+          <th style="width: 5%">Select</th>
           <th v-for="(col, i) in tableOptions.columns" :key="i" :style="'width:' + col.width">{{ col.label }}</th>
-          <th v-if="tableOptions.enableActions && !isEditing" style="width: 5%">Action</th>
+          <th v-if="tableOptions.enableActions" style="width: 5%">Action</th>
         </tr>
       </thead>
 
@@ -76,7 +76,7 @@
             <tr v-for="(entry, i) in tableData" :key="i">
 
               <!-- Select Row -->
-              <td v-show="!isEditing" class="text-center" style="width: 5%">
+              <td class="text-center" style="width: 5%">
                 <input type="checkbox" :checked="isChecked(entry)" @change="addSelected(entry, $event)">
               </td>
 
@@ -86,22 +86,22 @@
                 <template v-if="key.type === 'checkbox'">
                   <td class="text-center" :class="key.class" :style="{width: key.width}">
                     <input v-if="tableOptions.columns.length > 1" v-model="entry[key.name]" type="checkbox"
-                           :checked="entry[key.name]" :disabled="!isEditMode(i)" :ref="'row_' + i +'col_' + j">
+                           :checked="entry[key.name]" :disabled="isEditing" :ref="'row_' + i +'col_' + j">
                     <input v-else :value="entry" @change="updateSingleValue($event.target.value, i)" type="checkbox"
-                           :checked="entry" :disabled="!isEditMode(i)" :ref="'row_' + i +'col_' + j">
+                           :checked="entry" :disabled="isEditing" :ref="'row_' + i +'col_' + j">
                   </td>
                 </template>
 
                 <!-- Select -->
                 <template v-if="key.type === 'select'">
                   <td :class="key.class" :style="{width: key.width}">
-                    <template v-if="isEditMode(i)">
+                    <template v-if="!isEditing">
                       <select v-model="entry[key.name]" class="form-control-sm" :ref="'row_' + i +'col_' + j">
                         <option v-for="(option, i) in key.options" :key="i" :value="option.value">{{ option.label }}
                         </option>
                       </select>
                     </template>
-                    <template v-if="!isEditMode(i)">
+                    <template v-if="isEditing">
                       <span v-if="tableOptions.columns.length > 1">{{ entry[key.name] }}</span>
                       <span v-else>{{ entry }}</span>
                     </template>
@@ -117,13 +117,13 @@
                 <!-- Text -->
                 <template v-else-if="!['checkbox', 'select'].includes(key.type)">
                   <td :class="key.class" :style="{width: key.width}">
-                    <template v-if="isEditMode(i)">
+                    <template v-if="tableOptions.actionDisabledDefaultValues ? (!tableOptions.actionDisabledDefaultValues.includes(entry) && !isEditing) : !isEditing">
                       <input v-if="tableOptions.columns.length > 1" v-model="entry[key.name]" type="text"
-                             class="form-control form-control-sm" :ref="'row_' + i +'col_' + j" :disabled="isDisabled(entry, key)" @keyup.enter="saveRow(entry, i)">
+                             class="form-control form-control-sm" :ref="'row_' + i +'col_' + j" :disabled="isEditing" @keyup.enter="saveRow(entry, i)">
                       <input v-else :value="entry" @input="updateSingleValue($event.target.value, i)" type="text"
-                             class="form-control form-control-sm" :ref="'row_' + i +'col_' + j" :disabled="isDisabled(entry, key)" @keyup.enter="saveRow(entry, i)">
+                             class="form-control form-control-sm" :ref="'row_' + i +'col_' + j" :disabled="isEditing" @keyup.enter="saveRow(entry, i)">
                     </template>
-                    <template v-if="!isEditMode(i)">
+                    <template v-if="tableOptions.actionDisabledDefaultValues ? (tableOptions.actionDisabledDefaultValues.includes(entry) ? true : isEditing) : isEditing">
                       <span v-if="tableOptions.columns.length > 1">{{ entry[key.name] }}</span>
                       <span v-else>{{ entry }}</span>
                     </template>
@@ -132,18 +132,10 @@
               </template>
 
               <!-- Row Edit/Delete Actions -->
-              <template v-if="tableOptions.enableActions && !isEditing">
+              <template v-if="tableOptions.enableActions">
                 <td v-if="tableOptions.actionDisabledDefaultValues ? !tableOptions.actionDisabledDefaultValues.includes(entry) : true" class="justify-content-evenly text-center" style="width: 5%">
                   <div class="btn-group btn-group-sm align-items-center">
-                    <template v-if="!isEditMode(i)">
-                      <a href="#" class="btn btn-outline-light p-0 m-1" :class="isEditing ? 'link-secondary' : 'link-primary'" title="Edit" @click.prevent="editRow(entry, i)"><i
-                          class="fas fa-edit"></i></a>
-                    </template>
-                    <template v-else>
-                      <a href="#" class="btn btn-outline-light p-0 m-1" :class="isEditing ? 'link-secondary' : 'link-success'" title="Save" @click.prevent="saveRow(entry, i)"><i
-                          class="fas fa-check"></i></a>
-                    </template>
-                    <a class="btn btn-outline-light p-0" :class="isEditing ? 'link-secondary' : 'link-danger'" title="Delete" @click.prevent="deleteRow(entry, i)"><i
+                    <a class="btn btn-outline-light p-0" :class="isEditing ? 'link-secondary' : 'link-danger'" title="Delete" @click.prevent="deleteRow(entry)"><i
                         class="fas fa-times-circle"></i></a>
                   </div>
                 </td>
@@ -152,7 +144,7 @@
           </template>
           <template v-else>
             <tr>
-              <td v-if="!isEditing" :colspan="tableOptions.columns.length+2" class="text-center">None</td>
+              <td v-if="tableOptions.enableActions" :colspan="tableOptions.columns.length+2" class="text-center">None</td>
               <td v-else :colspan="tableOptions.columns.length" class="text-center">None</td>
             </tr>
           </template>
@@ -209,7 +201,6 @@ export default {
   data() {
     return {
       selectedLocal: JSON.parse(JSON.stringify(this.selected)),
-      editList: {}
     }
   },
   methods: {
@@ -257,12 +248,6 @@ export default {
         this.selectAll(false)
       }
     },
-    isEditMode(i) {
-      if (!this.editList[i]) {
-        return false
-      }
-      return this.editList[i].editMode
-    },
     isDisabled(entry, key) {
       if (key.disabled) {
         return true
@@ -284,24 +269,7 @@ export default {
       merged[index] = value
       this.$emit('updateTableData', merged)
     },
-    editRow(entry, i) {
-      for (let row in this.editList) {
-        if (row !== i) {
-          delete this.editList[row]
-        }
-      }
-      this.editList[i] = {editMode: true}
-    },
-    saveRow(entry, i) {
-      this.editList[i].editMode = false
-      let merged = JSON.parse(JSON.stringify(this.tableData))
-      merged[i] = entry
-      this.$emit('updateTableData', merged)
-    },
-    deleteRow(entry, i) {
-      if (this.editList[i]) {
-        this.editList[i].editMode = false
-      }
+    deleteRow(entry) {
       this.deleteSelected([entry])
     },
     addRow() {
@@ -320,7 +288,6 @@ export default {
       } else {
         merged.push('')
       }
-      this.editList[merged.length - 1] = {editMode: true}
       this.$emit('updateTableData', merged)
 
       // let tableDiv = this.$refs.tableDiv;
@@ -368,8 +335,6 @@ export default {
 
           if (!merged.some(x => JSON.stringify(x) === JSON.stringify(rowObject))) {
             merged.push(rowObject)
-            let index = merged.findIndex(x => JSON.stringify(x) === JSON.stringify(rowObject));
-            this.editList[index] = {editMode: false}
           }
         }
       }
