@@ -139,7 +139,7 @@
                   @updateTableData="collection.crawlConfig.sitemapUrls = $event"
                   :selected="selected"
                   @selected="updateSelected"
-                  :isEditing="true"
+                  :isEditing="false"
               />
             </div>
           </div>
