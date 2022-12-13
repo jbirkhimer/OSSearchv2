@@ -293,7 +293,7 @@ import Modal from "../../components/Modal";
 import EventBus from "../../common/EventBus";
 
 export default {
-  name: "Collection",
+  name: "CollectionDetails",
   props: ['name', 'tabName'],
   components: {
     CollectionBasicInfo,
@@ -867,7 +867,7 @@ export default {
             //console.log(errors);
             this.error = errors
           });
-      
+
       /*let url = '/collection/'+this.collection.id
       let body = {
         users: this.collection.users
