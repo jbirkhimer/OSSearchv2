@@ -140,8 +140,8 @@
   <property>
     <name>fetcher.server.delay</name>
       <!--<value>5.0</value>--> <!-- Nutch 1.x default -->
-      <value>2</value> <!-- OSSearch nutch 2.x setting-->
-      <!--<value>1</value>--> <!-- Testing -->
+      <!--<value>2</value>--> <!-- OSSearch nutch 2.x setting-->
+      <value>1</value> <!-- Testing -->
       <description>The number of seconds the fetcher will delay between
           successive requests to the same server. Note that this might get
           overridden by a Crawl-Delay from a robots.txt and is used ONLY if
@@ -336,7 +336,7 @@
     <property>
         <name>parser.html.blacklist</name>
         <!--<value>div.site-toggle robots-noindex,a.skip-main robots-noindex,div.header-nav  robots-noindex,div.browsenav robots-noindex,div.browsenav browsenav-stuck robots-noindex,div.row robots-noindex,div.footer robots-noindex</value>-->
-        <value>div.site-toggle robots-noindex,a.skip-main robots-noindex,div.header-nav robots-noindex,div.browsenav robots-noindex,div.browsenav browsenav-stuck robots-noindex,div.row robots-noindex,div.footer robots-noindex,div.row oss-nocrawl,div.skip-main oss-nocrawl</value>
+        <value>div.edan-facets,div.edan-search-facets,nasm-facet-dropdown,div#collections-trail,div.col span_3_of_12 robots-noindex,header.l-header robots-noindex,div.robots-noindex,header.robots-noindex,div.site-toggle robots-noindex,a.skip-main robots-noindex,div.header-nav  robots-noindex,div.browsenav robots-noindex,div.browsenav browsenav-stuck robots-noindex,div.row robots-noindex,div.footer robots-noindex,div.row oss-nocrawl,div.skip-main oss-nocrawl</value>
         <description>
             A comma-delimited list of css like tags to identify the elements which should
             NOT be parsed. Use this to tell the HTML parser to ignore the given elements, e.g. site navigation.
@@ -370,7 +370,7 @@
 
     <property>
         <name>parser.html.text.blacklist</name>
-        <value>class(robots-noindex,element-invisible,browsenav,header-nav)|type(header,title,nav,footer)|id(robots-noindex,chat-notification,skip-main,skip-link)</value>
+        <value>class(robots-noindex,element-invisible,browsenav,header-nav,edan-search-facets)|type(header,title,nav,footer)|id(robots-noindex,chat-notification,skip-main,skip-link)</value>
         <description>
             A piped-delimited list type,id,class prefix and comma-delimated list of values in parenthesis to identify
             the elements which should NOT be parsed.
