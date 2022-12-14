@@ -79,7 +79,7 @@ public class EdanUtils {
 
     private static SolrDocument convertToSolrDoc(Object content, List<String> fieldsFilter) {
         Map<String, Object> mapTo = ((Map<String,Object>) content).entrySet().stream()
-                .filter(e -> fieldsFilter.contains(e.getKey()))
+                .filter(e -> fieldsFilter.get(0).equals("*") ? true : fieldsFilter.contains(e.getKey()))
                 .map(e -> {
                     if (e.getValue() instanceof List && ((List<?>) e.getValue()).size() == 1) {
                         return new AbstractMap.SimpleImmutableEntry<>(e.getKey(), ((List<?>) e.getValue()).get(0));
