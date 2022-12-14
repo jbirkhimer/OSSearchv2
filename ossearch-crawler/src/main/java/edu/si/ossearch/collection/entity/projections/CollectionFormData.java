@@ -156,6 +156,9 @@ public interface CollectionFormData {
             @JsonSerialize(converter = UrlExclusionPatternTypeConverter.class)
             UrlExclusionPattern.Type getType();
 
+            @JsonSerialize(converter = UrlExclusionPatternScopeConverter.class)
+            UrlExclusionPattern.Scope getScope();
+
             Boolean getIgnoreCase();
         }
     }

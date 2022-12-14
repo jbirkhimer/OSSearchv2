@@ -1,8 +1,11 @@
 package edu.si.ossearch.scheduler.entity.projections;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import edu.si.ossearch.collection.entity.Collection;
-import edu.si.ossearch.collection.entity.RegexUrlFilters;
+//import edu.si.ossearch.collection.entity.RegexUrlFilters;
 import edu.si.ossearch.collection.entity.UrlExclusionPattern;
+import edu.si.ossearch.collection.entity.converters.UrlExclusionPatternScopeConverter;
+import edu.si.ossearch.collection.entity.converters.UrlExclusionPatternTypeConverter;
 import org.springframework.data.rest.core.config.Projection;
 
 import java.util.Date;
@@ -45,7 +48,11 @@ public interface CrawlConfigInfo {
     interface UrlExclusionPatternInfo {
         String getExpression();
 
+        @JsonSerialize(converter = UrlExclusionPatternTypeConverter.class)
         UrlExclusionPattern.Type getType();
+
+        @JsonSerialize(converter = UrlExclusionPatternScopeConverter.class)
+        UrlExclusionPattern.Scope getScope();
 
         Boolean isIgnoreCase();
 

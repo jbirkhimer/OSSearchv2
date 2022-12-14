@@ -107,6 +107,9 @@ public interface CollectionSearchData {
             @JsonSerialize(converter = UrlExclusionPatternTypeConverter.class)
             UrlExclusionPattern.Type getType();
 
+            @JsonSerialize(converter = UrlExclusionPatternScopeConverter.class)
+            UrlExclusionPattern.Scope getScope();
+
             Boolean getIgnoreCase();
         }
     }

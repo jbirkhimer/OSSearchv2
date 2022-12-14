@@ -48,9 +48,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.Reader;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
@@ -67,8 +68,11 @@ import java.util.stream.Collectors;
 
 import static edu.si.ossearch.scheduler.entity.CrawlLog.State.*;
 import static edu.si.ossearch.scheduler.entity.CrawlLog.StepType.*;
-import static edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType.SCHEDULED_CRAWL;
 import static org.apache.nutch.crawl.CrawlDb.CRAWLDB_ADDITIONS_ALLOWED;
+import static org.apache.nutch.crawl.CrawlDbFilter.URL_FILTERING;
+import static org.apache.nutch.crawl.Injector.URL_FILTER_NORMALIZE_ALL;
+import static org.apache.nutch.urlfilter.regex.RegexURLFilter.URLFILTER_REGEX_FILE;
+import static org.apache.nutch.urlfilter.regex.RegexURLFilter.URLFILTER_REGEX_RULES;
 
 /**
  * @author jbirkhimer
@@ -165,6 +169,9 @@ public class Crawler {
     private int maxNumRounds = 50;
 
     Path regexUrlFilterFile;
+
+    private String crawlUrlFilterRules = "";
+    private String indexUrlFilterRules = "";
 
     private boolean dump = false;
 
@@ -506,6 +513,9 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
+                if (filter || filterNormalizeAll || injectConf.getBoolean(URL_FILTERING, false) || injectConf.getBoolean(URL_FILTER_NORMALIZE_ALL, false)) {
+                    injectConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
 
                 new Injector(injectConf).inject(crawldbDir, seedDir, overwrite, update, normalize, filter, filterNormalizeAll);
 
@@ -528,6 +538,11 @@ public class Crawler {
 
         if (!stopFlag.get()) {
             try {
+                //cmd line: /opt/nutch-1.18/bin/nutch sitemap -Dmapreduce.job.reduces=2 -Dmapreduce.reduce.speculative=false -Dmapreduce.map.speculative=false -Dmapreduce.map.output.compress=true /opt/nutch-1.18/seeds/aaa_v2/db/crawldb -sitemapUrls /opt/nutch-1.18/seeds/aaa_v2/sitemap_urls -threads 150
+
+                // clone configuration for sitemap
+                Configuration sitemapConf = new Configuration(conf);
+                sitemapConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
 
                 Map<String, String> sitemapArgs = jobInfo.getNutchStepArgs().getSitemap();
 
@@ -552,11 +567,9 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                // clone configuration for sitemap
-                Configuration sitemapConf = new Configuration(conf);
-                sitemapConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
-
-                //cmd line: /opt/nutch-1.18/bin/nutch sitemap -Dmapreduce.job.reduces=2 -Dmapreduce.reduce.speculative=false -Dmapreduce.map.speculative=false -Dmapreduce.map.output.compress=true /opt/nutch-1.18/seeds/aaa_v2/db/crawldb -sitemapUrls /opt/nutch-1.18/seeds/aaa_v2/sitemap_urls -threads 150
+                if (filter || sitemapConf.getBoolean("sitemap.url.filter", false)) {
+                    sitemapConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
 
                 SitemapProcessor sitemapProcessor = new SitemapProcessor();
                 sitemapProcessor.setConf(sitemapConf);
@@ -596,6 +609,12 @@ public class Crawler {
 
         if (!stopFlag.get()) {
             try {
+                // Usage: UpdateHostDb -hostdb <hostdb> [-tophosts <tophosts>] [-crawldb <crawldb>] [-checkAll] [-checkFailed] [-checkNew] [-checkKnown] [-force] [-filter] [-normalize]
+
+                // clone configuration for updateHostDb
+                Configuration updateHostDbConf = new Configuration(conf);
+                updateHostDbConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
                 Map<String, String> hostdbUpdateArgs = jobInfo.getNutchStepArgs().getUpdatehostdb();
 
                 //Path hostDb = null;
@@ -632,11 +651,9 @@ public class Crawler {
                 crawlStepLog.setArgs(updateHostDb_args.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                // Usage: UpdateHostDb -hostdb <hostdb> [-tophosts <tophosts>] [-crawldb <crawldb>] [-checkAll] [-checkFailed] [-checkNew] [-checkKnown] [-force] [-filter] [-normalize]
-
-                // clone configuration for updateHostDb
-                Configuration updateHostDbConf = new Configuration(conf);
-                updateHostDbConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+                if (filter || updateHostDbConf.getBoolean("hostdb.url.filter", false)) {
+                    updateHostDbConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
 
                 UpdateHostDb updateHostDb = new UpdateHostDb();
                 updateHostDb.setConf(updateHostDbConf);
@@ -670,6 +687,13 @@ public class Crawler {
 
         if (!stopFlag.get()) {
             try {
+
+                // First, we generate a list of target URLs to fetch from:
+                // cmd line: /opt/nutch/runtime/local/bin/nutch generate -Dmapreduce.job.reduces=2 -Dmapreduce.reduce.speculative=false -Dmapreduce.map.speculative=false -Dmapreduce.map.output.compress=true /opt/nutch/seeds/siarchives/crawl/crawldb /opt/nutch/seeds/siarchives/crawl/segments -topN 50000 -numFetchers 1 -noFilter
+
+                // clone configuration for generator
+                Configuration generatorConf = new Configuration(conf);
+                generatorConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
 
                 Map<String, String> generateArgs = jobInfo.getNutchStepArgs().getGenerate();
 
@@ -712,14 +736,11 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                // First, we generate a list of target URLs to fetch from:
-                // cmd line: /opt/nutch/runtime/local/bin/nutch generate -Dmapreduce.job.reduces=2 -Dmapreduce.reduce.speculative=false -Dmapreduce.map.speculative=false -Dmapreduce.map.output.compress=true /opt/nutch/seeds/siarchives/crawl/crawldb /opt/nutch/seeds/siarchives/crawl/segments -topN 50000 -numFetchers 1 -noFilter
+                if (filter) {
+                    generatorConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
 
                 // generate(Path dbDir, Path segments, int numFetchers, long topN, long curTime, boolean filter, boolean norm, boolean force, int maxNumSegments, String expr, String hostdb)
-
-                // clone configuration for generator
-                Configuration generatorConf = new Configuration(conf);
-                generatorConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
 
                 sgmt = new Generator(generatorConf).generate(crawldbDir, segmentsDir, numFetchers, topN, curTime, filter, norm, force, maxNumSegments, expr, hostdb != null ? hostdb.toString() : null);
 
@@ -748,11 +769,11 @@ public class Crawler {
             try {
                 //cmd line: /opt/nutch/runtime/local/bin/nutch fetch -Dmapreduce.job.reduces=2 -Dmapreduce.reduce.speculative=false -Dmapreduce.map.speculative=false -Dmapreduce.map.output.compress=true -D fetcher.timelimit.mins=180 /opt/nutch/seeds/siarchives/crawl/segments/20210602150709 -threads 50
 
-                Map<String, String> fetchArgs = jobInfo.getNutchStepArgs().getFetch();
-
                 // clone configuration for fetcher
                 Configuration fetcherConf = new Configuration(conf);
                 fetcherConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
+                Map<String, String> fetchArgs = jobInfo.getNutchStepArgs().getFetch();
 
                 int threads = num_threads;
 
@@ -768,6 +789,10 @@ public class Crawler {
 
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
+
+                if (fetcherConf.getBoolean("fetcher.filter.urls", false)) {
+                    fetcherConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
 
                 new Fetcher(fetcherConf).fetch(sgmt[0], threads);
 
@@ -817,6 +842,10 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
+                if (parseConf.getBoolean("parse.filter.urls", false)) {
+                    parseConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
+
                 new ParseSegment(parseConf).parse(sgmt[0]);
 
                 crawlStepLog.setState(FINISHED);
@@ -840,14 +869,14 @@ public class Crawler {
             try {
                 //cmd line: /opt/nutch/runtime/local/bin/nutch updatedb -Dmapreduce.job.reduces=2 -Dmapreduce.reduce.speculative=false -Dmapreduce.map.speculative=false -Dmapreduce.map.output.compress=true /opt/nutch/seeds/siarchives/crawl/crawldb /opt/nutch/seeds/siarchives/crawl/segments/20210602150709
 
-                Map<String, String> updatedbArgs = jobInfo.getNutchStepArgs().getUpdatedb();
-
                 // clone configuration for crawlDb
                 Configuration crawlDbConf = new Configuration(conf);
                 crawlDbConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
 
+                Map<String, String> updatedbArgs = jobInfo.getNutchStepArgs().getUpdatedb();
+
                 boolean normalize = crawlDbConf.getBoolean(CrawlDbFilter.URL_NORMALIZING, false);
-                boolean filter = crawlDbConf.getBoolean(CrawlDbFilter.URL_FILTERING, false);
+                boolean filter = crawlDbConf.getBoolean(URL_FILTERING, false);
                 boolean additionsAllowed = crawlDbConf.getBoolean(CRAWLDB_ADDITIONS_ALLOWED, true);
                 boolean force = false;
 
@@ -875,10 +904,13 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                //new CrawlDb(conf).update(crawldbDir, Files.list(Paths.get(segmentsDir.toString())).map(p -> new Path(p.toString())).toArray(Path[]::new), false, false);
+                if (filter || crawlDbConf.getBoolean("crawldb.url.filters", false)) {
+                    crawlDbConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
 
                 //TODO: update to use -dir <segments> | <seg1>...<segN>
                 new CrawlDb(crawlDbConf).update(crawldbDir, sgmt, normalize, filter, additionsAllowed, force);
+                //new CrawlDb(conf).update(crawldbDir, Files.list(Paths.get(segmentsDir.toString())).map(p -> new Path(p.toString())).toArray(Path[]::new), false, false);
 
                 crawlStepLog.setState(FINISHED);
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
@@ -901,6 +933,10 @@ public class Crawler {
             try {
                 //cmd line: /opt/nutch/runtime/local/bin/nutch invertlinks -Dmapreduce.job.reduces=2 -Dmapreduce.reduce.speculative=false -Dmapreduce.map.speculative=false -Dmapreduce.map.output.compress=true /opt/nutch/seeds/siarchives/crawl/linkdb /opt/nutch/seeds/siarchives/crawl/segments/20210602150709 -noNormalize -nofilter
 
+                // clone configuration for linksDb
+                Configuration linksDbConf = new Configuration(conf);
+                linksDbConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
                 Map<String, String> invertlinksArgs = jobInfo.getNutchStepArgs().getInvertlinks();
 
                 boolean filter = !Boolean.parseBoolean(invertlinksArgs.getOrDefault("noFilter", "false"));
@@ -917,9 +953,9 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                // clone configuration for linksDb
-                Configuration linksDbConf = new Configuration(conf);
-                linksDbConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+                if (filter) {
+                    linksDbConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
 
                 //TODO: update to use -dir <segments> | <seg1>...<segN>
                 new LinkDb(linksDbConf).invert(linkdb, sgmt, normalize, filter, force);
@@ -944,6 +980,10 @@ public class Crawler {
         if (!stopFlag.get()) {
             try {
                 //cmd line: /opt/nutch/runtime/local/bin/nutch dedup -Dmapreduce.job.reduces=2 -Dmapreduce.reduce.speculative=false -Dmapreduce.map.speculative=false -Dmapreduce.map.output.compress=true /opt/nutch/seeds/siarchives/crawl/crawldb -group none
+
+                // clone configuration for dedupJob
+                Configuration dedupJobConf = new Configuration(conf);
+                dedupJobConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
 
                 Map<String, String> dedupArgs = jobInfo.getNutchStepArgs().getDedup();
 
@@ -972,10 +1012,6 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                // clone configuration for dedupJob
-                Configuration dedupJobConf = new Configuration(conf);
-                dedupJobConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
-
                 DeduplicationJob deduplicationJob = new DeduplicationJob();
                 deduplicationJob.setConf(dedupJobConf);
                 deduplicationJob.run(dedup_args.toArray(new String[dedup_args.size()]));
@@ -1001,6 +1037,9 @@ public class Crawler {
             try {
                 //cmd line: /opt/nutch/runtime/local/bin/nutch index -Dmapreduce.job.reduces=2 -Dmapreduce.reduce.speculative=false -Dmapreduce.map.speculative=false -Dmapreduce.map.output.compress=true /opt/nutch/seeds/siarchives/crawl/crawldb -linkdb /opt/nutch/seeds/siarchives/crawl/linkdb /opt/nutch/seeds/siarchives/crawl/segments/20210602150709 -deleteGone
 
+                Configuration indexConf = new Configuration(conf);
+                indexConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
                 Map<String, String> indexArgs = jobInfo.getNutchStepArgs().getIndex();
 
                 boolean noCrawlDb = false;
@@ -1019,26 +1058,14 @@ public class Crawler {
                 sj.add("noCommit: " + noCommit);
                 sj.add("deleteGone: " + deleteGone);
                 sj.add("params: " + params);
+                sj.add("filter: " + filter);
                 sj.add("normalize: " + normalize);
                 sj.add("addBinaryContent: " + addBinaryContent);
                 sj.add("base64: " + base64);
 
-                Configuration indexConf = new Configuration(conf);
-                indexConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
-
                 // Seems to cause issues when indexing to solr failing on commit
                 //conf.set("mapreduce.local.map.tasks.maximum", "1");
                 //conf.set("mapreduce.local.reduce.tasks.maximum", "1");
-
-                //TODO: merge default regex-urlfilter.txt with url exclusion rules and edan search exclusion rules and use the merged output for url filtering during all crawling steps that use filtering
-
-                if (regexUrlFilterFile != null) {
-                    indexConf.set("urlfilter.regex.file", "regexUrlFilters/"+regexUrlFilterFile.getName());
-                    filter = true;
-                }
-                log.info(">>>>> index using urlfilter.regex.file: {}", indexConf.get("urlfilter.regex.file"));
-
-                sj.add("filter: " + filter);
 
                 List<Collection> partOfCollections = collectionRepository.getPartOfCollectionsByCollectionId(Long.parseLong(jobInfo.getCollectionId()));
 
@@ -1056,6 +1083,16 @@ public class Crawler {
 
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
+
+                /*if (regexUrlFilterFile != null) {
+                    indexConf.set("urlfilter.regex.file", "regexUrlFilters/"+regexUrlFilterFile.getName());
+                    filter = true;
+                }
+                log.info(">>>>> index using urlfilter.regex.file: {}", indexConf.get("urlfilter.regex.file"));*/
+
+                if (filter) {
+                    indexConf.set(URLFILTER_REGEX_RULES, indexUrlFilterRules);
+                }
 
                 new IndexingJob(indexConf).index(crawldbDir, linkdb, Arrays.asList(sgmt), noCommit, deleteGone, params, filter, normalize, addBinaryContent, base64);
 
@@ -1080,7 +1117,7 @@ public class Crawler {
 
         if (!stopFlag.get()) {
             try {
-                solrClient.deleteByQuery(solrCollection, "collectionID:" + jobInfo.getCollectionId(), 30000);
+                //solrClient.deleteByQuery(solrCollection, "collectionID:" + jobInfo.getCollectionId(), 30000);
 
                 final List<Path> list = Files.list(Paths.get(segmentsDir.toString()))
                         .map(p -> new Path(p.toString()))
@@ -1247,7 +1284,7 @@ public class Crawler {
 
             setupSitemapSeedFile();
 
-            setupIndexingRegexUrlFilter(jobId, jobKey);
+            setupRegexUrlFilterRules(jobId, jobKey);
 
             crawlStepLog.setState(FINISHED);
             crawlStepLogRepository.saveAndFlush(crawlStepLog);
@@ -1449,22 +1486,29 @@ public class Crawler {
         }
     }
 
-    private void setupIndexingRegexUrlFilter(String jobId, JobKey jobKey) throws OSSearchException, Exception {
+    private void setupRegexUrlFilterRules(String jobId, JobKey jobKey) throws OSSearchException, Exception {
 
         Set<String> rules = new LinkedHashSet<>();
 
-        /*crawlConfig.getUrlExclusionPatterns().forEach(exclusionPattern -> {
-            rules.add("-" + exclusionPattern.getExpression());
-        });*/
+        String defaultFileRules = "regex-urlfilter.txt";
+        rules.addAll(readFileRules(conf.getConfResourceAsReader(defaultFileRules)));
+
+        log.debug("default regex urlfilter rules: {}", defaultFileRules);
+
+        String customFileRules = conf.get(URLFILTER_REGEX_FILE);
+        rules.addAll(readFileRules(conf.getConfResourceAsReader(customFileRules)));
+
+        log.debug("custom file regex urlfilter rules: {}", customFileRules);
 
         crawlConfig.getExcludeSiteUrls().forEach(rule -> {
             rules.add("-^"+rule.trim()+"$");
         });
 
-        /*crawlConfig.getRegexUrlFilters().forEach(rule -> {
-            String type = rule.getType() == Type.exclude ? "-" : "+";
-            rules.add(type + rule.getExpression());
-        });*/
+        Set<String> crawlRules = new LinkedHashSet<>();
+        Set<String> indexRules = new LinkedHashSet<>();
+
+        crawlRules.addAll(rules);
+        indexRules.addAll(rules);
 
         crawlConfig.getUrlExclusionPatterns().forEach(urlExclusionPattern -> {
             String rule = urlExclusionPattern.getExpression().trim();
@@ -1477,23 +1521,63 @@ public class Crawler {
                 rule = "(?i)"+rule+"(?-i)";
             }
 
-            rules.add("-"+rule);
+            switch(urlExclusionPattern.getScope()) {
+                case index:
+                    indexRules.add("-"+rule);
+                    break;
+                case crawl:
+                    crawlRules.add("-"+rule);
+                    break;
+                case all:
+                    indexRules.add("-"+rule);
+                    crawlRules.add("-"+rule);
+                    break;
+            }
         });
 
-        if (rules.size() > 0) {
+        //accept anything else
+        indexRules.add("+.");
+        crawlRules.add("+.");
 
-            rules.add("# accept anything else");
-            rules.add("+.");
+        crawlUrlFilterRules = crawlRules.stream().collect(Collectors.joining("\n"));
+        indexUrlFilterRules = indexRules.stream().collect(Collectors.joining("\n"));
+    }
 
-            // Next, we have to create a file with a list of regex url filters
-            Files.createDirectories(Paths.get(nutchConfDir.getAbsolutePath() + "/regexUrlFilters"));
+    /**
+     * Read the specified file of rules.
+     *
+     * @param reader
+     *          is a reader of regular expressions rules.
+     * @return the corresponding {@RegexRule rules}.
+     */
+    private List<String> readFileRules(Reader reader) throws IOException,
+            IllegalArgumentException {
 
-            regexUrlFilterFile = new Path(nutchConfDir.getAbsolutePath() + "/regexUrlFilters", jobKey.getGroup() + "_" + jobKey.getName() + "_regex-urlfilter.txt");
+        BufferedReader in = new BufferedReader(reader);
+        List<String> rules = new ArrayList<>();
+        String line;
 
-            Files.write(Paths.get(regexUrlFilterFile.toString()), String.join("\n", rules).getBytes());
+        while ((line = in.readLine()) != null) {
+            if (line.length() == 0) {
+                continue;
+            }
+            char first = line.charAt(0);
+            switch (first) {
+                case ' ':
+                case '\n':
+                case '#': // skip blank & comment lines
+                    continue;
+            }
 
-            log.info("created regexUrlFilterFile: {}", regexUrlFilterFile);
+            //skip accept/reject anything else regex we will add that later
+            if (line.equals("+.") || line.equals("-.")) {
+                continue;
+            }
+
+            log.debug("Adding rule [" + line + "]");
+            rules.add(line);
         }
+        return rules;
     }
 
     private String getJsonString(Object entity) throws JsonProcessingException {

@@ -161,6 +161,11 @@ export default {
       {label: 'include', value: 'include'},
       {label: 'exclude', value: 'exclude'}
     ]
+    let excludeScope = [
+      {label: 'crawling', value: 'crawl'},
+      {label: 'indexing', value: 'index'},
+      {label: 'crawling & indexing', value: 'all'}
+    ]
     return {
       loading: false,
       error: null,
@@ -179,7 +184,8 @@ export default {
           columns: [
             {label: 'URL Exclusion Patterns', name: 'expression', width: '70%'},
             {label: 'Type', name: 'type', class: 'text-center', type: 'select', options: patternTypes, default: "regex", width: '10%'},
-            {label: 'Ignore Case', name: 'ignoreCase', type: 'checkbox', class: 'text-center', width: '9%'}
+            {label: 'Ignore Case', name: 'ignoreCase', type: 'checkbox', class: 'text-center', width: '9%'},
+            {label: 'Exclusion Scope', name: 'scope', class: 'text-center', type: 'select', options: excludeScope, default: "all", width: '15%'}
           ]
         },
         regexUrlFilters: {

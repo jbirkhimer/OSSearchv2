@@ -1,6 +1,7 @@
 package edu.si.ossearch.collection.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import edu.si.ossearch.collection.entity.converters.UrlExclusionPatternScopeConverter;
 import edu.si.ossearch.collection.entity.converters.UrlExclusionPatternTypeConverter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,6 +30,12 @@ public class UrlExclusionPattern {
         regex
     }
 
+    public enum Scope {
+        crawl,
+        index,
+        all
+    }
+
 //    @Id
 //    @GeneratedValue(strategy = GenerationType.IDENTITY)
 //    private long id;
@@ -40,6 +47,10 @@ public class UrlExclusionPattern {
     @JsonSerialize(converter = UrlExclusionPatternTypeConverter.class)
     @Enumerated(EnumType.STRING)
     private UrlExclusionPattern.Type type;
+
+    @JsonSerialize(converter = UrlExclusionPatternScopeConverter.class)
+    @Enumerated(EnumType.STRING)
+    private UrlExclusionPattern.Scope scope;
 
     private Boolean ignoreCase = false;
 
