@@ -8,6 +8,18 @@
       <div class="row g-3 mb-3">
         <div class="col-md-12">
           <p>If you wish to immediately add or remove specific site urls from the search index.</p>
+
+          <ul class="list-unstyled">
+            <li><i class="fas fa-lightbulb text-warning pe-2"></i><b class="pe-2">Quick Tip:</b>If you are trying to:
+              <ul>
+                <li><b>add</b> a url that should have been crawled or indexed but was not</li>
+                <li><b>remove</b> a url that should not have been crawled or indexed</li>
+              </ul>
+            </li>
+            <li>It's best to figure out why the url was not included or excluded first before adding or removing them here. There
+              can be several reasons why a url is not included or excluded.
+            </li>
+          </ul>
         </div>
       </div>
 
