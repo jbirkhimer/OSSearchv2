@@ -9,7 +9,6 @@ import Login from '../views/Login';
 import Collections from '../views/collections/Collections';
 import Collection from "../views/collections/Collection";
 import Dashboard from "../views/Dashboard";
-// import CollectionForm from "../views/collections/CollectionForm";
 import UserForm from "../views/users/UserForm";
 import UserDetails from "../views/users/UserDetails";
 import Reports from "../views/reports/Reports";
@@ -17,7 +16,6 @@ import CrawlScheduleDetails from "../views/scheduler/CrawlScheduleDetails";
 import CrawlScheduleForm from "../views/scheduler/CrawlScheduleForm";
 import CrawlLogs from "../views/scheduler/CrawlLogs";
 import CrawlSteps from "../views/scheduler/CrawlSteps";
-// import CollectionDetails from "../views/collections/CollectionDetails";
 import AddRemoveUrls from "../views/collections/collection/AddRemoveUrls";
 import KeywordReport from "../views/collections/collection/reports/KeywordReport";
 import KeywordCountReport from "../views/collections/collection/reports/KeywordCountReport";
@@ -129,12 +127,6 @@ const routes = [
       name: 'collectionOverview'
     },
     children: [
-      /*{
-        path: 'configuration',
-        name: 'configuration',
-        component: CollectionDetails,
-        props: true
-      },*/
       {
         path: 'overview',
         name: 'collectionOverview',
@@ -268,11 +260,6 @@ const routes = [
     name: 'collectionCreate',
     component: CollectionCreate
   },
-  /*{
-    path: '/collections/create',
-    name: 'collectionForm',
-    component: CollectionForm
-  },*/
   {
     path: '/scheduler',
     name: 'crawlScheduler',
