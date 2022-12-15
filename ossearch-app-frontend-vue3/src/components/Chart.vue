@@ -32,6 +32,7 @@ export default {
   },
   data() {
     return {
+      chart: null,
       events: [
         // "animationEnd",
         // "beforeMount",

@@ -49,7 +49,7 @@ export default {
     return {
       loading: false,
       error: null,
-      startDate: moment().subtract(1, 'years'),
+      startDate: moment().subtract(1, 'years').startOf('day'),
       // startDate: moment('2019-03-01').utc().startOf('day'),
       endDate: moment().utc().endOf('day'),
       picker: {},
@@ -90,6 +90,9 @@ export default {
         xaxis: {
           type: 'datetime'
         },
+        yaxis: {
+          forceNiceScale: true
+        },
         noData: {
           text: 'Loading...'
         }
@@ -104,10 +107,10 @@ export default {
             enabled: true,
             autoScaleYaxis: true
           },
-          selection: {
+          /*selection: {
             enabled: true,
             xaxis: this.rangeSelection
-          },
+          },*/
           // events: {
           //   legendClick: function(chartContext, seriesIndex, config) {
           //     let value = {chartContext: chartContext, seriesIndex: seriesIndex, config: config}
@@ -133,7 +136,8 @@ export default {
           }
         },
         yaxis: {
-          tickAmount: 2
+          tickAmount: 3,
+          forceNiceScale: true
         },
         noData: {
           text: 'Loading...'
@@ -148,14 +152,18 @@ export default {
   },
   computed: {
     rangeSelection() {
-      const seriesMax = Math.max(...this.chartSeries.map(series => Math.max(...series.data.map(o => o[0]))))
+      //const seriesMax = Math.max(...this.chartSeries.map(series => Math.max(...series.data.map(o => o[0]))))
 
       const xaxis = {
         min: moment(this.endDate).subtract(1, 'months').toDate().getTime(),
         max: moment(this.endDate).toDate().getTime()
       }
 
+      let seriesMax = Math.max(...this.chartSeries[0].data.map(o => o[0]))
+      let seriesMin = Math.min(...this.chartSeries[0].data.map(o => o[0]))
+
       xaxis.max = seriesMax
+      xaxis.min = seriesMin
 
       // console.log("startDate", this.startDate.toISOString(), "endDate", this.endDate.toISOString(), "seriesMax", seriesMax)
       // console.log("diff years", this.endDate.diff(this.startDate, 'years'))
@@ -163,20 +171,21 @@ export default {
       // console.log("diff weeks", this.endDate.diff(this.startDate, 'weeks'))
       // console.log("diff days", this.endDate.diff(this.startDate, 'days'))
 
-      if (this.endDate.diff(this.startDate, 'years') > 1) {
-        xaxis.min = moment(this.endDate).subtract(1, 'years').toDate().getTime()
-        // console.log("years", xaxis.min)
-      } else if (this.endDate.diff(this.startDate, 'months') > 1) {
-        xaxis.min = moment(this.endDate).subtract(3, 'months').toDate().getTime()
-        // console.log("months", xaxis.min)
-      } else if (this.endDate.diff(this.startDate, 'weeks') > 1) {
-        xaxis.min = moment(this.endDate).subtract(2, 'weeks').toDate().getTime()
-        // console.log("weeks", moment.unix(xaxis.min/1000).toISOString())
-      } else if (this.endDate.diff(this.startDate, 'days') > 1) {
-        xaxis.min = moment(this.endDate).subtract(1, 'days').toDate().getTime()
-        // console.log("days", xaxis.min)
+      if (moment(seriesMax).diff(moment(seriesMin), 'years') > 1) {
+        xaxis.min = moment(seriesMax).subtract(1, 'years').toDate().getTime()
+        console.log("years", xaxis.min)
+      } else if (moment(seriesMax).diff(moment(seriesMin), 'months') > 1) {
+        xaxis.min = moment(seriesMax).subtract(3, 'months').toDate().getTime()
+        console.log("months", xaxis.min)
+      } else if (moment(seriesMax).diff(moment(seriesMin), 'weeks') > 1) {
+        xaxis.min = moment(seriesMax).subtract(2, 'weeks').toDate().getTime()
+        console.log("weeks", moment.unix(xaxis.min/1000).toISOString())
+      } else if (moment(seriesMax).diff(moment(seriesMin), 'days') > 1) {
+        xaxis.min = moment(seriesMax).subtract(1, 'days').toDate().getTime()
+        console.log("days", xaxis.min)
       }
 
+      //console.log("xaxis", xaxis)
       return xaxis
     }
   },
@@ -191,7 +200,10 @@ export default {
     chartSeries: {
       handler: async function () {
         let chartOptionsSelection = _.cloneDeep(this.chartOptionsSelection)
-        chartOptionsSelection.chart.selection.xaxis = this.rangeSelection
+        chartOptionsSelection.chart.selection = {
+          enabled: true,
+          xaxis: this.rangeSelection
+        }
         this.chartOptionsSelection = chartOptionsSelection
 
         let duration = moment.duration(this.endDate.diff(this.startDate))
@@ -206,7 +218,7 @@ export default {
           msg.push(duration.days() + " days")
         }
 
-        console.log("msg >>>>>>>>>>>>>>>>>>>", msg.join(","))
+        // console.log("msg >>>>>>>>>>>>>>>>>>>", msg.join(","))
 
         let chartOptionsMain = _.cloneDeep(this.chartOptionsMain)
         chartOptionsMain.title = {
@@ -264,7 +276,24 @@ export default {
             //console.log(errors);
             this.error = errors
           });
-      this.chartSeries = chartSeries
+
+      if (chartSeries && chartSeries.length) {
+        this.chartSeries = chartSeries
+      } else {
+        this.chartSeries = [{name: this.name, data: []}]
+
+        let nodata = {
+          text: 'No Data'
+        }
+
+        let chartOptionsSelection = _.cloneDeep(this.chartOptionsSelection)
+        chartOptionsSelection.noData = nodata
+        this.chartOptionsSelection = chartOptionsSelection
+
+        let chartOptionsMain = _.cloneDeep(this.chartOptionsMain)
+        chartOptionsMain.noData = nodata
+        this.chartOptionsMain = chartOptionsMain
+      }
     },
     updatePicker(picker) {
       // console.log("updatePicker")
@@ -291,6 +320,6 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 
 </style>

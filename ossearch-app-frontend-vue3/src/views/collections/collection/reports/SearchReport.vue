@@ -65,7 +65,7 @@ export default {
       loading: false,
       error: null,
       collection: null,
-      startDate: moment().subtract(1, 'years'),
+      startDate: moment().subtract(1, 'years').startOf('day'),
       // startDate: moment('2019-03-01').utc().startOf('day'),
       endDate: moment().utc().endOf('day'),
       picker: {},
@@ -146,10 +146,10 @@ export default {
             enabled: true,
             autoScaleYaxis: true
           },
-          selection: {
+          /*selection: {
             enabled: true,
             xaxis: this.rangeSelection
-          }
+          }*/
         },
         theme: {
           palette: 'palette1' // upto palette10
@@ -196,40 +196,43 @@ export default {
 
         url = new URL(process.env.VUE_APP_API_BASE_URL + '/api/reports/search/' + this.collection.id)
         url.search = new URLSearchParams(params)
-        console.log("export url", url.toString())
+        // console.log("export url", url.toString())
       }
       return url
     },
     rangeSelection() {
-      const xaxis = {
+      let xaxis = {
         min: moment(this.endDate).subtract(1, 'months').toDate().getTime(),
         max: moment(this.endDate).toDate().getTime()
       }
 
-      const seriesMax = Math.max(...this.chartSeries[0].data.map(o => o[0]))
+      let seriesMax = Math.max(...this.chartSeries[0].data.map(o => o[0]))
+      let seriesMin = Math.min(...this.chartSeries[0].data.map(o => o[0]))
 
       xaxis.max = seriesMax
+      xaxis.min = seriesMin
 
-      console.log("startDate", this.startDate.toISOString(), "endDate", this.endDate.toISOString(), "seriesMax", seriesMax)
-      console.log("diff years", this.endDate.diff(this.startDate, 'years'))
-      console.log("diff months", this.endDate.diff(this.startDate, 'months'))
-      console.log("diff weeks", this.endDate.diff(this.startDate, 'weeks'))
-      console.log("diff days", this.endDate.diff(this.startDate, 'days'))
+      console.log("startDate", moment(seriesMin).toISOString(), "endDate", moment(seriesMax).toISOString(), "seriesMax", seriesMax)
+      console.log("diff years", moment(seriesMax).diff(moment(seriesMin), 'years'))
+      console.log("diff months", moment(seriesMax).diff(moment(seriesMin), 'months'))
+      console.log("diff weeks", moment(seriesMax).diff(moment(seriesMin), 'weeks'))
+      console.log("diff days", moment(seriesMax).diff(moment(seriesMin), 'days'))
 
-      if (this.endDate.diff(this.startDate, 'years') > 1) {
-        xaxis.min = moment(this.endDate).subtract(1, 'years').toDate().getTime()
+      if (moment(seriesMax).diff(moment(seriesMin), 'years') > 1) {
+        xaxis.min = moment(seriesMax).subtract(1, 'years').toDate().getTime()
         console.log("years", xaxis.min)
-      } else if (this.endDate.diff(this.startDate, 'months') > 1) {
-        xaxis.min = moment(this.endDate).subtract(3, 'months').toDate().getTime()
+      } else if (moment(seriesMax).diff(moment(seriesMin), 'months') > 1) {
+        xaxis.min = moment(seriesMax).subtract(3, 'months').toDate().getTime()
         console.log("months", xaxis.min)
-      } else if (this.endDate.diff(this.startDate, 'weeks') > 1) {
-        xaxis.min = moment(this.endDate).subtract(2, 'weeks').toDate().getTime()
+      } else if (moment(seriesMax).diff(moment(seriesMin), 'weeks') > 1) {
+        xaxis.min = moment(seriesMax).subtract(2, 'weeks').toDate().getTime()
         console.log("weeks", moment.unix(xaxis.min/1000).toISOString())
-      } else if (this.endDate.diff(this.startDate, 'days') > 1) {
-        xaxis.min = moment(this.endDate).subtract(1, 'days').toDate().getTime()
+      } else if (moment(seriesMax).diff(moment(seriesMin), 'days') > 1) {
+        xaxis.min = moment(seriesMax).subtract(1, 'days').toDate().getTime()
         console.log("days", xaxis.min)
       }
 
+      //console.log("xaxis", xaxis)
       return xaxis
     }
   },
@@ -276,7 +279,7 @@ export default {
     tableOptions: {
       deep: true,
       handler: async function () {
-        console.log(">>> order", this.tableOptions.order)
+        // console.log(">>> order", this.tableOptions.order)
         this.loading = true
         await this.getSearchLogs()
         this.loading = false
@@ -285,7 +288,10 @@ export default {
     chartSeries: {
       handler: async function () {
         let chartOptionsSelection = _.cloneDeep(this.chartOptionsSelection)
-        chartOptionsSelection.chart.selection.xaxis = this.rangeSelection
+        chartOptionsSelection.chart.selection = {
+          enabled: true,
+          xaxis: this.rangeSelection
+        }
         this.chartOptionsSelection = chartOptionsSelection
 
         let duration = moment.duration(this.endDate.diff(this.startDate))
@@ -300,7 +306,7 @@ export default {
           msg.push(duration.days() + " days")
         }
 
-        console.log("msg >>>>>>>>>>>>>>>>>>>", msg.join(","))
+        // console.log("msg >>>>>>>>>>>>>>>>>>>", msg.join(","))
 
         let chartOptionsMain = _.cloneDeep(this.chartOptionsMain)
         chartOptionsMain.title = {
@@ -336,7 +342,7 @@ export default {
             this.searchLogs = data._embedded.searchlog
             this.recordsTotal = data.page.totalElements
             this.recordsFiltered = data.page.totalElements
-            console.log("data", data)
+            // console.log("data", data)
           }).catch(errors => {
             //console.log(errors);
             this.error = errors
@@ -354,9 +360,9 @@ export default {
 
       await SearchLogService.get("/searchlog/search/searchLogChartData", params)
           .then(response => {
-            console.log("searchLogChartData", JSON.stringify(response.data, null, 2))
+            // console.log("searchLogChartData", JSON.stringify(response.data, null, 2))
             Object.keys(response.data).forEach(site => {
-              console.log("searchLogChartData site:", site, "data:", JSON.stringify(response.data[site], null, 2))
+              // console.log("searchLogChartData site:", site, "data:", JSON.stringify(response.data[site], null, 2))
               datasets.push({
                 label: site,
                 data: response.data[site],
@@ -399,7 +405,7 @@ export default {
       }
     },
     updatePicker(picker) {
-      console.log("updatePicker")
+      // console.log("updatePicker")
       this.apiParams = {
         startDate: picker.startDate.utc().startOf('day').format(),
         endDate: picker.endDate.utc().endOf('day').format()
@@ -408,7 +414,7 @@ export default {
       this.endDate = picker.endDate.utc().endOf('day')
     },
     updateOrder(order) {
-      console.log('>>>Ordering on column ', order)
+      // console.log('>>>Ordering on column ', order)
       this.order = order
     },
     getMoment(date) {
@@ -436,6 +442,9 @@ export default {
     getLocalDateTime(utc) {
       let u = utc+'Z'
       return new Date(u).toLocaleString()
+    },
+    chartEvent(chartContext, selection) {
+      console.log(">>>>>>> EVENT", chartContext, selection.xaxis, selection.yaxis)
     },
   }
 }
