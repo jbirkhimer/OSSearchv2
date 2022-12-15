@@ -67,7 +67,7 @@ public class SearchLogsController {
     }
 
     @GetMapping("/searchlog/search/searchLogChartData")
-    public @ResponseBody ResponseEntity<?> keywordCountsBetweenDatesByCollectionId(@RequestParam(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
+    public @ResponseBody ResponseEntity<?> searchLogChartData(@RequestParam(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
                                                                                    @RequestParam(value = "endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
                                                                                    @RequestParam(value = "collectionId", required = false) Long collectionId,
                                                                                    @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText) {
