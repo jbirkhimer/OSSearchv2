@@ -284,125 +284,6 @@ public class Crawler {
     }
 
     /**
-     * Cleanup segments older than db.fetch.interval.default [default: 2592000 sec (30 days)] or db.fetch.interval.max [default: 7776000 sec (90 days)]
-     * @throws OSSearchException
-     */
-    private void deleteSegmentDirsOlderThanFetchInterval() throws OSSearchException {
-        Integer fetchInterval = conf.getInt("db.fetch.interval.default", 2592000);
-
-        log.info("Crawl removing segments older than fetch interval = {} sec");
-
-        CrawlStepLog crawlStepLog = createCrawlStepLog(CLEANUP, RUNNING);
-
-        try {
-
-            Date startDateMinusFetchInterval = DateUtils.addSeconds(startSegmentGenerateDate, -fetchInterval);
-
-            File folder =  new File(segmentsDir.toString());
-            String[] directories = folder.list((current, name) -> new File(current, name).isDirectory());
-
-            JSONArray segmentsDeleted = new JSONArray();
-            JSONArray errors = new JSONArray();
-
-            for (String dir : directories) {
-                log.debug("checking segment dir older than fetch interval: {}", dir);
-
-                Date segmentDate = new SimpleDateFormat("yyyyMMddHHmmss").parse(dir);
-
-                if (segmentDate.compareTo(startDateMinusFetchInterval) < 0) {
-                    File directory = new File(folder + "/" +dir);
-                    log.debug("deleting old segment dir: {}", directory.getAbsolutePath());
-                    try {
-                        FileUtils.deleteDirectory(directory);
-                        segmentsDeleted.put(directory.getName());
-                    } catch (IOException e) {
-                        errors.put(directory.getName() + " Error: "+e.getMessage());
-                        log.error("Problem deleting old segment dir: {}", directory, e);
-                    }
-                }
-            }
-
-            StringJoiner sj = new StringJoiner(", ");
-            sj.add("segmentDir: " + segmentsDir.toString());
-            sj.add("segmentsDeleted: " + segmentsDeleted);
-            crawlStepLog.setArgs(sj.toString());
-            if (!errors.isEmpty()) {
-                crawlStepLog.setErrors("Problem deleting old segment dir(s): " + errors);
-            }
-            crawlStepLog.setState(FINISHED);
-            crawlStepLogRepository.saveAndFlush(crawlStepLog);
-
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            updateCrawlStepLogError(crawlStepLog, e.getMessage());
-            throw new OSSearchException(e);
-        }
-    }
-
-    private void getStats() throws Exception, OSSearchException {
-
-        Map<String, String> args = new HashMap<>();
-        args.put("sort", "false");
-
-        CrawlDbReader dbr = new CrawlDbReader();
-        Map<String, Object> results = new HashMap<>();
-        results = (Map<String, Object>) dbr.query(args, conf, "stats", dbDir.toString());
-        crawlLog.setDbStats(getJsonString(results));
-
-
-        SolrQuery query = new SolrQuery();
-        query.setQuery("*:*");
-        query.setFilterQueries("collectionID:" + jobInfo.getCollectionId());
-        query.setRows(0);
-        QueryResponse rsp = solrClient.query(solrCollection, query);
-        crawlLog.setSolrCount(rsp.getResults().getNumFound());
-    }
-
-    private void getRoundStats(CrawlStepLog crawlStepLog) throws Exception {
-        Map<String, String> args = new HashMap<>();
-        args.put("sort", "false");
-
-        CrawlDbReader dbr = new CrawlDbReader();
-        Map<String, Object> results = new HashMap<>();
-        results = (Map<String, Object>) dbr.query(args, conf, "stats", dbDir.toString());
-        crawlStepLog.setDbStats(getJsonString(results));
-
-
-        SolrQuery query = new SolrQuery();
-        query.setQuery("*:*");
-        query.setFilterQueries("collectionID:" + jobInfo.getCollectionId());
-        query.setRows(0);
-        QueryResponse rsp = solrClient.query(solrCollection, query);
-        crawlStepLog.setSolrCount(rsp.getResults().getNumFound());
-    }
-
-    private void updateCrawldbWebpagesDb() {
-
-        edu.si.ossearch.nutch.entity.CrawlDb savedCrawldb = crawlDbRepository.findCrawlDbByCollectionId(Integer.valueOf(jobInfo.getCollectionId()))
-                .orElseGet(() -> {
-                    edu.si.ossearch.nutch.entity.CrawlDb crawlDb = new edu.si.ossearch.nutch.entity.CrawlDb();
-                    crawlDb.setCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
-                    edu.si.ossearch.nutch.entity.CrawlDb newCrawldb = crawlDbRepository.saveAndFlush(crawlDb);
-                    return newCrawldb;
-                });
-
-        NutchCrawldbUtils crawldbUtils = new NutchCrawldbUtils();
-
-        List<Webpage> webpageList = crawldbUtils.dumpCrawlDatumEntityList(crawldbDir, conf, savedCrawldb);
-
-        List<String> newUUIDList = new ArrayList<>();
-        webpageList.stream().forEach(webpage -> newUUIDList.add(webpage.getId()));
-
-        Optional<List<String>> currentUUIDsInDb = webpageRepository.findAllUrlUuidsByCrawlDb_CollectionId(Integer.valueOf(jobInfo.getCollectionId()));
-
-        List<String> webpageIdsForDelete = new ArrayList<>((CollectionUtils.removeAll(currentUUIDsInDb.get(), newUUIDList)));
-
-        webpageRepository.deleteAllById(webpageIdsForDelete);
-
-        webpageRepository.saveAll(webpageList);
-    }
-
-    /**
      * One Crawl Cycle.
      *
      * @throws IOException
@@ -1190,6 +1071,125 @@ public class Crawler {
             log.info("STOPPING {}", RECRAWL);
             updateCrawlStepLogStopped(crawlStepLog);
         }
+    }
+
+    /**
+     * Cleanup segments older than db.fetch.interval.default [default: 2592000 sec (30 days)] or db.fetch.interval.max [default: 7776000 sec (90 days)]
+     * @throws OSSearchException
+     */
+    private void deleteSegmentDirsOlderThanFetchInterval() throws OSSearchException {
+        Integer fetchInterval = conf.getInt("db.fetch.interval.default", 2592000);
+
+        log.info("Crawl removing segments older than fetch interval = {} sec");
+
+        CrawlStepLog crawlStepLog = createCrawlStepLog(CLEANUP, RUNNING);
+
+        try {
+
+            Date startDateMinusFetchInterval = DateUtils.addSeconds(startSegmentGenerateDate, -fetchInterval);
+
+            File folder =  new File(segmentsDir.toString());
+            String[] directories = folder.list((current, name) -> new File(current, name).isDirectory());
+
+            JSONArray segmentsDeleted = new JSONArray();
+            JSONArray errors = new JSONArray();
+
+            for (String dir : directories) {
+                log.debug("checking segment dir older than fetch interval: {}", dir);
+
+                Date segmentDate = new SimpleDateFormat("yyyyMMddHHmmss").parse(dir);
+
+                if (segmentDate.compareTo(startDateMinusFetchInterval) < 0) {
+                    File directory = new File(folder + "/" +dir);
+                    log.debug("deleting old segment dir: {}", directory.getAbsolutePath());
+                    try {
+                        FileUtils.deleteDirectory(directory);
+                        segmentsDeleted.put(directory.getName());
+                    } catch (IOException e) {
+                        errors.put(directory.getName() + " Error: "+e.getMessage());
+                        log.error("Problem deleting old segment dir: {}", directory, e);
+                    }
+                }
+            }
+
+            StringJoiner sj = new StringJoiner(", ");
+            sj.add("segmentDir: " + segmentsDir.toString());
+            sj.add("segmentsDeleted: " + segmentsDeleted);
+            crawlStepLog.setArgs(sj.toString());
+            if (!errors.isEmpty()) {
+                crawlStepLog.setErrors("Problem deleting old segment dir(s): " + errors);
+            }
+            crawlStepLog.setState(FINISHED);
+            crawlStepLogRepository.saveAndFlush(crawlStepLog);
+
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            updateCrawlStepLogError(crawlStepLog, e.getMessage());
+            throw new OSSearchException(e);
+        }
+    }
+
+    private void getStats() throws Exception, OSSearchException {
+
+        Map<String, String> args = new HashMap<>();
+        args.put("sort", "false");
+
+        CrawlDbReader dbr = new CrawlDbReader();
+        Map<String, Object> results = new HashMap<>();
+        results = (Map<String, Object>) dbr.query(args, conf, "stats", dbDir.toString());
+        crawlLog.setDbStats(getJsonString(results));
+
+
+        SolrQuery query = new SolrQuery();
+        query.setQuery("*:*");
+        query.setFilterQueries("collectionID:" + jobInfo.getCollectionId());
+        query.setRows(0);
+        QueryResponse rsp = solrClient.query(solrCollection, query);
+        crawlLog.setSolrCount(rsp.getResults().getNumFound());
+    }
+
+    private void getRoundStats(CrawlStepLog crawlStepLog) throws Exception {
+        Map<String, String> args = new HashMap<>();
+        args.put("sort", "false");
+
+        CrawlDbReader dbr = new CrawlDbReader();
+        Map<String, Object> results = new HashMap<>();
+        results = (Map<String, Object>) dbr.query(args, conf, "stats", dbDir.toString());
+        crawlStepLog.setDbStats(getJsonString(results));
+
+
+        SolrQuery query = new SolrQuery();
+        query.setQuery("*:*");
+        query.setFilterQueries("collectionID:" + jobInfo.getCollectionId());
+        query.setRows(0);
+        QueryResponse rsp = solrClient.query(solrCollection, query);
+        crawlStepLog.setSolrCount(rsp.getResults().getNumFound());
+    }
+
+    private void updateCrawldbWebpagesDb() {
+
+        edu.si.ossearch.nutch.entity.CrawlDb savedCrawldb = crawlDbRepository.findCrawlDbByCollectionId(Integer.valueOf(jobInfo.getCollectionId()))
+                .orElseGet(() -> {
+                    edu.si.ossearch.nutch.entity.CrawlDb crawlDb = new edu.si.ossearch.nutch.entity.CrawlDb();
+                    crawlDb.setCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
+                    edu.si.ossearch.nutch.entity.CrawlDb newCrawldb = crawlDbRepository.saveAndFlush(crawlDb);
+                    return newCrawldb;
+                });
+
+        NutchCrawldbUtils crawldbUtils = new NutchCrawldbUtils();
+
+        List<Webpage> webpageList = crawldbUtils.dumpCrawlDatumEntityList(crawldbDir, conf, savedCrawldb);
+
+        List<String> newUUIDList = new ArrayList<>();
+        webpageList.stream().forEach(webpage -> newUUIDList.add(webpage.getId()));
+
+        Optional<List<String>> currentUUIDsInDb = webpageRepository.findAllUrlUuidsByCrawlDb_CollectionId(Integer.valueOf(jobInfo.getCollectionId()));
+
+        List<String> webpageIdsForDelete = new ArrayList<>((CollectionUtils.removeAll(currentUUIDsInDb.get(), newUUIDList)));
+
+        webpageRepository.deleteAllById(webpageIdsForDelete);
+
+        webpageRepository.saveAll(webpageList);
     }
 
     /**
