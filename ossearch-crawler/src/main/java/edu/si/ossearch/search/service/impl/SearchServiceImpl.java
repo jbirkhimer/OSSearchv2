@@ -238,7 +238,7 @@ public class SearchServiceImpl implements SearchService {
                 EdanResponse edanResponse = edanClient.sendRequest(uri);
                 List<String> fieldsFilter = Arrays.asList(solrQuery.getFields().split(","));
                 //Collections.addAll(fieldsFilter, solrQuery.getFacetFields());
-                rsp = EdanUtils.convertQueryResponse(edanResponse, fieldsFilter);
+                rsp = EdanUtils.convertQueryResponse(edanRequest, edanResponse, fieldsFilter);
                 searchLog.setDocsFound(rsp.getResults().getNumFound());
                 searchLog.setQueryTime(rsp.getQTime());
                 searchLog.setElapsedTime(rsp.getElapsedTime());
@@ -255,7 +255,7 @@ public class SearchServiceImpl implements SearchService {
         searchLogRepository.saveAndFlush(searchLog);
 
         if (query.getOutput() == null || query.getOutput().isEmpty() || query.getOutput().equals("html")) {
-            return createHtmlResponse(rsp, query, paging, collection, searchLog);
+            return createHtmlResponse(rsp, query, paging, collection, edan, searchLog);
         } else if (query.getOutput().equals("xml") || query.getOutput().equals("xml_no_dtd")) {
             return createXmlResponse(rsp, query, paging, collection, searchLog, edan);
         } else if (query.getOutput().equals("json")) {
@@ -461,7 +461,7 @@ public class SearchServiceImpl implements SearchService {
         return ResponseEntity.ok().contentType(MediaType.TEXT_XML).body(gsp);
     }
 
-    private Object createHtmlResponse(QueryResponse rsp, Query query, Paging paging, Collection collection, SearchLog searchLog) throws Exception {
+    private Object createHtmlResponse(QueryResponse rsp, Query query, Paging paging, Collection collection, Boolean edan, SearchLog searchLog) throws Exception {
 
         PageResult pageResult = collection.getPageResults().stream()
                 .filter(pageresult -> pageresult.getName().equals(query.getClient()))
@@ -471,7 +471,7 @@ public class SearchServiceImpl implements SearchService {
         List<GM> keymatches = new ArrayList<>();
         processKeymatch(keymatches, query.getQ(), collection.getKeymatches());
 
-        String htmlContent = pageResultHelperService.generatePageResult(query, pageResult, paging, rsp, keymatches);
+        String htmlContent = pageResultHelperService.generatePageResult(query, pageResult, paging, rsp, keymatches, edan);
 
         return ResponseEntity.status(200).contentType(MediaType.TEXT_HTML).body(htmlContent);
     }

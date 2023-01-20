@@ -32,8 +32,10 @@ public class EdanUtils {
         List<String> fqs = Arrays.stream(solrQuery.getFilterQueries()).map(fq -> "p.webpage."+fq.toLowerCase().trim()).collect(Collectors.toList());
         queryParams.add("fqs", new JSONArray(fqs).toString());
 
-        List<String> facetFields = Arrays.stream(solrQuery.getFacetFields()).map(facetField -> "p.webpage."+facetField.toLowerCase().trim()).collect(Collectors.toList());
-        queryParams.addAll("facet.field", facetFields);
+        if (solrQuery.getFacetFields() != null) {
+            List<String> facetFields = Arrays.stream(solrQuery.getFacetFields()).map(facetField -> "p.webpage." + facetField.toLowerCase().trim()).collect(Collectors.toList());
+            queryParams.addAll("facet.field", facetFields);
+        }
 
         queryParams.add("facet", solrQuery.get(FacetParams.FACET));
 
@@ -48,7 +50,7 @@ public class EdanUtils {
         return queryParams;
     }
 
-    public static QueryResponse convertQueryResponse(EdanResponse edanResponse, List<String> fieldsFilter) {
+    public static QueryResponse convertQueryResponse(MultiValueMap<String, String> edanRequest, EdanResponse edanResponse, List<String> fieldsFilter) {
         NamedList<Object> res = new NamedList<>();
 
         SolrDocumentList solrDocuments = new SolrDocumentList();
@@ -71,8 +73,18 @@ public class EdanUtils {
         NamedList<Object> highlighting = new NamedList<>();
         res.add("highlighting", highlighting);
 
+        NamedList<Object> params = new NamedList<>();
+        params.add("start", edanRequest.get("start").get(0));
+        params.add("rows", edanRequest.get("rows").get(0));
+
+        NamedList<Object> responseHeader = new NamedList<>();
+        responseHeader.add("params", params);
+        responseHeader.add("QTime", 0);
+        res.add("responseHeader", responseHeader);
+
         QueryResponse queryResponse = new QueryResponse();
         queryResponse.setResponse(res);
+        queryResponse.setElapsedTime(0);
 
         return queryResponse;
     }

@@ -13,5 +13,5 @@ import java.util.List;
  */
 public interface SearchPageResultHelperService {
 
-    String generatePageResult(Query query, PageResult pageResult, Paging paging, QueryResponse solrResults, List<GM> keymatches);
+    String generatePageResult(Query query, PageResult pageResult, Paging paging, QueryResponse solrResults, List<GM> keymatches, Boolean edan);
 }

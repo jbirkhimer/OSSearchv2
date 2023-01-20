@@ -62,7 +62,7 @@ public class SearchPageResultHelperImpl implements SearchPageResultHelperService
     }
 
     @Override
-    public String generatePageResult(Query query, PageResult pageResult, Paging paging, QueryResponse rsp, List<GM> keymatches) {
+    public String generatePageResult(Query query, PageResult pageResult, Paging paging, QueryResponse rsp, List<GM> keymatches, Boolean edan) {
 
         Map<String, Object> solrParams = (HashMap) rsp.getResponseHeader().toMap(new HashMap()).get("params");
         int startIndex = Integer.parseInt(String.valueOf(solrParams.get("start")));
@@ -87,6 +87,7 @@ public class SearchPageResultHelperImpl implements SearchPageResultHelperService
         ctx.setVariable("proxystylesheet", query.getProxystylesheet());
         ctx.setVariable("getfields", query.getGetfields());
         ctx.setVariable("num", pageSize);
+        ctx.setVariable("edan", edan);
 
         //Keymatch Template props
         ctx.setVariable("keymatch", keymatches);
