@@ -18,7 +18,7 @@
 
   <div class="container-fluid px-4">
     <!--    <h1 class="mt-4">{{ jobData.jobName }}</h1>-->
-    <h1 class="mt-4">Crawl Logs for {{ $route.params.jobGroup }}.{{ $route.params.jobName }}</h1>
+    <h1 class="mt-4">Crawl Logs for {{ $route.params.jobName }}</h1>
     <Breadcrumb/>
     <!--    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="createCrawlSchedule()">Create
         </button>-->
@@ -92,7 +92,7 @@
                 <td v-if="column.name === 'view'" class="justify-content-evenly text-center">
                   <div class="btn-group btn-group-sm align-items-center">
                     <router-link class="btn link-primary p-0 m-1"
-                                 :to="{ name: 'crawlSteps', params: { jobName: $route.params.jobName, jobGroup: $route.params.jobGroup, jobId: crawLog.jobId }}"
+                                 :to="{ name: 'crawlSteps', params: { jobName: $route.params.jobName, jobId: crawLog.jobId }}"
                                  @click="selectedJobId = crawLog['jobId']"><i class="fas fa-tasks"></i></router-link>
                   </div>
                 </td>
