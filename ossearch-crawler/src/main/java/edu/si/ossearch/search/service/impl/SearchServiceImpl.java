@@ -546,6 +546,13 @@ public class SearchServiceImpl implements SearchService {
                     parseSpecialTerms(solrQuery, queryPart);
                 } else {
                     queryPart = queryPart.trim().replaceAll("\\s(AND|OR)$", "");
+                    //Escaping Common Problem Special Characters for solr
+                    queryPart = queryPart.replace("\\", "\\\\");
+                    queryPart = queryPart.replace(":", "\\:");
+                    /*queryPart = queryPart.replace("\\", "\\\\");
+                    for (String chr : Arrays.asList("+", "-", "&", "|", "!", "(", ")", "{", "}", "[", "]", "^", "\"", "~", "?", ":", "/")) {
+                        queryPart = queryPart.replace(chr, '\\' + chr);
+                    }*/
                     solrQuery.setQuery(queryPart);
                 }
             }
