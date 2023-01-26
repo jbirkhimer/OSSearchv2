@@ -230,6 +230,18 @@ public class Crawler {
 
             currentRound--;
 
+            // if a recrawl delete existing solr records and index all segments from the recrawl
+            if (jobInfo.isRecrawl() || jobInfo.getJobType() == JobType.RECRAWL) {
+                solrClient.deleteByQuery(solrCollection, "collectionID:" + jobInfo.getCollectionId(), 30000);
+
+                final List<Path> list = Files.list(Paths.get(segmentsDir.toString()))
+                        .map(p -> new Path(p.toString()))
+                        .sorted(Comparator.comparing(Path::toString))
+                        .collect(Collectors.toList());
+
+                index(list.toArray(new Path[list.size()]));
+            }
+
             deleteSegmentDirsOlderThanFetchInterval();
 
             if (!stopFlag.get()) {
@@ -354,8 +366,10 @@ public class Crawler {
             /*List<Path> segments = new ArrayList<>();
             segments.add(sgmt);*/
 
-            // index
-            index(sgmt);
+            if (!jobInfo.isRecrawl() || jobInfo.getJobType() != JobType.RECRAWL) {
+                // index
+                index(sgmt);
+            }
         }
 
         return false;
@@ -998,7 +1012,7 @@ public class Crawler {
 
         if (!stopFlag.get()) {
             try {
-                //solrClient.deleteByQuery(solrCollection, "collectionID:" + jobInfo.getCollectionId(), 30000);
+                solrClient.deleteByQuery(solrCollection, "collectionID:" + jobInfo.getCollectionId(), 30000);
 
                 final List<Path> list = Files.list(Paths.get(segmentsDir.toString()))
                         .map(p -> new Path(p.toString()))
@@ -1006,17 +1020,12 @@ public class Crawler {
                         .collect(Collectors.toList());
 
                 index(list.toArray(new Path[list.size()]));
-//                index(new Path[]{list.get(list.size() - 1)});
-
-//                jobInfo.setReindex(false);
-//                jobInfo.setJobType(SCHEDULED_CRAWL);
-//                schedulerRepository.save(jobInfo);
 
                 crawlStepLog.setState(FINISHED);
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
                 getStats();
-                updateCrawldbWebpagesDb();
+                //updateCrawldbWebpagesDb();
 
                 crawlLog.setState(CrawlLog.State.FINISHED);
                 crawlLogRepository.saveAndFlush(crawlLog);
@@ -1040,8 +1049,6 @@ public class Crawler {
 
         if (!stopFlag.get()) {
             try {
-                //solrClient.deleteByQuery(solrCollection, "collectionID:" + jobInfo.getCollectionId(), 30000);
-
                 if (new File(dbDir.toString()).exists()) {
                     FileUtils.moveDirectory(new File(dbDir.toString()), new File(dbDir + "_backup_" + new Date().getTime()));
                 }
@@ -1051,10 +1058,6 @@ public class Crawler {
                 webpageRepository.deleteAll(webpages.get());;
 
                 crawl();
-
-//                jobInfo.setRecrawl(false);
-//                jobInfo.setJobType(SCHEDULED_CRAWL);
-//                schedulerRepository.save(jobInfo);
 
                 crawlStepLog.setState(FINISHED);
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
