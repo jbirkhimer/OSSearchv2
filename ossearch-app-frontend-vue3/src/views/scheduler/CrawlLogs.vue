@@ -42,7 +42,7 @@
                   {{ crawLog[column.name] }}
                 </td>
                 <td v-if="column.name === 'currentStep'">
-                  {{ JSON.parse(crawLog?.jobConfig)?.reindex ? 'Reindex' : crawLog[column.name] }}
+                  {{ JSON.parse(crawLog?.jobConfig)?.reindex ? 'REINDEX' : crawLog[column.name] }}
                 </td>
                 <td v-if="['rounds', 'currentRound'].includes(column.name)">
                   {{ !JSON.parse(crawLog?.jobConfig)?.reindex ? crawLog[column.name] : '' }}
