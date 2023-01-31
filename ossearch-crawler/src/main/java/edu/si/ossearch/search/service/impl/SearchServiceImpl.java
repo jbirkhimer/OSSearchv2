@@ -120,8 +120,6 @@ public class SearchServiceImpl implements SearchService {
         META_TAG, DATE, NUMBER
     }
 
-    boolean useHighlighting = true;
-
     /*@Override
     public SearchResponseDTO search(SearchRequestDTO searchRequest) throws Exception {
         SearchResponseDTO searchResponse = new SearchResponseDTO();
@@ -131,7 +129,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     @Transactional
-    public Object search(Query query, @Valid Paging paging, Boolean edan, Boolean edanDebug) throws Exception, OSSearchException {
+    public Object search(Query query, @Valid Paging paging, Boolean useHighlighting, Boolean edan, Boolean edanDebug) throws Exception, OSSearchException {
 
         //log and save request to db
         SearchLog searchLog = new SearchLog(query);
@@ -164,15 +162,6 @@ public class SearchServiceImpl implements SearchService {
         solrQuery.setFacet(true);
         solrQuery.setFacetMinCount(1);
         //solrQuery.setFacetLimit(-1);
-
-        if (useHighlighting) {
-            solrQuery.setHighlight(true);
-            solrQuery.addHighlightField("title");
-            solrQuery.addHighlightField("content");
-            solrQuery.setHighlightSimplePre("<b>");
-            solrQuery.setHighlightSimplePost("</b>");
-            solrQuery.setHighlightFragsize(120);
-        }
 
         List<String> collectionIdFq = new ArrayList();
         collectionIdFq.add(String.valueOf(collection.getId()));
@@ -213,6 +202,16 @@ public class SearchServiceImpl implements SearchService {
         // ie -> input encoding
         // oe -> output encoding
         // client -> string specifying valid frontend (default -needs to be speficied- is default_frontend)
+
+        if (useHighlighting) {
+            solrQuery.setHighlight(true);
+            solrQuery.addHighlightField("title");
+            solrQuery.addHighlightField("content");
+            solrQuery.setHighlightSimplePre("<b>");
+            solrQuery.setHighlightSimplePost("</b>");
+            solrQuery.setHighlightFragsize(120);
+            solrQuery.add("hl.usePhraseHighlighter","true");
+        }
 
         QueryResponse rsp;
         if (!edan) {
@@ -342,7 +341,7 @@ public class SearchServiceImpl implements SearchService {
 
         res.setNB(nb);
 
-        Map<String, Map<String, List<String>>> highlighting = rsp.getHighlighting();
+        Map<String, Map<String, List<String>>> highlighting = rsp.getHighlighting() != null ? rsp.getHighlighting() : new HashMap<>();
 
         for (SolrDocument doc : solrResults) {
 

@@ -13,7 +13,7 @@ public interface SearchService {
 
     //SearchResponseDTO search(SearchRequestDTO searchRequest);
 
-    Object search(Query query, @Valid Paging paging, Boolean edan, Boolean edanDebug) throws Exception, OSSearchException;
+    Object search(Query query, @Valid Paging paging, Boolean useHighlighting, Boolean edan, Boolean edanDebug) throws Exception, OSSearchException;
 
 //    void parseSpecialTerms(SolrQuery solrQuery, String query);
 //

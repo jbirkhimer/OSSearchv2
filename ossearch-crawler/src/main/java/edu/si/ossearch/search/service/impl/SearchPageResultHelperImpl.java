@@ -127,7 +127,7 @@ public class SearchPageResultHelperImpl implements SearchPageResultHelperService
         List<Map<String, String>> resultsList = new ArrayList<>();
 
         SolrDocumentList solrResults = rsp.getResults();
-        Map<String, Map<String, List<String>>> highlighting = rsp.getHighlighting();
+        Map<String, Map<String, List<String>>> highlighting = rsp.getHighlighting() != null ? rsp.getHighlighting() : new HashMap<>();
 
         for (SolrDocument doc : solrResults) {
 

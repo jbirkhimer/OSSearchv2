@@ -54,11 +54,12 @@ public class SearchController {
     @PostMapping
     @Operation(summary = "search", responses = {@ApiResponse( content = {@Content(mediaType = "application/json"), @Content(mediaType = "application/xml"), @Content(mediaType = "text/html")})})
     public Object search(@Valid Query query, @Valid Paging paging,
+                         @RequestParam(value = "hl", defaultValue = "true") Boolean useHighlighting,
                          @RequestParam(value = "edan", defaultValue = "false") Boolean edan,
                          @RequestParam(value = "edanDebug", defaultValue = "false") Boolean edanDebug) {
 
         try {
-            return searchService.search(query, paging, edan, edanDebug);
+            return searchService.search(query, paging, useHighlighting, edan, edanDebug);
         } catch (Exception | OSSearchException e) {
             log.error("Problem with search!", e);
             return ResponseEntity.status(200).contentType(MediaType.TEXT_HTML).body("No response available. Error: " + e.getMessage());
