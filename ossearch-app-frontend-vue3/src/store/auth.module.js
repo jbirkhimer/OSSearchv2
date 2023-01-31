@@ -1,20 +1,5 @@
 import AuthService from '../services/auth.service';
 
-// const user = {
-//     status: {
-//         loggedIn: false
-//     },
-//     user: {
-//         refreshToken: null,
-//         id: null,
-//         username: "admin",
-//         email: "birkhimerj@quotient-inc.com",
-//         roles: ["ROLE_ADMIN"],
-//         accessToken: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTY0NjE4MDI2MywiZXhwIjoxNjQ2MTgwMzIzfQ.BagBbCy9-rCZunRWoJRD5RsmDFjo2KiFuoZWSKTjzHdQ5YDkGn0-zyzvAA9Xyh3WUiqDXTfkZ0eEnFr2GaOo5g",
-//         tokenType: "Bearer"
-//     }
-// }
-
 const user = JSON.parse(localStorage.getItem('user'));
 const initialState = user
     ? {status: {loggedIn: true}, user}
