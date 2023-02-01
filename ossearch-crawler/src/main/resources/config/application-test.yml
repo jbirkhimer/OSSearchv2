@@ -1,9 +1,23 @@
 spring:
+  application:
+    name: ossearch-crawler-test
+
+  devtools:
+    restart:
+      additional-exclude: conf/**
+      enabled: false
+
+  security:
+    enabled: true
+    user:
+      name: admin
+      password: admin
+
+  jmx:
+    enabled: false
+
   data:
     solr:
-#      host: http://si-wsdsolr02.si.edu:8983/solr
-#      slave: http://si-wsdsolr02.si.edu:8983/solr
-#      collection: external
       host: http://localhost:8984/solr
       slave: http://localhost:8984/solr
       collection: external-v1_FULL
@@ -13,12 +27,8 @@ spring:
     url: jdbc:mysql://localhost:3309/si_search_db_test?createDatabaseIfNotExist=true
     username: root
     password: root
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 6
 
     legacy:
-      driver-class-name: com.mysql.cj.jdbc.Driver
       url: jdbc:mysql://localhost:3309/si_search_db
       username: root
       password: root
@@ -30,32 +40,16 @@ spring:
 #      ddl-auto: create-drop
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect #org.hibernate.dialect.MySQL5InnoDBDialect
         format_sql: true
 #        generate_statistics: true
-        order_inserts: true
+#        order_inserts: true
         jdbc:
           batch_size: 100000
-#    hibernate:
-#      naming:
-#        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
-#        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
 
   quartz:
     wait-for-jobs-to-complete-on-shutdown: false
     jdbc:
       initialize-schema: never
-
-  security:
-    enabled: true
-    user:
-      name: admin
-      password: admin
-
-  boot:
-    admin:
-      client:
-        enabled: true
 
   ldap:
     embedded:
@@ -64,16 +58,10 @@ spring:
       base-dn: dc=springframework,dc=org
       port: 8389
 
-  jmx:
-    enabled: false
-
-  devtools:
-    restart:
-      additional-exclude: conf/**
-      enabled: false
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher
+  boot:
+    admin:
+      client:
+        enabled: true
 
 #Disable Health Checks while testing
 management:
@@ -87,7 +75,7 @@ management:
 
 ossearch:
   embedded-vuejs: true
-  allowedOrigins: "http://0.0.0.0:3000,http://localhost:3000,http://127.0.0.1:3000,http://10.0.0.95:3000,http://jbirkhimer.myquotient.net:3000,http://ossearchv2:8080,http://0.0.0.0:8484,http://localhost:8484,http://127.0.0.1:8484,http://10.0.0.95:8484,http://jbirkhimer.myquotient.net:8484,http://ossearchv2:8080"
+  allowedOrigins: "http://0.0.0.0:3000,http://localhost:3000,http://127.0.0.1:3000,http://10.0.0.95:3000,http://jbirkhimer.myquotient.net:3000,http://ossearchv2:8080,http://0.0.0.0:8484,http://localhost:8484,http://127.0.0.1:8484,http://10.0.0.95:8484,http://jbirkhimer.myquotient.net:8484"
   jwt:
 #    #For Testing Refresh tokens
 #    expirationMs: 60000
@@ -97,11 +85,17 @@ ossearch:
       cron:
         expression: 0 0/5 * * * ?
   nutch:
-    pluginsDir: /home/jbirkhimer/IdeaProjects/OSSearchv2/nutch-plugins/target/plugins
+    pluginsDir: plugins
     confDir: conf
     crawlDir: crawls
+  edan-api:
+    url: https://edandev.si.edu
+    path: /metadata/v2.0/metadata/search.htm
+    appId: xxxxxxxxxxxx
+    appKey: xxxxxxxxxxx
 
 logging:
+  #  config: config/logback.xml
   file:
     name: logs/${spring.application.name}.log
   level:

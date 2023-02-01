@@ -4,7 +4,35 @@ spring:
   profiles:
     active: test
 
+  security:
+    user:
+      name: xxxxxxxxx
+      password: xxxxxxxxx
+
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+  jmx:
+    enabled: true
+
+  jackson:
+    serialization:
+      indent_output: true
+      fail-on-empty-beans: false
+
+  output:
+    ansi:
+      enabled: always
+
+  main:
+    allow-bean-definition-overriding: true
+
   data:
+    rest:
+      default-page-size: 10
+      enable-enum-translation: false
+      base-path: api
     solr:
       host: xxxxxxxxx
       slave: xxxxxxxxx
@@ -18,26 +46,24 @@ spring:
       repositories:
         enabled: true
 
-    rest:
-      default-page-size: 10
-      enable-enum-translation: false
-      base-path: api
-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://xxxxxxxxx:xxxxxxxxx/si_search_db_v2?createDatabaseIfNotExist=true
     username: root
     password: root
     hikari:
-      maximum-pool-size: 10
+      maximum-pool-size: 15
       minimum-idle: 5
+      max-lifetime: 60000
+      connection-timeout: 300000
+      idle-timeout: 120000
+      leak-detection-threshold: 300000
+
     legacy:
-      driver-class-name: com.mysql.cj.jdbc.Driver
+      driver-class-name: ${spring.datasource.driver-class-name}
       url: jdbc:mysql://localhost:3309/si_search_db
       username: root
       password: root
-#    generate-unique-name: false
-#    name: dataSource
 
   # JPA drop and recreate tables, show sql in logs
   jpa:
@@ -48,6 +74,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect #org.hibernate.dialect.MySQL5InnoDBDialect
         format_sql: false
+        generate_statistics: true
+#        order_inserts: true
+        jdbc:
+          batch_size: 5000
     open-in-view: false
 
   quartz:
@@ -58,20 +88,6 @@ spring:
     jdbc:
       platform: mysql
       initialize-schema: never
-#    properties:
-#      org:
-#        quartz:
-#          jobStore:
-#            class: org.quartz.impl.jdbcjobstore.JobStoreTX
-#            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
-#            dataSource: dataSource
-#          scheduler:
-#            wrapJobExecutionInUserTransaction: true
-
-  jackson:
-    serialization:
-      indent_output: true
-      fail-on-empty-beans: false
 
   ldap:
     urls: ldap://xxxxxxxxx
@@ -82,21 +98,10 @@ spring:
     embedded:
       enabled: false
 
-  mail:
-    host: smtp.si.edu
-    test-connection: false
-
-  output:
-    ansi:
-      enabled: always
-
-  main:
-    allow-bean-definition-overriding: true
-
   boot:
     admin:
       client:
-        enabled: true
+        enabled: false
         url: http://localhost:8484/admin
         username: ${spring.security.user.name}
         password: ${spring.security.user.password}
@@ -106,11 +111,6 @@ spring:
             user.name: ${spring.security.user.name}
             user.password: ${spring.security.user.password}
       context-path: /admin
-
-  security:
-    user:
-      name: xxxxxxxxx
-      password: xxxxxxxxx
 
 management:
   endpoint:
@@ -145,7 +145,7 @@ springdoc:
 
 ossearch:
   embedded-vuejs: true
-  allowedOrigins: "http://0.0.0.0:3000,http://localhost:3000,http://127.0.0.1:3000,http://192.168.1.128:3000,http://jbirkhimer.myquotient.net:3000"
+  allowedOrigins: "http://0.0.0.0:3000,http://localhost:3000,http://127.0.0.1:3000"
   jwt:
     # key used to sign JWT tokens (should be secure and long)
     secret: xxxxxxxxx
@@ -170,8 +170,8 @@ ossearch:
   edan-api:
     url: https://edandev.si.edu
     path: /metadata/v2.0/metadata/search.htm
-    appId: QUOTIENTTEST
-    appKey: b846922f298366c4a2c236215d28c33e622f3595
+    appId: xxxxxxxxxxxx
+    appKey: xxxxxxxxxxx
 
 logging:
   #  config: config/logback.xml
