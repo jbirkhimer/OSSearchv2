@@ -23,7 +23,7 @@
   <writer id="indexer_solr_1" class="org.apache.nutch.indexwriter.solr.SolrIndexWriter">
     <parameters>
       <param name="type" value="http"/>
-<!--      <param name="url" value="http://si-wsdsolr01:8983/solr/external-v1"/>-->
+      <!--<param name="url" value="http://si-wsdsolr01:8983/solr/external"/>-->
       <param name="url" value="http://localhost:8984/solr/external-v1_FULL"/>
       <param name="collection" value=""/>
       <param name="weight.field" value=""/>
