@@ -28,11 +28,6 @@ spring:
     username: root
     password: root
 
-    legacy:
-      url: jdbc:mysql://localhost:3309/si_search_db
-      username: root
-      password: root
-
   # JPA drop and recreate tables, show sql in logs
   jpa:
     show-sql: false

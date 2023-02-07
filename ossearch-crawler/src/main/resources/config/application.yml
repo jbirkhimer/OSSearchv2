@@ -59,12 +59,6 @@ spring:
       idle-timeout: 120000
       leak-detection-threshold: 300000
 
-    legacy:
-      driver-class-name: ${spring.datasource.driver-class-name}
-      url: jdbc:mysql://localhost:3309/si_search_db
-      username: root
-      password: root
-
   # JPA drop and recreate tables, show sql in logs
   jpa:
     show-sql: false
