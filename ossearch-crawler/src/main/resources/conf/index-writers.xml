@@ -86,6 +86,7 @@
     <parameters>
       <param name="delete" value="true"/>
       <param name="path" value="./index_logs"/>
+      <!--<param name="path" value="/data/ossearch-crawler-data/index_logs"/>-->
       <param name="batchSize" value="5000"/>
     </parameters>
     <mapping>
