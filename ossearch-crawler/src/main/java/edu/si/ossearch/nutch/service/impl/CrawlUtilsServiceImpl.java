@@ -203,7 +203,7 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
     @Override
     public HashMap<String, Object> parseChecker(String collectionName, String url, boolean normalize, boolean checkRobotsTxt, boolean dumpText, boolean followRedirects) throws OSSearchException, Exception {
 
-        CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByCollectionName(collectionName);
+        CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(collectionName, "scheduled_crawl");
 
         if (jobInfo == null) {
             throw new OSSearchException("Parsechecker error! Crawl config does not exists for collection: "+collectionName+"!");
