@@ -133,12 +133,12 @@ public class CrawlUtilsController {
                     "9. ParseText: The page parse text which varies in length depending on content.length configuration."
     )
     @GetMapping(value = "/urls/parsechecker")
-    public ResponseEntity<Object> getStats(@Parameter(name = "collectionName", required = true, description = "the collection name") String collectionName,
+    public ResponseEntity<Object> parseChecker(@Parameter(name = "collectionName", required = true, description = "the collection name") String collectionName,
                                            @Parameter(name = "url", required = true, description = "the url") String url,
-                                           @Parameter(name = "normalize", schema = @Schema(defaultValue = "false"), description = "normalize URLs") boolean normalize,
-                                           @Parameter(name = "checkRobotsTxt", schema = @Schema(defaultValue = "false"), description = "fail if the robots.txt disallows fetching") boolean checkRobotsTxt,
-                                           @Parameter(name = "dumpText", schema = @Schema(defaultValue = "false"), description = "also show the plain-text extracted by parsers") boolean dumpText,
-                                           @Parameter(name = "followRedirects", schema = @Schema(defaultValue = "false"), description = "follow redirects when fetching URL") boolean followRedirects
+                                           @Parameter(name = "normalize", schema = @Schema(defaultValue = "false", type = "boolean", allowableValues = {"true", "false"}), description = "normalize URLs") boolean normalize,
+                                           @Parameter(name = "checkRobotsTxt", schema = @Schema(defaultValue = "false", type = "boolean", allowableValues = {"true", "false"}), description = "fail if the robots.txt disallows fetching") boolean checkRobotsTxt,
+                                           @Parameter(name = "dumpText", schema = @Schema(defaultValue = "false", type = "boolean", allowableValues = {"true", "false"}), description = "also show the plain-text extracted by parsers") boolean dumpText,
+                                           @Parameter(name = "followRedirects", schema = @Schema(defaultValue = "false", type = "boolean", allowableValues = {"true", "false"}), description = "follow redirects when fetching URL") boolean followRedirects
     ) throws OSSearchException {
 
         if (collectionName == null) {
