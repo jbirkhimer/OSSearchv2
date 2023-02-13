@@ -334,6 +334,18 @@
     </property>-->
 
     <property>
+        <name>parser.html.outlinks.include_tags</name>
+        <value></value>
+        <description>Comma separated list of CSS like tags, from which outlinks
+            should be extracted in addition to the defaults provided by Nutch.
+            Nutch by default takes links from: a, area, form, frame, iframe, script, link, img, source.
+            It is required to only specify the element type, and its class name ('.').
+            More complex expressions will not be parsed.
+            Valid examples: outline-button.button-url,someOtherElementType.someOtherElementAttribute
+            Invalid expressions: div#head#part1,#footer,.inner#post</description>
+    </property>
+
+    <property>
         <name>parser.html.blacklist</name>
         <!--<value>div.site-toggle robots-noindex,a.skip-main robots-noindex,div.header-nav  robots-noindex,div.browsenav robots-noindex,div.browsenav browsenav-stuck robots-noindex,div.row robots-noindex,div.footer robots-noindex</value>-->
         <value>div.edan-facets,div.edan-search-facets,nasm-facet-dropdown,div#collections-trail,div.col span_3_of_12 robots-noindex,header.l-header robots-noindex,div.robots-noindex,header.robots-noindex,div.site-toggle robots-noindex,a.skip-main robots-noindex,div.header-nav  robots-noindex,div.browsenav robots-noindex,div.browsenav browsenav-stuck robots-noindex,div.row robots-noindex,div.footer robots-noindex,div.row oss-nocrawl,div.skip-main oss-nocrawl</value>

@@ -36,13 +36,13 @@ import org.apache.hadoop.io.Text;
 
 /**
  * A collection of methods for extracting content from DOM trees.
- * 
+ *
  * This class holds a few utility methods for pulling content out of DOM nodes,
  * such as getOutlinks, getText, etc.
- * 
+ *
  */
 public class DOMContentUtils {
-  
+
   private String srcTagMetaName;
   private boolean keepNodenames;
   private Set<String> blockNodes;
@@ -90,13 +90,22 @@ public class DOMContentUtils {
     linkParams.put("img", new LinkParams("img", "src", 0));
     linkParams.put("source", new LinkParams("source", "src", 0));
 
+    // add custom link tags to the linkParams map
+    String[] includeTags = conf.getStrings("parser.html.outlinks.include_tags");
+    for (int i = 0; includeTags != null && i < includeTags.length; i++) {
+      if (!linkParams.containsKey(includeTags[i])) {
+        String[] linkparam = includeTags[i].split("\\.");
+        linkParams.put(linkparam[0], new LinkParams(linkparam[0], linkparam[1], 0));
+      }
+    }
+
     // remove unwanted link tags from the linkParams map
     String[] ignoreTags = conf.getStrings("parser.html.outlinks.ignore_tags");
     for (int i = 0; ignoreTags != null && i < ignoreTags.length; i++) {
       if (!forceTags.contains(ignoreTags[i]))
         linkParams.remove(ignoreTags[i]);
     }
-    
+
     //NUTCH-2433 - Should we keep the html node where the outlinks are found?
     srcTagMetaName = this.conf
         .get("parser.html.outlinks.htmlnode_metadata_name");
@@ -108,15 +117,15 @@ public class DOMContentUtils {
    * This method takes a {@link StringBuffer} and a DOM {@link Node}, and will
    * append all the content text found beneath the DOM node to the
    * <code>StringBuffer</code>.
-   * 
+   *
    * <p>
-   * 
+   *
    * If <code>abortOnNestedAnchors</code> is true, DOM traversal will be aborted
    * and the <code>StringBuffer</code> will not contain any text encountered
    * after a nested anchor is found.
-   * 
+   *
    * <p>
-   * 
+   *
    * @return true if nested anchors were found
    */
   public boolean getText(StringBuffer sb, Node node,
@@ -130,7 +139,7 @@ public class DOMContentUtils {
   /**
    * This is a convinience method, equivalent to
    * {@link #getText(StringBuffer,Node,boolean) getText(sb, node, false)}.
-   * 
+   *
    */
   public void getText(StringBuffer sb, Node node) {
     getText(sb, node, false);
@@ -272,7 +281,7 @@ public class DOMContentUtils {
    * This method takes a {@link StringBuffer} and a DOM {@link Node}, and will
    * append the content text found beneath the first <code>title</code> node to
    * the <code>StringBuffer</code>.
-   * 
+   *
    * @return true if a title node was found, false otherwise
    */
   public boolean getTitle(StringBuffer sb, Node node) {
@@ -401,9 +410,9 @@ public class DOMContentUtils {
    * creates appropriate {@link Outlink} records for each (relative to the
    * supplied <code>base</code> URL), and adds them to the <code>outlinks</code>
    * {@link ArrayList}.
-   * 
+   *
    * <p>
-   * 
+   *
    * Links without inner structure (tags, text, etc) are discarded, as are links
    * which contain only single nested links and empty text nodes (this is a
    * common DOM-fixup artifact, at least with nekohtml).
