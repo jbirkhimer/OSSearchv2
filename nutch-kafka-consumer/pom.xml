@@ -6,13 +6,13 @@
     <parent>
         <artifactId>OSSearchv2</artifactId>
         <groupId>edu.si.ossearch</groupId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>edu.si.ossearch</groupId>
     <artifactId>nutch-kafka-consumer</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${revision}</version>
 
     <name>nutch-kafka-consumer</name>
     <description>nutch-kafka-consumer</description>

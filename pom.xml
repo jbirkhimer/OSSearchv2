@@ -12,7 +12,7 @@
 
     <groupId>edu.si.ossearch</groupId>
     <artifactId>OSSearchv2</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${revision}</version>
     <packaging>pom</packaging>
 
     <name>OSSearchv2</name>
@@ -26,6 +26,7 @@
     </modules>
 
     <properties>
+        <revision>0.1.1-SNAPSHOT</revision>
         <nutch.version>1.18</nutch.version>
         <!--<nutch.plugins.dir>nutch-plugins/plugins</nutch.plugins.dir>-->
     </properties>
