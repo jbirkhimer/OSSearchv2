@@ -7,6 +7,7 @@ import com.opencsv.CSVReaderBuilder;
 import edu.si.ossearch.OSSearchException;
 import edu.si.ossearch.collection.entity.CrawlConfig;
 import edu.si.ossearch.collection.repository.CrawlConfigRepository;
+import edu.si.ossearch.nutch.ParserChecker;
 import edu.si.ossearch.nutch.service.CrawlUtilsService;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
 import edu.si.ossearch.scheduler.entity.NutchStepArgs;
@@ -17,13 +18,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.nutch.crawl.Injector;
 import org.apache.nutch.util.NutchConfiguration;
-import org.apache.nutch.util.TableUtil;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.quartz.JobKey;
 import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -202,6 +198,30 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
         log.debug("urls for delete from solr. count: {}", deleteUrls.size());
 
         solrClient.deleteById(solrCollection, deleteUrls, 1000);
+    }
+
+    @Override
+    public HashMap<String, Object> parseChecker(String collectionName, String url, boolean normalize, boolean checkRobotsTxt, boolean dumpText, boolean followRedirects) throws OSSearchException, Exception {
+
+        CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByCollectionName(collectionName);
+
+        if (jobInfo == null) {
+            throw new OSSearchException("Parsechecker error! Crawl config does not exists for collection: "+collectionName+"!");
+        }
+
+        Properties properties = new Properties();
+        properties.putAll(jobInfo.getNutchProperties());
+
+        Configuration conf = NutchConfiguration.create(true, properties);
+        log.info(">>>>> http.agent.name: {}", conf.get("http.agent.name"));
+
+        conf.set("hadoop.log.dir", "logs");
+        conf.set("hadoop.tmp.dir", "hadoop_tmp");
+        conf.set("hadoop.log.file", "logs/hadoop.log");
+
+
+        ParserChecker parserChecker = new ParserChecker(conf);
+        return parserChecker.process(url, normalize, checkRobotsTxt, dumpText, followRedirects);
     }
 
     private Path getCrawlBaseDir(CrawlSchedulerJobInfo jobInfo) {

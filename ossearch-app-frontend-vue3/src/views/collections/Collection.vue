@@ -60,7 +60,9 @@ export default {
           ]
         },
         {name: 'addRemoveUrls', label: 'Add/Remove URLs', icon: 'fas fa-filter'},
-        {name: 'reportsTab', label: 'Reports', icon: 'fas fa-chart-area', type: 'dropdown', subTabs: [
+        {name: 'parseChecker', label: 'Parse Checker', icon: 'fas fa-tools'},
+        {name: 'reportsTab', label: 'Reports', icon: 'fas fa-chart-area', type: 'dropdown',
+          subTabs: [
             {name: 'searchReport', label: 'Search Report'},
             {name: 'keywordReport', label: 'Keyword Report'},
             {name: 'keywordCountReport', label: 'Keyword Count Report'},

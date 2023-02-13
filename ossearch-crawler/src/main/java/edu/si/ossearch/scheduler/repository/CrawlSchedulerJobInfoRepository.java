@@ -9,8 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-import java.util.List;
-
 /**
  * @author jbirkhimer
  */
@@ -26,8 +24,9 @@ public interface CrawlSchedulerJobInfoRepository extends JpaRepository<CrawlSche
     @Query("select s from CrawlSchedulerJobInfo s join Collection c on c.name = s.collectionName join c.users cu on cu.username = ?#{authentication.name} or c.owner.username = ?#{authentication.name}")
     Page<CrawlSchedulerJobInfo> findAll(Pageable pageable);
 
-    Page<CrawlSchedulerJobInfo> findByCollectionName(String collectionName, Pageable pageable);
+    //Page<CrawlSchedulerJobInfo> findByCollectionName(String collectionName, Pageable pageable);
 
+    CrawlSchedulerJobInfo findByCollectionName(String collectionName);
 
     CrawlSchedulerJobInfo findByJobName(String jobName);
 

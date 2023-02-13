@@ -32,14 +32,13 @@ import CollectionOverlappingSearchConfig from "../views/collections/collection/s
 import CollectionCrawlingConfig from "../views/collections/collection/crawling/CollectionCrawlingConfig";
 import CollectionCrawlSchedule from "../views/collections/collection/crawling/CollectionCrawlSchedule";
 import CollectionUsers from "../views/collections/collection/CollectionUsers";
-import CollectionCrawlingIncludeExcludeSiteUrls
-  from "../views/collections/collection/crawling/CollectionCrawlingIncludeExcludeSiteUrls";
-import CollectionCrawlingUrlExclusionPatterns
-  from "../views/collections/collection/crawling/CollectionCrawlingUrlExclusionPatterns";
+import CollectionCrawlingIncludeExcludeSiteUrls from "../views/collections/collection/crawling/CollectionCrawlingIncludeExcludeSiteUrls";
+import CollectionCrawlingUrlExclusionPatterns from "../views/collections/collection/crawling/CollectionCrawlingUrlExclusionPatterns";
 import CollectionCrawlingSitemaps from "../views/collections/collection/crawling/CollectionCrawlingSitemaps";
 import CollectionCreate from "../views/collections/CollectionCreate";
 import CollectionSearchPageResults from "../views/collections/collection/search/CollectionSearchPageResults";
 import SearchReport from "../views/collections/collection/reports/SearchReport";
+import ParseChecker from "../views/collections/collection/ParseChecker.vue";
 const CrawlScheduler = () => import('../views/scheduler/CrawlScheduler');
 import SearchCounts from '../views/reports/search/SearchCounts';
 import SearchUrls from '../views/reports/search/SearchUrls';
@@ -197,6 +196,12 @@ const routes = [
         path: 'addRemoveUrls',
         name: 'addRemoveUrls',
         component: AddRemoveUrls,
+        props: true
+      },
+      {
+        path: 'parseChecker',
+        name: 'parseChecker',
+        component: ParseChecker,
         props: true
       },
       {

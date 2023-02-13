@@ -1,11 +1,10 @@
 package edu.si.ossearch.nutch.service;
 
 import edu.si.ossearch.OSSearchException;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -18,4 +17,6 @@ public interface CrawlUtilsService {
     List<String> readAll(MultipartFile file);
 
     void removeUrls(String jobName, String jobGroup, List<String> urls) throws OSSearchException, Exception;
+
+    HashMap<String, Object> parseChecker(String collectionName, String url, boolean normalize, boolean checkRobotsTxt, boolean dumpText, boolean followRedirects) throws OSSearchException, Exception;
 }
