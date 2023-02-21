@@ -13,6 +13,7 @@ import java.util.Date;
 @Setter
 @ToString//(onlyExplicitlyIncluded = true)
 @Entity
+@IdClass(WebpagePK.class)
 @Table(name = "webpage")
 public class Webpage implements Serializable {
 
@@ -56,6 +57,7 @@ public class Webpage implements Serializable {
 ////    @Column(name = "nutch_property")
 //    private Map<String, Object> metadata = new HashMap<>();
 
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "crawl_db_id")
     private CrawlDb crawlDb;

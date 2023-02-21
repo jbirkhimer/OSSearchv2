@@ -1,11 +1,13 @@
 package edu.si.ossearch.nutch.service;
 
 import edu.si.ossearch.OSSearchException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * @author jbirkhimer
@@ -13,6 +15,9 @@ import java.util.List;
 public interface CrawlUtilsService {
 
     void addUrls(String jobName, String jobGroup, boolean crawl, List<String> urls) throws IOException, ClassNotFoundException, InterruptedException, OSSearchException;
+
+    @Async
+    Future<Void> async_updateDb(String jobName, String jobGroup);
 
     List<String> readAll(MultipartFile file);
 

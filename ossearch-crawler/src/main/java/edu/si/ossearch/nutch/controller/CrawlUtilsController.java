@@ -2,6 +2,7 @@ package edu.si.ossearch.nutch.controller;
 
 import edu.si.ossearch.OSSearchException;
 import edu.si.ossearch.nutch.service.CrawlUtilsService;
+import edu.si.ossearch.scheduler.service.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,6 +27,7 @@ import java.util.List;
  */
 @Slf4j
 @CrossOrigin(origins = "*", maxAge = 3600)
+@EnableAsync
 @RestController
 @RequestMapping("/api/crawl/utils")
 @Tag(description = "Crawl Utils", name = "Crawl Utils")
@@ -33,6 +36,9 @@ public class CrawlUtilsController {
 
     @Autowired
     private CrawlUtilsService crawlUtilsService;
+
+    @Autowired
+    private JobService jobService;
 
     public static final String DEFAULT_JOB_GROUP_NAME = "scheduled_crawl";
 
@@ -154,6 +160,35 @@ public class CrawlUtilsController {
             log.error("Parsechecker problem for url: ", url, e);
             return ResponseEntity.internalServerError().contentType(MediaType.TEXT_PLAIN).body(e.getMessage());
         }
+    }
+
+    @Operation(summary = "update the mysql db with urls from crawldb", responses = {
+            @ApiResponse(description = "Successful Operation", responseCode = "200", content = {@Content(mediaType = "application/csv"), @Content(mediaType = "application/json")})
+    })
+    @GetMapping(value = "/crawldb/updateDb")
+    public ResponseEntity<Object> updateDb(@RequestParam(value = "jobName") String jobName,
+                                           @RequestParam(value = "jobGroup", required = false, defaultValue = DEFAULT_JOB_GROUP_NAME) String jobGroup
+    ) throws OSSearchException {
+
+        if (jobName == null || jobGroup == null) {
+            return ResponseEntity.badRequest().body("jobName must not be null");
+        }
+
+        try {
+            boolean isJobRunning = jobService.isJobRunning(jobName, jobGroup);
+            boolean isAddUrlJobRunning = jobService.isJobRunning(jobName, "add_urls");
+
+            if (isJobRunning || isAddUrlJobRunning) {
+                throw new OSSearchException("A crawl is currently running for this collection. Try again when the crawl is finished or stop the current crawl and try again!");
+            }
+
+            crawlUtilsService.async_updateDb(jobName, jobGroup);
+        } catch (Exception e) {
+            log.error("ERROR: /crawldb/updateDb request failed for {}!", jobName, e);
+            return ResponseEntity.internalServerError().contentType(MediaType.TEXT_PLAIN).body(e.getMessage());
+        }
+
+        return ResponseEntity.ok().build();
     }
 
 }

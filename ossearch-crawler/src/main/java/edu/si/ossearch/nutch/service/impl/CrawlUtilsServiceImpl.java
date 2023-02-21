@@ -7,7 +7,12 @@ import com.opencsv.CSVReaderBuilder;
 import edu.si.ossearch.OSSearchException;
 import edu.si.ossearch.collection.entity.CrawlConfig;
 import edu.si.ossearch.collection.repository.CrawlConfigRepository;
+import edu.si.ossearch.nutch.NutchCrawldbUtils;
 import edu.si.ossearch.nutch.ParserChecker;
+import edu.si.ossearch.nutch.entity.CrawlDb;
+import edu.si.ossearch.nutch.entity.Webpage;
+import edu.si.ossearch.nutch.repository.CrawlDbRepository;
+import edu.si.ossearch.nutch.repository.WebpageRepository;
 import edu.si.ossearch.nutch.service.CrawlUtilsService;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
 import edu.si.ossearch.scheduler.entity.NutchStepArgs;
@@ -23,6 +28,8 @@ import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Future;
 
 import static edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType.ADD_URLS;
 import static org.apache.nutch.util.TableUtil.reverseUrl;
@@ -52,6 +60,12 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
 
     @Autowired
     private CrawlConfigRepository crawlConfigRepository;
+
+    @Autowired
+    private CrawlDbRepository crawlDbRepository;
+
+    @Autowired
+    private WebpageRepository webpageRepository;
 
     @Value(value = "${spring.data.solr.collection}")
     String solrCollection;
@@ -222,6 +236,35 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
 
         ParserChecker parserChecker = new ParserChecker(conf);
         return parserChecker.process(url, normalize, checkRobotsTxt, dumpText, followRedirects);
+    }
+
+    @Async
+    @Override
+    public Future<Void> async_updateDb(String jobName, String jobGroup) {
+        CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(jobName, jobGroup);
+
+        CrawlDb savedCrawldb = crawlDbRepository.findCrawlDbByCollectionId(Integer.valueOf(jobInfo.getCollectionId()))
+                .orElseGet(() -> {
+                    CrawlDb crawlDb = new CrawlDb();
+                    crawlDb.setCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
+                    CrawlDb newCrawldb = crawlDbRepository.saveAndFlush(crawlDb);
+                    return newCrawldb;
+                });
+
+        Configuration conf = NutchConfiguration.create();
+        conf.set("hadoop.tmp.dir", "hadoop_tmp");
+        Path crawlBaseDir = getCrawlBaseDir(jobInfo);
+        Path dbDir = new Path(crawlBaseDir, "db");
+        Path crawldbDir = new Path(dbDir, "crawldb");
+
+        NutchCrawldbUtils crawldbUtils = new NutchCrawldbUtils();
+
+        List<Webpage> webpageList = crawldbUtils.dumpCrawlDatumEntityList(crawldbDir, conf, savedCrawldb);
+
+        webpageRepository.deleteAllByCrawlDb(savedCrawldb);
+
+        webpageRepository.saveAllAndFlush(webpageList);
+        return new AsyncResult<>(null);
     }
 
     private Path getCrawlBaseDir(CrawlSchedulerJobInfo jobInfo) {
