@@ -41,14 +41,14 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
 
     @Query(value = "select count(s.id) from search_log s" +
             " where s.collection_id in (" + collectionsByOwnerUserAdmin + ")" +
-            " and s.created_date between (CURDATE() - INTERVAL ?1 DAY)" +
-            " and CURDATE() and collection_id = ?2",
+            " and s.created_date between DATE_ADD(CURDATE(), INTERVAL -?1 DAY)" +
+            " and addtime(CURDATE(), '23:59:59') and collection_id = ?2",
             nativeQuery = true)
     long totalCountForAllCollectionsLastNumDaysByCollectionId(@Param("days") Integer days, @Param("collectionId") Long collectionId);
 
     @Query(value = "select count(s.id) from search_log s" +
             " where s.collection_id in (" + collectionsByOwnerUserAdmin + ")" +
-            " and s.created_date between (CURDATE() - INTERVAL ?1 DAY) and CURDATE()",
+            " and s.created_date between DATE_ADD(CURDATE(), INTERVAL -?1 DAY) and addtime(CURDATE(), '23:59:59')",
             nativeQuery = true)
     long totalCountForAllCollectionsLastNumDays(@Param("days") Integer days);
 
@@ -56,7 +56,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             " where s.collection_id in (" + collectionsByOwnerUserAdmin + ")" +
             " and s.created_date between ?1 and ?2",
             nativeQuery = true)
-    long totalCountForAllCollectionsBetweenDates(@Param("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate, @Param("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate);
+    long totalCountForAllCollectionsBetweenDates(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate, @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate);
 
     @Query("select s from SearchLog s" +
             " where s.collectionId = :collectionId" +
@@ -66,8 +66,8 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             " or s.docsFound like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
             " or s.elapsedTime like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
             " and s.createdDate between :startDate and :endDate")
-    Optional<Page<SearchLog>> totalCountForAllCollectionsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
-                                                                                    @Param("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+    Optional<Page<SearchLog>> totalCountForAllCollectionsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+                                                                                    @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
                                                                                     @Param("collectionId") Long collectionId,
                                                                                     @Param("searchText") @Nullable String searchText,
                                                                                     Pageable pageable);
@@ -88,8 +88,8 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             " where s.collectionId = :collectionId" +
             " and (:searchText is null or s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
             " and s.createdDate between :startDate and :endDate")
-    Optional<Page<SearchLog>> keywordsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
-                                                                 @Param("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+    Optional<Page<SearchLog>> keywordsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+                                                                 @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
                                                                  @Param("collectionId") Long collectionId,
                                                                  @Param("searchText") @Nullable String searchText,
                                                                  Pageable pageable);
@@ -107,8 +107,8 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
                     " and created_date between :startDate and :endDate" +
                     " group by query) sc",
             nativeQuery = true)
-    Optional<Page<SearchLogKeywordCountsView>> keywordCountsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
-                                                                                       @Param("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+    Optional<Page<SearchLogKeywordCountsView>> keywordCountsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+                                                                                       @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
                                                                                        @Param("collectionId") Long collectionId,
                                                                                        @Param("searchText") @Nullable String searchText,
                                                                                        Pageable pageable);
@@ -120,8 +120,8 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             " WHERE createdDate between :startDate and :endDate" +
             " GROUP BY year, monthName, date, site" +
             " ORDER BY site, date")
-    List<SearchLogChart> searchLogChartData(@Param("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
-                                                      @Param("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate);*/
+    List<SearchLogChart> searchLogChartData(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+                                                      @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate);*/
 
     @Query("SELECT new edu.si.ossearch.reports.entity.projections.SearchLogChart(DATE(createdDate), count(query), site)" +
             " FROM SearchLog" +
@@ -130,9 +130,9 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             " and createdDate between :startDate and :endDate" +
             " GROUP BY YEAR(createdDate), MONTHNAME(createdDate), DATE(createdDate), site" +
             " ORDER BY site, DATE(createdDate)")
-    List<SearchLogChart> searchLogChartData(@Param("collectionIds") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) List<Long> collectionIds,
-                                            @Param("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
-                                            @Param("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+    List<SearchLogChart> searchLogChartData(@Param("collectionIds") List<Long> collectionIds,
+                                            @Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+                                            @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
                                             @Param("searchText") @Nullable String searchText);
 
 

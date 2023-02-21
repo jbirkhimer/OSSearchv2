@@ -49,13 +49,13 @@ export default {
     return {
       loading: false,
       error: null,
-      startDate: moment().subtract(1, 'years').startOf('day'),
+      startDate: moment().subtract(1, 'years').utc().startOf('day'),
       // startDate: moment('2019-03-01').utc().startOf('day'),
       endDate: moment().utc().endOf('day'),
       picker: {},
       apiParams: {
         // startDate: moment('2019-03-01').utc().startOf('day').format(),
-        startDate: moment().subtract(1, 'years').startOf('day').utc().format(),
+        startDate: moment().subtract(1, 'years').utc().startOf('day').format(),
         endDate: moment().utc().endOf('day').format()
       },
       chartSeries: [{name: 'siarchives', data: []}],

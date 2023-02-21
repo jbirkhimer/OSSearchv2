@@ -62,8 +62,8 @@ public class ReportsController {
 
     @GetMapping(value = "/keywords/{collectionId}")
     @Operation(summary = "get keywords", responses = {@ApiResponse( content = {@Content(mediaType = "application/json"), @Content(mediaType = "application/csv"), @Content(mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), @Content(mediaType = "application/pdf")})})
-    public @ResponseBody ResponseEntity<?> keywordsBetweenDatesByCollectionId(@RequestParam(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
-                                                                              @RequestParam(value = "endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+    public @ResponseBody ResponseEntity<?> keywordsBetweenDatesByCollectionId(@RequestParam(value = "startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+                                                                              @RequestParam(value = "endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
                                                                               @RequestParam(value = "collectionId") Long collectionId,
                                                                               @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText,
                                                                               @RequestParam(value = "exportType", required = false) String exportType,
@@ -92,8 +92,8 @@ public class ReportsController {
 
     @GetMapping("/keywordCounts/{collectionId}")
     @Operation(summary = "get keyword counts", responses = {@ApiResponse( content = {@Content(mediaType = "application/json"), @Content(mediaType = "application/csv"), @Content(mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), @Content(mediaType = "application/pdf")})})
-    public @ResponseBody ResponseEntity<?> keywordCountsBetweenDatesByCollectionIdExport(@RequestParam(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
-                                                                                         @RequestParam(value = "endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+    public @ResponseBody ResponseEntity<?> keywordCountsBetweenDatesByCollectionIdExport(@RequestParam(value = "startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+                                                                                         @RequestParam(value = "endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
                                                                                          @RequestParam(value = "collectionId") Long collectionId,
                                                                                          @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText,
                                                                                          @RequestParam(value = "exportType", required = false) String exportType,

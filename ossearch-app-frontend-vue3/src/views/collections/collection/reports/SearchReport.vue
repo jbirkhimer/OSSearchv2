@@ -65,13 +65,13 @@ export default {
       loading: false,
       error: null,
       collection: null,
-      startDate: moment().subtract(1, 'years').startOf('day'),
+      startDate: moment().subtract(1, 'years').utc().startOf('day'),
       // startDate: moment('2019-03-01').utc().startOf('day'),
       endDate: moment().utc().endOf('day'),
       picker: {},
       apiParams: {
         // startDate: moment('2019-03-01').utc().startOf('day').format(),
-        startDate: moment().subtract(1, 'years').startOf('day').utc().format(),
+        startDate: moment().subtract(1, 'years').utc().startOf('day').format(),
         endDate: moment().utc().endOf('day').format()
       },
       tableOptions: {
@@ -127,7 +127,9 @@ export default {
           size: 0
         },
         xaxis: {
-          type: 'datetime'
+          type: 'datetime',
+          min: this.startDate,
+          max: this.endDate
         },
         yaxis: {
           forceNiceScale: true
@@ -163,6 +165,8 @@ export default {
         },
         xaxis: {
           type: 'datetime',
+          min: this.startDate,
+          max: this.endDate,
           tooltip: {
             enabled: false
           }

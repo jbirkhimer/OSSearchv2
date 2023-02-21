@@ -359,7 +359,7 @@ export default {
           });
     },
     async getSearchLogCounts() {
-      await SearchLogService.get("/searchlog/search/totalCountForAllCollectionsLastNumDaysByCollectionId", {days: 7, collectionId: this.collection.id})
+      await SearchLogService.get("/searchlog/search/totalCountForAllCollectionsLastNumDaysByCollectionId", {days: 30, collectionId: this.collection.id})
           .then(response => {
             this.searchesCount = response.data
           }).catch(errors => {

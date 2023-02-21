@@ -51,13 +51,13 @@ export default {
       loading: false,
       error: null,
       collection: null,
-      startDate: moment().subtract(30, 'days'),
+      startDate: moment().utc().subtract(30, 'days'),
       // startDate: moment('2019-03-01').utc().startOf('day'),
       endDate: moment().utc().endOf('day'),
       picker: {},
       apiParams: {
         // startDate: moment('2019-03-01').utc().startOf('day').format(),
-        startDate: moment().subtract(30, 'days').startOf('day').utc().format(),
+        startDate: moment().subtract(30, 'days').utc().startOf('day').format(),
         endDate: moment().utc().endOf('day').format()
       },
       tableOptions: {

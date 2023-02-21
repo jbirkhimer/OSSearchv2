@@ -47,8 +47,8 @@ public class SearchLogsController {
     }
 
     @GetMapping("/searchlog/search/keywordCountsBetweenDatesByCollectionId")
-    public @ResponseBody ResponseEntity<?> keywordCountsBetweenDatesByCollectionId(@RequestParam(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
-                                                                                   @RequestParam(value = "endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+    public @ResponseBody ResponseEntity<?> keywordCountsBetweenDatesByCollectionId(@RequestParam(value = "startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+                                                                                   @RequestParam(value = "endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
                                                                                    @RequestParam(value = "collectionId") Long collectionId,
                                                                                    @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText,
                                                                                    Pageable pageable,
@@ -67,8 +67,8 @@ public class SearchLogsController {
     }
 
     @GetMapping("/searchlog/search/searchLogChartData")
-    public @ResponseBody ResponseEntity<?> searchLogChartData(@RequestParam(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
-                                                                                   @RequestParam(value = "endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+    public @ResponseBody ResponseEntity<?> searchLogChartData(@RequestParam(value = "startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+                                                                                   @RequestParam(value = "endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
                                                                                    @RequestParam(value = "collectionId", required = false) Long collectionId,
                                                                                    @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText) {
 
