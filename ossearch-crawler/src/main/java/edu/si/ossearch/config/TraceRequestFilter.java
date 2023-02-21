@@ -31,6 +31,6 @@ public class TraceRequestFilter extends HttpTraceFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        return !request.getServletPath().matches("api|search"); //.contains("api");
+        return request.getServletPath().matches("api|search"); //.contains("api");
     }
 }
