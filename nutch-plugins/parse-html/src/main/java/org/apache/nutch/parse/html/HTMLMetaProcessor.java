@@ -68,7 +68,7 @@ public class HTMLMetaProcessor {
           Node attr = attrs.item(i);
           //String attrName = attr.getNodeName().toLowerCase();
           String attrName = attr.getNodeName();
-          if (attrName.equals("name")) {
+          if (attrName.equals("name") || attrName.equals("property")) {
             nameNode = attr;
           //} else if (attrName.equals("http-equiv")) {
           } else if (attrName.equalsIgnoreCase("http-equiv")) {
