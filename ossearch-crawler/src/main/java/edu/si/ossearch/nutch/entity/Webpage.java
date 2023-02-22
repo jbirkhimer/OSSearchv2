@@ -11,7 +11,7 @@ import java.util.Date;
 
 @Getter
 @Setter
-@ToString//(onlyExplicitlyIncluded = true)
+//@ToString//(onlyExplicitlyIncluded = true)
 @Entity
 @IdClass(WebpagePK.class)
 @Table(name = "webpage")
