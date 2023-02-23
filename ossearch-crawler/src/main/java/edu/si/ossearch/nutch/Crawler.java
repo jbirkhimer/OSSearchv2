@@ -36,7 +36,13 @@ import org.apache.nutch.util.NutchConfiguration;
 import org.apache.nutch.util.SitemapProcessor;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.SolrException;
+import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.params.CursorMarkParams;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.quartz.JobKey;
@@ -96,6 +102,9 @@ public class Crawler {
 
     @Value(value = "${spring.data.solr.collection}")
     String solrCollection;
+
+    @Value(value = "${spring.data.solr.max-rows}")
+    Integer solrMaxRows;
 
     @Autowired
     private CrawlSchedulerJobInfoRepository schedulerRepository;
@@ -232,12 +241,13 @@ public class Crawler {
 
             // if a recrawl delete existing solr records and index all segments from the recrawl
             if (jobInfo.isRecrawl() || jobInfo.getJobType() == JobType.RECRAWL) {
-                solrClient.deleteByQuery(solrCollection, "collectionID:" + jobInfo.getCollectionId(), 30000);
 
-                final List<Path> list = Files.list(Paths.get(segmentsDir.toString()))
+                deleteCollectionFromSolr();
+
+                final List<Path> list = Paths.get(segmentsDir.toString()).toFile().exists() ? Files.list(Paths.get(segmentsDir.toString()))
                         .map(p -> new Path(p.toString()))
                         .sorted(Comparator.comparing(Path::toString))
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toList()) : new ArrayList<>();
 
                 index(list.toArray(new Path[list.size()]));
             }
@@ -1012,7 +1022,7 @@ public class Crawler {
 
         if (!stopFlag.get()) {
             try {
-                solrClient.deleteByQuery(solrCollection, "collectionID:" + jobInfo.getCollectionId(), 30000);
+                deleteCollectionFromSolr();
 
                 final List<Path> list = Files.list(Paths.get(segmentsDir.toString()))
                         .map(p -> new Path(p.toString()))
@@ -1033,9 +1043,6 @@ public class Crawler {
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 updateCrawlStepLogError(crawlStepLog, e.getMessage());
-//                jobInfo.setReindex(false);
-//                jobInfo.setJobType(SCHEDULED_CRAWL);
-//                schedulerRepository.save(jobInfo);
                 throw new OSSearchException(e);
             }
         } else {
@@ -1065,9 +1072,6 @@ public class Crawler {
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 updateCrawlStepLogError(crawlStepLog, e.getMessage());
-//                jobInfo.setRecrawl(false);
-//                jobInfo.setJobType(SCHEDULED_CRAWL);
-//                schedulerRepository.save(jobInfo);
                 throw new OSSearchException(e);
             }
         } else {
@@ -1092,7 +1096,7 @@ public class Crawler {
             Date startDateMinusFetchInterval = DateUtils.addSeconds(startSegmentGenerateDate, -fetchInterval);
 
             File folder =  new File(segmentsDir.toString());
-            String[] directories = folder.list((current, name) -> new File(current, name).isDirectory());
+            String[] directories = folder.exists() ? folder.list((current, name) -> new File(current, name).isDirectory()) : new String[0];
 
             JSONArray segmentsDeleted = new JSONArray();
             JSONArray errors = new JSONArray();
@@ -1193,6 +1197,85 @@ public class Crawler {
         webpageRepository.deleteAllById(webpageIdsForDelete);
 
         webpageRepository.saveAll(webpageList);
+    }
+
+    /**
+     * Delete collection records from solr during reindex or recrawl
+     * Also handle records that have multiple collectionID's. Only remove collectionID of the current job
+     */
+    private void deleteCollectionFromSolr() throws SolrException, SolrServerException, IOException, OSSearchException {
+
+        SolrQuery query = new SolrQuery();
+        query.setQuery("*:*");
+        query.setFields("id","collectionID");
+        query.addFilterQuery("collectionID:" + jobInfo.getCollectionId());
+        query.addSort("id", SolrQuery.ORDER.asc);  // Pay attention to this line
+        query.setRows(0);
+
+        QueryResponse rsp = solrClient.query(solrCollection, query);
+
+        long numfound = rsp.getResults().getNumFound();
+        log.info("solr numFound = {}", numfound);
+
+        query.setRows(solrMaxRows);
+
+        List<SolrInputDocument> deleteDocs = new ArrayList<>();
+
+        String cursorMark = CursorMarkParams.CURSOR_MARK_START;
+        boolean done = false;
+        int count = 0;
+        while (!done) {
+            query.set(CursorMarkParams.CURSOR_MARK_PARAM, cursorMark);
+
+            rsp = solrClient.query(solrCollection, query);
+
+            String nextCursorMark = rsp.getNextCursorMark();
+
+            SolrDocumentList docList = rsp.getResults();
+
+            if (docList.size() != 0) {
+                count += docList.size();
+                log.debug("cursorMark: {}, nextCursorMark: {}, getting {} of {}", cursorMark, nextCursorMark, count, numfound);
+                log.debug("collection solr delete paging page {} of {} {}", count, numfound, String.format("%.2f", (((double) count) / numfound)*100) + "%");
+            }
+
+            for (SolrDocument doc : docList) {
+                //if only one collectionID skip otherwise remove the current jobs collectionID keeping other collectionID's
+                if (doc.getFieldValues("collectionID").size() > 1) {
+                    log.info("remove collectionID {} from solr doc id:{} with collectionsID: {}", jobInfo.getCollectionId(), doc.getFieldValue("id"), doc.getFieldValues("collectionID"));
+
+                    SolrInputDocument sdoc = new SolrInputDocument();
+                    sdoc.addField("id", doc.getFieldValue("id"));
+
+                    Map<String, Object> fieldModifier = new HashMap<>(1);
+                    fieldModifier.put("remove", jobInfo.getCollectionId());
+                    sdoc.addField("collectionID", fieldModifier);  // add the map as the field value
+
+                    deleteDocs.add(sdoc);
+                }
+            }
+
+            // Check if we have a large enough set of docs
+            if (deleteDocs.size() >= solrMaxRows) {
+                solrClient.add(solrCollection, deleteDocs, 10000);
+                deleteDocs.clear();
+            }
+
+            if (cursorMark.equals(nextCursorMark)) {
+                done = true;
+            }
+
+            cursorMark = nextCursorMark;
+        }
+
+        // remove this jobs collectionID from any remaining docs that are part of other collections
+        if (deleteDocs.size() > 0) {
+            solrClient.add(solrCollection, deleteDocs, 10000);
+            deleteDocs.clear();
+        }
+
+        // Delete any remaining docs for this jobs collectionID
+        solrClient.deleteByQuery(solrCollection, "collectionID:" + jobInfo.getCollectionId(), 30000);
     }
 
     /**
