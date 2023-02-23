@@ -100,86 +100,88 @@
               <pre>{{ data.output }}</pre>
             </li>
 
-            <li class="list-group-item d-flex justify-content-start align-items-start">
-              <div class="me-2 fw-bold">URL:</div>
-              <a :href="data.result.url" target="_blank" class="text-wrap" style="word-break: break-all">{{ data.result.url}}</a>
-            </li>
+            <template v-if="data.result">
+              <li class="list-group-item d-flex justify-content-start align-items-start">
+                <div class="me-2 fw-bold">URL:</div>
+                <a :href="data.result.url" target="_blank" class="text-wrap" style="word-break: break-all">{{ data.result.url}}</a>
+              </li>
 
-            <li class="list-group-item d-flex justify-content-start align-items-start">
-              <div class="me-2 fw-bold text-nowrap">Status:</div>
-              <span class="text-wrap" style="word-break: break-all">{{ data.result.Status }}</span>
-            </li>
+              <li class="list-group-item d-flex justify-content-start align-items-start">
+                <div class="me-2 fw-bold text-nowrap">Status:</div>
+                <span class="text-wrap" style="word-break: break-all">{{ data.result.Status }}</span>
+              </li>
 
-            <li class="list-group-item d-flex justify-content-start align-items-start">
-              <div class="me-2 fw-bold text-nowrap">ContentType:</div>
-              <span class="text-wrap" style="word-break: break-all">{{ data.result.contentType }}</span>
-            </li>
+              <li class="list-group-item d-flex justify-content-start align-items-start">
+                <div class="me-2 fw-bold text-nowrap">ContentType:</div>
+                <span class="text-wrap" style="word-break: break-all">{{ data.result.contentType }}</span>
+              </li>
 
-            <li class="list-group-item d-flex justify-content-start align-items-start">
-              <div class="me-2 fw-bold text-nowrap">Signature:</div>
-              <span  class="text-wrap" style="word-break: break-all">{{ data.result.signature }}</span>
-            </li>
+              <li class="list-group-item d-flex justify-content-start align-items-start">
+                <div class="me-2 fw-bold text-nowrap">Signature:</div>
+                <span  class="text-wrap" style="word-break: break-all">{{ data.result.signature }}</span>
+              </li>
 
-            <li class="list-group-item d-flex justify-content-start align-items-start">
-              <div class="me-2 fw-bold text-nowrap">Title:</div>
-              <span class="text-wrap" style="word-break: break-all">{{ data.result.Title}}</span>
-            </li>
+              <li class="list-group-item d-flex justify-content-start align-items-start">
+                <div class="me-2 fw-bold text-nowrap">Title:</div>
+                <span class="text-wrap" style="word-break: break-all">{{ data.result.Title}}</span>
+              </li>
 
-            <li class="list-group-item d-flex justify-content-start align-items-start">
-              <div class="me-2 fw-bold text-nowrap">Parse Metadata:</div>
-              <ul class="list-unstyled">
-                <template v-for="(value, key, i) in data.result['Parse\ Metadata']" :key="i">
-                  <li class="d-flex justify-content-start align-items-start">
-                    <div class="me-2 fw-bold text-nowrap">{{key}}:</div>
-                    <template v-for="item in value" :key="item">
-                      <div class="text-wrap" style="word-break: break-all">{{item}}</div>
-                    </template>
-                  </li>
-                </template>
-              </ul>
-            </li>
+              <li class="list-group-item d-flex justify-content-start align-items-start">
+                <div class="me-2 fw-bold text-nowrap">Parse Metadata:</div>
+                <ul class="list-unstyled">
+                  <template v-for="(value, key, i) in data.result['Parse\ Metadata']" :key="i">
+                    <li class="d-flex justify-content-start align-items-start">
+                      <div class="me-2 fw-bold text-nowrap">{{key}}:</div>
+                      <template v-for="item in value" :key="item">
+                        <div class="text-wrap" style="word-break: break-all">{{item}}</div>
+                      </template>
+                    </li>
+                  </template>
+                </ul>
+              </li>
 
-            <li class="list-group-item d-flex justify-content-start align-items-start">
-              <div class="me-2 fw-bold text-nowrap">Content Metadata:</div>
-              <ul class="list-unstyled">
-                <template v-for="(value, key, i) in data.result['Content\ Metadata']" :key="i">
-                  <li class="d-flex justify-content-start align-items-start">
-                    <div class="me-2 fw-bold text-nowrap">{{key}}:</div>
-                    <template v-for="item in value" :key="item">
-                      <div class="text-wrap" style="word-break: break-all">{{item}}</div>
-                    </template>
-                  </li>
-                </template>
-              </ul>
-            </li>
+              <li class="list-group-item d-flex justify-content-start align-items-start">
+                <div class="me-2 fw-bold text-nowrap">Content Metadata:</div>
+                <ul class="list-unstyled">
+                  <template v-for="(value, key, i) in data.result['Content\ Metadata']" :key="i">
+                    <li class="d-flex justify-content-start align-items-start">
+                      <div class="me-2 fw-bold text-nowrap">{{key}}:</div>
+                      <template v-for="item in value" :key="item">
+                        <div class="text-wrap" style="word-break: break-all">{{item}}</div>
+                      </template>
+                    </li>
+                  </template>
+                </ul>
+              </li>
 
-            <li class="list-group-item d-flex justify-content-start align-items-start">
-              <div class="me-2 fw-bold text-nowrap">Outlinks:</div>
-              <span class="badge bg-primary rounded-pill me-2">{{data.result.Outlinks.count}}</span>
-              <ul class="list-group list-group-numbered w-100">
-                <template v-for="(value, i) in data.result.Outlinks.outlinks" :key="i">
-                  <li class="list-group-item d-flex justify-content-start align-items-start">
-                    <ul class="list-unstyled">
-                      <li class="d-flex justify-content-start align-items-start">
-                        <div class="ms-2 me-2 fw-bold">toUrl:</div>
-                        <a :href="value.toUrl" target="_blank" class="text-wrap" style="word-break: break-all">{{value.toUrl}}</a>
-                      </li>
-                      <li class="d-flex justify-content-start align-items-start">
-                        <div class="ms-2 me-2 fw-bold">anchor:</div>
-                        {{value.anchor}}
-                      </li>
-                    </ul>
-                  </li>
-                </template>
-              </ul>
-            </li>
+              <li class="list-group-item d-flex justify-content-start align-items-start">
+                <div class="me-2 fw-bold text-nowrap">Outlinks:</div>
+                <span class="badge bg-primary rounded-pill me-2">{{data.result.Outlinks.count}}</span>
+                <ul class="list-group list-group-numbered w-100">
+                  <template v-for="(value, i) in data.result.Outlinks.outlinks" :key="i">
+                    <li class="list-group-item d-flex justify-content-start align-items-start">
+                      <ul class="list-unstyled">
+                        <li class="d-flex justify-content-start align-items-start">
+                          <div class="ms-2 me-2 fw-bold">toUrl:</div>
+                          <a :href="value.toUrl" target="_blank" class="text-wrap" style="word-break: break-all">{{value.toUrl}}</a>
+                        </li>
+                        <li class="d-flex justify-content-start align-items-start">
+                          <div class="ms-2 me-2 fw-bold">anchor:</div>
+                          {{value.anchor}}
+                        </li>
+                      </ul>
+                    </li>
+                  </template>
+                </ul>
+              </li>
 
-            <li class="list-group-item d-flex justify-content-start align-items-start">
-              <div class="me-2 fw-bold text-nowrap">Parse Text:</div>
-              <div class="text-wrap">{{ data.result.text}}</div>
-            </li>
-
+              <li class="list-group-item d-flex justify-content-start align-items-start">
+                <div class="me-2 fw-bold text-nowrap">Parse Text:</div>
+                <div class="text-wrap">{{ data.result.text}}</div>
+              </li>
+            </template>
           </ul>
+
         </div>
       </div>
     </div>
