@@ -28,9 +28,9 @@ class UserService {
     return api.post(url, body);
   }
 
-  updateUser(url, body) {
+  updateUser(url, params, body) {
     //console.log('[userService] PATCH url: '+url+',\nbody: ' + body)
-    return api.patch(url, body, {headers: {"Content-Type": "application/json"}});
+    return api.patch(url, body, {headers: {"Content-Type": "application/json"}, params: params});
   }
 
   addRole(url, body) {

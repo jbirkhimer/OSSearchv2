@@ -43,7 +43,7 @@ public class User {
 	@Email
 	private String email;
 
-	@NotBlank
+//	@NotBlank
 	@Size(max = 120)
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	@JsonDeserialize(using = JsonDeserializers.PasswordDeserializer.class)

@@ -439,7 +439,7 @@ export default {
 
       //console.log("[updateUser] url: " + url + ", body: " + JSON.stringify(body), null, 2)
 
-      await UserService.updateUser(url, JSON.stringify(body))
+      await UserService.updateUser(url, {projection: 'userInfo'}, JSON.stringify(body))
           .then(response => {
             let data = response.data;
             this.user = data;
