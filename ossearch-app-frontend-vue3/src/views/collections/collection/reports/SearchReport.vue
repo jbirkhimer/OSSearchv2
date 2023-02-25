@@ -198,9 +198,12 @@ export default {
       if (this?.collection?.id) {
         let params = this.getParams()
 
+        delete params.collectionId
+        delete params.projection
+
         url = new URL(process.env.VUE_APP_API_BASE_URL + '/api/reports/search/' + this.collection.id)
         url.search = new URLSearchParams(params)
-        // console.log("export url", url.toString())
+        console.log("export url", url.toString())
       }
       return url
     },

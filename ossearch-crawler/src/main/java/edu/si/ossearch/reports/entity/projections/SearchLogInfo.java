@@ -13,11 +13,11 @@ import java.util.Date;
 public interface SearchLogInfo {
     String getQuery();
 
-    String getFields();
+//    String getFields();
 
-    Integer getNumRows();
+//    Integer getNumRows();
 
-    Long getStart();
+//    Long getStart();
 
     String getResponseType();
 

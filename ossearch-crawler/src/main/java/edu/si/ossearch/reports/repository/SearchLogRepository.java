@@ -2,15 +2,19 @@ package edu.si.ossearch.reports.repository;
 
 import edu.si.ossearch.reports.entity.SearchLog;
 import edu.si.ossearch.reports.entity.projections.SearchLogChart;
+import edu.si.ossearch.reports.entity.projections.SearchLogInfo;
 import edu.si.ossearch.reports.entity.projections.SearchLogKeywordCountsView;
+import edu.si.ossearch.reports.entity.projections.SearchLogKeywordsView;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.data.rest.core.annotation.RestResource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.lang.Nullable;
 
@@ -58,6 +62,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             nativeQuery = true)
     long totalCountForAllCollectionsBetweenDates(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate, @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate);
 
+    @RestResource(path = "totalCountForAllCollectionsBetweenDatesByCollectionId", rel = "customFindMethod")
     @Query("select s from SearchLog s" +
             " where s.collectionId = :collectionId" +
             " and (s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
@@ -71,7 +76,20 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
                                                                                     @Param("collectionId") Long collectionId,
                                                                                     @Param("searchText") @Nullable String searchText,
                                                                                     Pageable pageable);
-
+    @RestResource(path = "totalCountForAllCollectionsBetweenDatesByCollectionIdReport", rel = "customFindMethod")
+    @Query("select s from SearchLog s" +
+            " where s.collectionId = :collectionId" +
+            " and (s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
+            " or s.responseType like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
+            " or s.requestIp like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
+            " or s.docsFound like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
+            " or s.elapsedTime like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
+            " and s.createdDate between :startDate and :endDate")
+    Optional<List<SearchLogInfo>> totalCountForAllCollectionsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+                                                                                        @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
+                                                                                        @Param("collectionId") Long collectionId,
+                                                                                        @Param("searchText") @Nullable String searchText,
+                                                                                        Sort sort);
     @Query(value = "select count(s.id) as count, s.site as site, s.collection_id as collectionId from search_log s inner join (" + collectionsByOwnerUserAdmin + ") cj on cj.id = s.collection_id group by s.site, s.collection_id order by count desc", nativeQuery = true)
     List<CountsByCollectionView> countsByCollection();
 
@@ -83,7 +101,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
         Integer getCollectionId();
     }
 
-
+    @RestResource(path = "keywordsBetweenDatesByCollectionId", rel = "customFindMethod")
     @Query(value = "select s from SearchLog s" +
             " where s.collectionId = :collectionId" +
             " and (:searchText is null or s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
@@ -93,6 +111,16 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
                                                                  @Param("collectionId") Long collectionId,
                                                                  @Param("searchText") @Nullable String searchText,
                                                                  Pageable pageable);
+    @RestResource(path = "keywordsBetweenDatesByCollectionIdReport", rel = "customFindMethod")
+    @Query(value = "select s from SearchLog s" +
+            " where s.collectionId = :collectionId" +
+            " and (:searchText is null or s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
+            " and s.createdDate between :startDate and :endDate")
+    Optional<List<SearchLogKeywordsView>> keywordsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+                                                                 @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
+                                                                 @Param("collectionId") Long collectionId,
+                                                                 @Param("searchText") @Nullable String searchText,
+                                                                 Sort sort);
 
     @Query(value = "select query, count(query) as wordCount, concat(date_format(min(created_date), '%Y-%m-%d'), ' - ', date_format(max(created_date), '%Y-%m-%d')) as dateRange from search_log" +
             " where collection_id = :collectionId" +
@@ -112,8 +140,6 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
                                                                                        @Param("collectionId") Long collectionId,
                                                                                        @Param("searchText") @Nullable String searchText,
                                                                                        Pageable pageable);
-
-
 
     /*@Query("SELECT YEAR(createdDate) as year, MONTHNAME(createdDate) as monthName, DATE(createdDate) as date, count(query) as count, site as site" +
             " FROM SearchLog" +

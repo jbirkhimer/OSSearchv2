@@ -143,6 +143,7 @@ export default {
         params.rows = params.size
         delete params.size
         delete params.projection
+        delete params.collectionId
         params.export = true
 
         // url = new URL(process.env.VUE_APP_API_BASE_URL + '/api/webpage/search/findByWebPagesByCrawlDb_CollectionIdReport')
@@ -289,7 +290,7 @@ export default {
           });
       await new Promise(resolve => setTimeout(resolve, 3000));
       this.loading = true
-      await this.getIndexedUrlsReport()
+      await this.getCrawlDbTableData()
       this.loading = false
     },
     getParams() {

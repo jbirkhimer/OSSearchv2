@@ -3,6 +3,8 @@ package edu.si.ossearch.reports.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.si.ossearch.collection.repository.CollectionRepository;
 import edu.si.ossearch.nutch.entity.projections.CrawldbUrlStatusCounts;
+import edu.si.ossearch.reports.entity.projections.SearchLogInfo;
+import edu.si.ossearch.reports.entity.projections.SearchLogKeywordsView;
 import edu.si.ossearch.reports.service.ReportsService;
 import edu.si.ossearch.reports.util.SortOrderParser;
 import edu.si.ossearch.reports.entity.SearchLog;
@@ -64,25 +66,29 @@ public class ReportsController {
     @Operation(summary = "get keywords", responses = {@ApiResponse( content = {@Content(mediaType = "application/json"), @Content(mediaType = "application/csv"), @Content(mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), @Content(mediaType = "application/pdf")})})
     public @ResponseBody ResponseEntity<?> keywordsBetweenDatesByCollectionId(@RequestParam(value = "startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                               @RequestParam(value = "endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
-                                                                              @RequestParam(value = "collectionId") Long collectionId,
+                                                                              @PathVariable(value = "collectionId") Long collectionId,
                                                                               @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText,
                                                                               @RequestParam(value = "exportType", required = false) String exportType,
-                                                                              Pageable pageable,
-                                                                              ServletWebRequest webRequest) {
+                                                                              @RequestParam(value = "sort", defaultValue = "id,asc") List<String> sortList) {
 
-        Method enclosingMethod = new Object() {}.getClass().getEnclosingMethod();
-        Sort sort = new SortHandlerMethodArgumentResolver().resolveArgument(new MethodParameter(enclosingMethod, 4), null, webRequest, null);
-
-        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
-
-        if (pageable.getSort().isUnsorted()) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.ASC, "query"));
+        List<Sort.Order> orders = new ArrayList<>();
+        if (sortList.get(0).contains(",")) {
+            sortList.forEach(sort -> {
+                String[] param = sort.split(",");
+                Sort.Direction dir = param[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+                orders.add(new Sort.Order(dir, param[0]));
+            });
+        } else {
+            Sort.Direction dir = sortList.get(1).equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+            orders.add(new Sort.Order(dir, sortList.get(0)));
         }
 
-        Page<SearchLog> searchLogs = searchLogRepository.keywordsBetweenDatesByCollectionId(startDate, endDate, collectionId, searchText, pageable).orElse(new PageImpl<>(new ArrayList<>()));
+        Sort sort = Sort.by(orders);
+
+        List<SearchLogKeywordsView> searchLogs = searchLogRepository.keywordsBetweenDatesByCollectionId(startDate, endDate, collectionId, searchText, sort).orElse(new ArrayList<>());
 
         List<Map<String, Object>> results = searchLogs.stream()
-                .map((SearchLog row) -> (Map<String, Object>) mapObject.convertValue(row, Map.class))
+                .map((SearchLogKeywordsView row) -> (Map<String, Object>) mapObject.convertValue(row, Map.class))
                 .collect(Collectors.toList());
 
         Optional<String> collectionName = collectionRepository.findCollectionById(collectionId);
@@ -94,7 +100,7 @@ public class ReportsController {
     @Operation(summary = "get keyword counts", responses = {@ApiResponse( content = {@Content(mediaType = "application/json"), @Content(mediaType = "application/csv"), @Content(mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), @Content(mediaType = "application/pdf")})})
     public @ResponseBody ResponseEntity<?> keywordCountsBetweenDatesByCollectionIdExport(@RequestParam(value = "startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                                          @RequestParam(value = "endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
-                                                                                         @RequestParam(value = "collectionId") Long collectionId,
+                                                                                         @PathVariable(value = "collectionId") Long collectionId,
                                                                                          @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText,
                                                                                          @RequestParam(value = "exportType", required = false) String exportType,
                                                                                          Pageable pageable,
@@ -103,10 +109,10 @@ public class ReportsController {
         Method enclosingMethod = new Object() {}.getClass().getEnclosingMethod();
         Sort sort = new SortHandlerMethodArgumentResolver().resolveArgument(new MethodParameter(enclosingMethod, 4), null, webRequest, null);
 
-        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        pageable = PageRequest.of(0, Integer.MAX_VALUE, sort);
 
         if (pageable.getSort().isUnsorted()) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.ASC, "query"));
+            pageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.ASC, "query"));
         }
 
         Page<SearchLogKeywordCountsView> searchLogs = searchLogRepository.keywordCountsBetweenDatesByCollectionId(startDate, endDate, collectionId, searchText, pageable).orElse(new PageImpl<>(new ArrayList<>()));
@@ -268,7 +274,7 @@ public class ReportsController {
                                                            @RequestParam(value = "export", required = false, defaultValue = "false") Boolean export,
                                                            @RequestParam(value = "exportType", required = false) String exportType,
                                                            @RequestParam(value = "search", required = false) String search,
-                                                           @RequestParam(value = "sort", defaultValue = "id asc") List<String> sort,
+                                                           @RequestParam(value = "sort", defaultValue = "id,asc") List<String> sort,
                                                            @RequestParam(value = "page") Integer page,
                                                            @RequestParam(value = "rows") Integer rows) {
 
@@ -313,5 +319,39 @@ public class ReportsController {
         }
 
 
+    }
+
+    @GetMapping(value = "/search/{collectionId}")
+    @Operation(summary = "get daily search counts", responses = {@ApiResponse( content = {@Content(mediaType = "application/json"), @Content(mediaType = "application/csv"), @Content(mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), @Content(mediaType = "application/pdf")})})
+    public @ResponseBody ResponseEntity<?> dailySearchCountsBetweenDatesByCollectionId(@RequestParam(value = "startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+                                                                              @RequestParam(value = "endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
+                                                                              @PathVariable(value = "collectionId") Long collectionId,
+                                                                              @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText,
+                                                                              @RequestParam(value = "exportType", required = false) String exportType,
+                                                                              @RequestParam(value = "sort", defaultValue = "id,asc") List<String> sortList) {
+
+        List<Sort.Order> orders = new ArrayList<>();
+        if (sortList.get(0).contains(",")) {
+            sortList.forEach(sort -> {
+                String[] param = sort.split(",");
+                Sort.Direction dir = param[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+                orders.add(new Sort.Order(dir, param[0]));
+            });
+        } else {
+            Sort.Direction dir = sortList.get(1).equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+            orders.add(new Sort.Order(dir, sortList.get(0)));
+        }
+
+        Sort sort = Sort.by(orders);
+
+        List<SearchLogInfo> searchLogs = searchLogRepository.totalCountForAllCollectionsBetweenDatesByCollectionId(startDate, endDate, collectionId, searchText, sort).orElse(new ArrayList<>());
+
+        List<Map<String, Object>> results = searchLogs.stream()
+                .map((SearchLogInfo row) -> (Map<String, Object>) mapObject.convertValue(row, Map.class))
+                .collect(Collectors.toList());
+
+        Optional<String> collectionName = collectionRepository.findCollectionById(collectionId);
+        String filePrefix = collectionName.get() + "_" + collectionId + "_dailySearchCountsReport";
+        return getResponse(exportType, filePrefix, results);
     }
 }
