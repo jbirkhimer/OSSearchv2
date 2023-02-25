@@ -93,10 +93,14 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
 
         CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(jobName, jobGroup);
 
-//        CrawlConfig crawlConfig = crawlConfigRepository.getCrawlConfigByCollectionName(jobInfo.getCollectionName());
+        CrawlConfig crawlConfig = crawlConfigRepository.getCrawlConfigByCollectionName(jobInfo.getCollectionName());
 
-        if (jobInfo == null /*|| crawlConfig == null*/) {
-            throw new OSSearchException("addUrls Crawl Job not Created! Crawl Schedule does not exists for collection "+jobName+"!");
+        crawlConfig.getExcludeSiteUrls().removeAll(urls);
+        crawlConfig.getIncludeSiteUrls().addAll(urls);
+        crawlConfigRepository.save(crawlConfig);
+
+        if (jobInfo == null || crawlConfig == null) {
+            throw new OSSearchException("addUrls Crawl Job not Created! Crawl Schedule or CrawlConfig does not exists for collection "+jobName+"!");
         }
 
         Properties properties = new Properties();
@@ -212,6 +216,8 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
         log.debug("urls for delete from solr. count: {}", deleteUrls.size());
 
         solrClient.deleteById(solrCollection, deleteUrls, 1000);
+
+        webpageRepository.deleteWebpagesByCrawlDb_CollectionIdAndUrlIn(Integer.valueOf(jobInfo.getCollectionId()), urls);
     }
 
     @Override

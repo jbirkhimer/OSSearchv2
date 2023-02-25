@@ -2,6 +2,7 @@ package edu.si.ossearch.nutch.repository;
 
 import edu.si.ossearch.nutch.entity.CrawlDb;
 import edu.si.ossearch.nutch.entity.Webpage;
+import edu.si.ossearch.nutch.entity.WebpagePK;
 import edu.si.ossearch.nutch.entity.projections.CrawldbUrlStatusCounts;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +23,7 @@ import java.util.Optional;
 @Tag(name = "Webpage", description = "WebpageRepository")
 @RepositoryRestResource(collectionResourceRel = "webpage", path = "webpage")
 @SecurityRequirement(name = "bearerAuth")
-public interface WebpageRepository extends JpaRepository<Webpage, String> {
+public interface WebpageRepository extends JpaRepository<Webpage, WebpagePK> {
 
 
     @Query("SELECT new edu.si.ossearch.nutch.entity.projections.CrawldbUrlStatusCounts(w.statusName, COUNT(w.statusName)) FROM Webpage w WHERE w.crawlDb.collectionId = :collectionId GROUP BY w.statusName")
@@ -37,6 +38,10 @@ public interface WebpageRepository extends JpaRepository<Webpage, String> {
     @Modifying
     @Query("DELETE FROM Webpage w WHERE w.crawlDb = :crawlDb")
     int deleteAllByCrawlDb(@Param("crawlDb") CrawlDb crawlDb);
+
+    @Transactional
+    @Modifying
+    int deleteWebpagesByCrawlDb_CollectionIdAndUrlIn(@Param("collectionId") Integer collectionId, @Param("urls") List<String> urls);
 
     @RestResource(path = "findByWebPagesByCrawlDb_CollectionId", rel = "customFindMethod")
     @Query("SELECT w FROM Webpage w WHERE w.crawlDb.collectionId = :collectionId AND (:search is null or (w.url like %:search% or w.statusName like %:search%))")

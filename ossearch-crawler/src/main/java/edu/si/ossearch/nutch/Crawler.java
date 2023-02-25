@@ -10,6 +10,7 @@ import edu.si.ossearch.collection.entity.UrlExclusionPattern;
 import edu.si.ossearch.collection.repository.CollectionRepository;
 import edu.si.ossearch.collection.repository.CrawlConfigRepository;
 import edu.si.ossearch.nutch.entity.Webpage;
+import edu.si.ossearch.nutch.entity.WebpagePK;
 import edu.si.ossearch.nutch.repository.CrawlDbRepository;
 import edu.si.ossearch.nutch.repository.WebpageRepository;
 import edu.si.ossearch.scheduler.entity.CrawlLog;
@@ -1194,7 +1195,8 @@ public class Crawler {
 
         List<String> webpageIdsForDelete = new ArrayList<>((CollectionUtils.removeAll(currentUUIDsInDb.get(), newUUIDList)));
 
-        webpageRepository.deleteAllById(webpageIdsForDelete);
+        List<WebpagePK> webpagePKIdsForDelete = webpageIdsForDelete.stream().map(uuid -> new WebpagePK(uuid, savedCrawldb.getId())).collect(Collectors.toList());
+        webpageRepository.deleteAllById(webpagePKIdsForDelete);
 
         webpageRepository.saveAll(webpageList);
     }
