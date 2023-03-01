@@ -27,7 +27,7 @@
 <!--        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="crawlLogs()">Crawl Logs</button>-->
         <router-link class="btn btn-primary" type="button" role="toolbar" aria-label="Toolbar with button groups" :to="{name: 'crawlLogs', params: { jobName: this.jobData.jobName, jobGroup: this.jobData.jobGroup }}">Crawl Logs</router-link>
       </div>
-      <div v-if="isAdmin" class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+      <div v-if="isAdmin || isManager" class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
         <button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#nutchReindexlModal">ReIndex</button>
         <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#nutchRecrawlModal">ReCrawl</button>
       </div>
@@ -176,7 +176,7 @@
     </div>
 
     <!-- Basic Crawl Options -->
-    <div class="card mb-4" v-if="isAdmin">
+    <div class="card mb-4" v-if="isAdmin || isManager">
       <div class="card-header">
         <i class="fas fa-cog me-1"></i>
         <b>Basic Crawl Options</b>
@@ -204,7 +204,7 @@
     </div>
 
     <!-- Advanced Crawling -->
-    <div class="card mb-4" v-if="isAdmin">
+    <div class="card mb-4" v-if="isAdmin || isManager">
       <div class="card-header">
         <i class="fas fa-cogs me-1"></i>
         <b>Advanced Crawling</b> <b class="text-danger">(Advanced)</b>
@@ -303,7 +303,7 @@
     </div>
 
     <!-- Nutch Crawler Properties -->
-    <div class="card mb-4" v-if="isAdmin">
+    <div class="card mb-4" v-if="isAdmin || isManager">
       <div class="card-header">
         <i class="fas fa-tools me-1"></i>
         <b>Nutch Crawler Properties</b> <b class="text-danger">(Advanced)</b>
@@ -690,6 +690,12 @@ export default {
     isAdmin() {
       if (this.currentUser && this.currentUser['roles']) {
         return this.currentUser['roles'].includes('ROLE_ADMIN');
+      }
+      return false;
+    },
+    isManager() {
+      if (this.currentUser && this.currentUser['roles']) {
+        return this.currentUser['roles'].includes('ROLE_MANAGER');
       }
       return false;
     }
