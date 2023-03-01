@@ -218,7 +218,7 @@ export default {
       }
 
       // await ReportsService.get('/reports/crawldb/'+this.collectionId, params)
-      await ReportsService.get('/webpage/search/findWebpageByCrawlDb_CollectionIdAndAndUrl' , params)
+      await ReportsService.get('/webpage/search/findWebpageByCollectionIdAndAndUrl' , params)
           .then(response => {
             this.crawlDbData = response.data
             delete this.crawlDbData._links

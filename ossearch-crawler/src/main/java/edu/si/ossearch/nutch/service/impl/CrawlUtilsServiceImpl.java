@@ -9,9 +9,7 @@ import edu.si.ossearch.collection.entity.CrawlConfig;
 import edu.si.ossearch.collection.repository.CrawlConfigRepository;
 import edu.si.ossearch.nutch.NutchCrawldbUtils;
 import edu.si.ossearch.nutch.ParserChecker;
-import edu.si.ossearch.nutch.entity.CrawlDb;
 import edu.si.ossearch.nutch.entity.Webpage;
-import edu.si.ossearch.nutch.repository.CrawlDbRepository;
 import edu.si.ossearch.nutch.repository.WebpageRepository;
 import edu.si.ossearch.nutch.service.CrawlUtilsService;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
@@ -60,9 +58,6 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
 
     @Autowired
     private CrawlConfigRepository crawlConfigRepository;
-
-    @Autowired
-    private CrawlDbRepository crawlDbRepository;
 
     @Autowired
     private WebpageRepository webpageRepository;
@@ -217,7 +212,7 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
 
         solrClient.deleteById(solrCollection, deleteUrls, 1000);
 
-        webpageRepository.deleteWebpagesByCrawlDb_CollectionIdAndUrlIn(Integer.valueOf(jobInfo.getCollectionId()), urls);
+        webpageRepository.deleteWebpagesByCollectionIdAndUrlIn(Integer.valueOf(jobInfo.getCollectionId()), urls);
     }
 
     @Override
@@ -249,14 +244,6 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
     public Future<Void> async_updateDb(String jobName, String jobGroup) {
         CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(jobName, jobGroup);
 
-        CrawlDb savedCrawldb = crawlDbRepository.findCrawlDbByCollectionId(Integer.valueOf(jobInfo.getCollectionId()))
-                .orElseGet(() -> {
-                    CrawlDb crawlDb = new CrawlDb();
-                    crawlDb.setCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
-                    CrawlDb newCrawldb = crawlDbRepository.saveAndFlush(crawlDb);
-                    return newCrawldb;
-                });
-
         Configuration conf = NutchConfiguration.create();
         conf.set("hadoop.tmp.dir", "hadoop_tmp");
         Path crawlBaseDir = getCrawlBaseDir(jobInfo);
@@ -265,9 +252,9 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
 
         NutchCrawldbUtils crawldbUtils = new NutchCrawldbUtils();
 
-        List<Webpage> webpageList = crawldbUtils.dumpCrawlDatumEntityList(crawldbDir, conf, savedCrawldb);
+        List<Webpage> webpageList = crawldbUtils.dumpCrawlDatumEntityList(crawldbDir, conf, Integer.valueOf(jobInfo.getCollectionId()));
 
-        webpageRepository.deleteAllByCrawlDb(savedCrawldb);
+        webpageRepository.deleteAllByCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
 
         webpageRepository.saveAllAndFlush(webpageList);
         return new AsyncResult<>(null);

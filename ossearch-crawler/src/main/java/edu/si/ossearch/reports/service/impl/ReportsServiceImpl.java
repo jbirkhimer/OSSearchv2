@@ -1,9 +1,7 @@
 package edu.si.ossearch.reports.service.impl;
 
-import edu.si.ossearch.nutch.entity.CrawlDb;
 import edu.si.ossearch.nutch.entity.Webpage;
-import edu.si.ossearch.nutch.entity.projections.CrawldbUrlStatusCounts;
-import edu.si.ossearch.nutch.repository.CrawlDbRepository;
+import edu.si.ossearch.nutch.entity.projections.WebpageUrlStatusCounts;
 import edu.si.ossearch.nutch.repository.WebpageRepository;
 import edu.si.ossearch.reports.service.ExportService;
 import edu.si.ossearch.reports.service.ReportsService;
@@ -48,9 +46,6 @@ public class ReportsServiceImpl implements ReportsService {
     @Autowired
     @Qualifier("master")
     private SolrClient solrClient;
-
-    @Autowired
-    private CrawlDbRepository crawlDbRepository;
 
     @Autowired
     private WebpageRepository webpageRepository;
@@ -172,24 +167,17 @@ public class ReportsServiceImpl implements ReportsService {
     }
 
     @Override
-    public Optional<List<CrawldbUrlStatusCounts>> crawldbStats(Integer collectionId) {
+    public Optional<List<WebpageUrlStatusCounts>> crawldbStats(Integer collectionId, String search, String statusName) {
 
-        Optional<List<CrawldbUrlStatusCounts>> stats = webpageRepository.getCrawldbStats(collectionId);
+        Optional<List<WebpageUrlStatusCounts>> stats = webpageRepository.getCrawldbStats(collectionId, search, statusName);
 
         return stats;
     }
 
     @Override
-    public JSONObject crawldbWebpages(Integer collectionId, String search, List<String> sortList, Integer page, Integer rows, Boolean export) {
+    public JSONObject crawldbWebpages(Integer collectionId, String search, String statusName, List<String> sortList, Integer page, Integer rows, Boolean export) {
 
         JSONObject answer = new JSONObject();
-
-        CrawlDb savedCrawldb = crawlDbRepository.findCrawlDbByCollectionId(collectionId).orElseGet(() -> {
-            CrawlDb crawlDb = new CrawlDb();
-            crawlDb.setCollectionId(collectionId);
-            CrawlDb newCrawldb = crawlDbRepository.saveAndFlush(crawlDb);
-            return newCrawldb;
-        });
 
         List<Sort.Order> orders = new ArrayList<>();
         if (sortList.get(0).contains(",")) {
@@ -206,7 +194,7 @@ public class ReportsServiceImpl implements ReportsService {
         Sort sort = Sort.by(orders);
 
         if (export) {
-            Optional<List<Webpage>> crawldbReport = webpageRepository.findByWebPagesByCrawlDb_CollectionId(collectionId, search, sort);
+            Optional<List<Webpage>> crawldbReport = webpageRepository.findByWebPagesByCollectionId(collectionId, search, statusName, sort);
 
             //JSONArray data = new JSONArray(crawldbReport.get());
             JSONArray data = new JSONArray();
@@ -222,7 +210,7 @@ public class ReportsServiceImpl implements ReportsService {
         } else {
             Pageable pageableRequest = PageRequest.of(page, rows, sort);
 
-            Optional<Page<Webpage>> webpages = webpageRepository.findByWebPagesByCrawlDb_CollectionId(collectionId, search, pageableRequest);
+            Optional<Page<Webpage>> webpages = webpageRepository.findByWebPagesByCollectionId(collectionId, search, statusName, pageableRequest);
 
             JSONArray data = new JSONArray(webpages.get());
             answer.put("data", data);

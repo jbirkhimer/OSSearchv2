@@ -18,7 +18,6 @@ package edu.si.ossearch.nutch.controller;
 
 import edu.si.ossearch.OSSearchException;
 import edu.si.ossearch.nutch.NutchCrawldbUtils;
-import edu.si.ossearch.nutch.entity.projections.CrawldbUrlStatusCounts;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
 import edu.si.ossearch.scheduler.repository.CrawlSchedulerJobInfoRepository;
 import io.swagger.v3.oas.annotations.Operation;

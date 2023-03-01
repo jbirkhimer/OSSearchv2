@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import edu.si.ossearch.nutch.entity.CrawlDb;
 import edu.si.ossearch.nutch.entity.Inlink;
 import edu.si.ossearch.nutch.entity.Webpage;
 import lombok.extern.slf4j.Slf4j;
@@ -175,7 +174,7 @@ public class NutchCrawldbUtils implements Closeable {
         return crawldbData;
     }
 
-    public List<Webpage> dumpCrawlDatumEntityList(Path crawldb, Configuration conf, CrawlDb crawl_db) {
+    public List<Webpage> dumpCrawlDatumEntityList(Path crawldb, Configuration conf, Integer collectionId) {
 
         List<Webpage> crawldbData = new ArrayList<>();
 
@@ -194,7 +193,7 @@ public class NutchCrawldbUtils implements Closeable {
 
                     log.debug("crawldb: {}, key: {}, value: {}", crawldb, key, value);
 
-                    Webpage answer = writeEntity(key, value, crawl_db);
+                    Webpage answer = writeEntity(key, value, collectionId);
                     crawldbData.add(answer);
                 }
                 reader.close();
@@ -213,7 +212,7 @@ public class NutchCrawldbUtils implements Closeable {
         return crawldbData;
     }
 
-    public Map<String, Inlink> dumpInlinksEntityList(Path crawldb, Configuration conf, CrawlDb crawl_db) {
+    public Map<String, Inlink> dumpInlinksEntityList(Path crawldb, Configuration conf, Integer collectionId) {
 
         Map<String, Inlink> crawldbData = new HashMap<>();
 
@@ -233,7 +232,7 @@ public class NutchCrawldbUtils implements Closeable {
 
                     log.debug("crawldb: {}, key: {}, value: {}", crawldb, key, value);
 
-                    Inlink inlinkList = writeInlinks(key, value, crawl_db);
+                    Inlink inlinkList = writeInlinks(key, value, collectionId);
                     crawldbData.put(key.toString(), inlinkList);
                 }
                 reader.close();
@@ -252,7 +251,7 @@ public class NutchCrawldbUtils implements Closeable {
         return crawldbData;
     }
 
-    public synchronized Inlink writeInlinks(Text key, Inlinks value, CrawlDb crawldb) {
+    public synchronized Inlink writeInlinks(Text key, Inlinks value, Integer collectionId) {
         Inlink inlink = new Inlink();
         inlink.setId(UUID.nameUUIDFromBytes(key.toString().getBytes(StandardCharsets.UTF_8)).toString());
         inlink.setUrl(key.toString());
@@ -305,7 +304,7 @@ public class NutchCrawldbUtils implements Closeable {
 
     public synchronized List<String> writeCsv(Text key, CrawlDatum value) throws IOException {
         List<String> row = new ArrayList<>();
-        
+
         row.add(key.toString());
         row.add(Integer.toString(value.getStatus()));
         row.add(CrawlDatum.getStatusName(value.getStatus()));
@@ -330,10 +329,10 @@ public class NutchCrawldbUtils implements Closeable {
         return row;
     }
 
-    public synchronized Webpage writeEntity(Text key, CrawlDatum value, CrawlDb crawldb) throws IOException {
+    public synchronized Webpage writeEntity(Text key, CrawlDatum value, Integer collectionId) throws IOException {
         Webpage data = new Webpage();
         data.setId(UUID.nameUUIDFromBytes(key.toString().getBytes(StandardCharsets.UTF_8)).toString());
-        data.setCrawlDb(crawldb);
+        data.setCollectionId(collectionId);
         data.setUrl(key.toString());
         data.setStatusCode(Integer.valueOf(value.getStatus()));
         data.setStatusName(CrawlDatum.getStatusName(value.getStatus()));

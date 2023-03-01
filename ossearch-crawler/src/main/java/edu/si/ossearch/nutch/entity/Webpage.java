@@ -26,6 +26,9 @@ public class Webpage implements Serializable {
     @Id
     private String id;
 
+    @Id
+    private Integer collectionId;
+
     @Column(columnDefinition = "TEXT", length = 4096)
     private String url;
     private Integer statusCode;
@@ -56,9 +59,4 @@ public class Webpage implements Serializable {
 //    @MapKeyColumn(name = "metadata_name")
 ////    @Column(name = "nutch_property")
 //    private Map<String, Object> metadata = new HashMap<>();
-
-    @Id
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "crawl_db_id")
-    private CrawlDb crawlDb;
 }

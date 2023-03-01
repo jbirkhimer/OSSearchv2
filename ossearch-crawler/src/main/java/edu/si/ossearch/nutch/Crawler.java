@@ -11,7 +11,6 @@ import edu.si.ossearch.collection.repository.CollectionRepository;
 import edu.si.ossearch.collection.repository.CrawlConfigRepository;
 import edu.si.ossearch.nutch.entity.Webpage;
 import edu.si.ossearch.nutch.entity.WebpagePK;
-import edu.si.ossearch.nutch.repository.CrawlDbRepository;
 import edu.si.ossearch.nutch.repository.WebpageRepository;
 import edu.si.ossearch.scheduler.entity.CrawlLog;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
@@ -125,9 +124,6 @@ public class Crawler {
     @Autowired
     @Qualifier("master")
     private SolrClient solrClient;
-
-    @Autowired
-    private CrawlDbRepository crawlDbRepository;
 
     @Autowired
     private WebpageRepository webpageRepository;
@@ -1061,7 +1057,7 @@ public class Crawler {
                     FileUtils.moveDirectory(new File(dbDir.toString()), new File(dbDir + "_backup_" + new Date().getTime()));
                 }
 
-                Optional<List<Webpage>> webpages = webpageRepository.findAllByCrawlDb_CollectionId(Integer.valueOf(jobInfo.getCollectionId()));
+                Optional<List<Webpage>> webpages = webpageRepository.findAllByCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
 
                 webpageRepository.deleteAll(webpages.get());;
 
@@ -1176,26 +1172,18 @@ public class Crawler {
 
     private void updateCrawldbWebpagesDb() {
 
-        edu.si.ossearch.nutch.entity.CrawlDb savedCrawldb = crawlDbRepository.findCrawlDbByCollectionId(Integer.valueOf(jobInfo.getCollectionId()))
-                .orElseGet(() -> {
-                    edu.si.ossearch.nutch.entity.CrawlDb crawlDb = new edu.si.ossearch.nutch.entity.CrawlDb();
-                    crawlDb.setCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
-                    edu.si.ossearch.nutch.entity.CrawlDb newCrawldb = crawlDbRepository.saveAndFlush(crawlDb);
-                    return newCrawldb;
-                });
-
         NutchCrawldbUtils crawldbUtils = new NutchCrawldbUtils();
 
-        List<Webpage> webpageList = crawldbUtils.dumpCrawlDatumEntityList(crawldbDir, conf, savedCrawldb);
+        List<Webpage> webpageList = crawldbUtils.dumpCrawlDatumEntityList(crawldbDir, conf, Integer.valueOf(jobInfo.getCollectionId()));
 
         List<String> newUUIDList = new ArrayList<>();
         webpageList.stream().forEach(webpage -> newUUIDList.add(webpage.getId()));
 
-        Optional<List<String>> currentUUIDsInDb = webpageRepository.findAllUrlUuidsByCrawlDb_CollectionId(Integer.valueOf(jobInfo.getCollectionId()));
+        Optional<List<String>> currentUUIDsInDb = webpageRepository.findAllUrlUuidsByCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
 
         List<String> webpageIdsForDelete = new ArrayList<>((CollectionUtils.removeAll(currentUUIDsInDb.get(), newUUIDList)));
 
-        List<WebpagePK> webpagePKIdsForDelete = webpageIdsForDelete.stream().map(uuid -> new WebpagePK(uuid, savedCrawldb.getId())).collect(Collectors.toList());
+        List<WebpagePK> webpagePKIdsForDelete = webpageIdsForDelete.stream().map(uuid -> new WebpagePK(uuid, Integer.valueOf(jobInfo.getCollectionId()))).collect(Collectors.toList());
         webpageRepository.deleteAllById(webpagePKIdsForDelete);
 
         webpageRepository.saveAll(webpageList);

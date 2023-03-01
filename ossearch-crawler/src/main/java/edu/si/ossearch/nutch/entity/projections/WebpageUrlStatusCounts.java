@@ -10,13 +10,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CrawldbUrlStatusCounts {
+public class WebpageUrlStatusCounts {
     private String statusName;
     private Long statusCount;
 }
 
-//@Projection(name = "crawldbUrlStatusCounts", types = {CrawldbUrlStatusCounts.class})
-//public interface CrawldbUrlStatusCounts {
+//@Projection(name = "webpageUrlStatusCounts", types = {WebpageUrlStatusCounts.class})
+//public interface WebpageUrlStatusCounts {
 //    String getStatusName();
 //    Long getStatusCount();
 //}

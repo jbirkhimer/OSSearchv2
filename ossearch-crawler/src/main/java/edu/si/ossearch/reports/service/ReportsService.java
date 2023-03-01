@@ -1,8 +1,7 @@
 package edu.si.ossearch.reports.service;
 
-import edu.si.ossearch.nutch.entity.projections.CrawldbUrlStatusCounts;
+import edu.si.ossearch.nutch.entity.projections.WebpageUrlStatusCounts;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
@@ -26,9 +25,9 @@ public interface ReportsService {
 
     JSONObject solrUrlReport(Integer collectionId, String url) throws SolrServerException, IOException;
 
-    Optional<List<CrawldbUrlStatusCounts>> crawldbStats(Integer collectionId);
+    Optional<List<WebpageUrlStatusCounts>> crawldbStats(Integer collectionId, String search, String statusName);
 
-    JSONObject crawldbWebpages(Integer collectionId, String search, List<String> sort, Integer page, Integer rows, Boolean export);
+    JSONObject crawldbWebpages(Integer collectionId, String search, String statusName, List<String> sort, Integer page, Integer rows, Boolean export);
 
     ByteArrayInputStream export(List<Map<String, Object>> data, String type, String name) throws IOException;
 }

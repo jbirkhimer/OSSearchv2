@@ -2,12 +2,11 @@ package edu.si.ossearch.reports.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.si.ossearch.collection.repository.CollectionRepository;
-import edu.si.ossearch.nutch.entity.projections.CrawldbUrlStatusCounts;
+import edu.si.ossearch.nutch.entity.projections.WebpageUrlStatusCounts;
 import edu.si.ossearch.reports.entity.projections.SearchLogInfo;
 import edu.si.ossearch.reports.entity.projections.SearchLogKeywordsView;
 import edu.si.ossearch.reports.service.ReportsService;
 import edu.si.ossearch.reports.util.SortOrderParser;
-import edu.si.ossearch.reports.entity.SearchLog;
 import edu.si.ossearch.reports.entity.projections.SearchLogKeywordCountsView;
 import edu.si.ossearch.reports.repository.SearchLogRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -258,9 +257,11 @@ public class ReportsController {
 
     @GetMapping(value = "/crawldb/stats/{collectionId}")
     @Operation(summary = "CrawlDb Stats Report", responses = {@ApiResponse(content = @Content(mediaType = "application/json"))})
-    public ResponseEntity<String> getCrawlDbStatsByCollectionId(@PathVariable(name = "collectionId") Integer collectionId) {
+    public ResponseEntity<String> getCrawlDbStatsByCollectionId(@PathVariable(name = "collectionId") Integer collectionId,
+                                                                @RequestParam(value = "search", required = false) String search,
+                                                                @RequestParam(value = "statusName", required = false) String statusName) {
 
-        Optional<List<CrawldbUrlStatusCounts>> crawldbStats = reportsService.crawldbStats(collectionId);
+        Optional<List<WebpageUrlStatusCounts>> crawldbStats = reportsService.crawldbStats(collectionId, search, statusName);
 
 
         JSONArray answer = new JSONArray(crawldbStats.get());
@@ -274,6 +275,7 @@ public class ReportsController {
                                                            @RequestParam(value = "export", required = false, defaultValue = "false") Boolean export,
                                                            @RequestParam(value = "exportType", required = false) String exportType,
                                                            @RequestParam(value = "search", required = false) String search,
+                                                           @RequestParam(value = "statusName", required = false) String statusName,
                                                            @RequestParam(value = "sort", defaultValue = "id,asc") List<String> sort,
                                                            @RequestParam(value = "page") Integer page,
                                                            @RequestParam(value = "rows") Integer rows) {
@@ -282,7 +284,7 @@ public class ReportsController {
 
         if (export) {
 
-            crawldbWebpages = reportsService.crawldbWebpages(collectionId, search, sort, 0, -1, export);
+            crawldbWebpages = reportsService.crawldbWebpages(collectionId, search, statusName, sort, 0, -1, export);
 
             Optional<String> collectionName = collectionRepository.findCollectionById(collectionId);
             String filePrefix = collectionName.get() + "_" + collectionId+ "_crawldb";
@@ -314,7 +316,7 @@ public class ReportsController {
             }
         } else {
 
-            crawldbWebpages = reportsService.crawldbWebpages(collectionId, search, sort, page, rows, export);
+            crawldbWebpages = reportsService.crawldbWebpages(collectionId, search, statusName, sort, page, rows, export);
             return ResponseEntity.status(HttpStatus.OK).body(crawldbWebpages.toString());
         }
 

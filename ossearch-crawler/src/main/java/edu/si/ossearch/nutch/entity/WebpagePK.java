@@ -15,5 +15,5 @@ import java.io.Serializable;
 public class WebpagePK implements Serializable {
 
     private String id;
-    private Long crawlDb;
+    private Integer collectionId;
 }

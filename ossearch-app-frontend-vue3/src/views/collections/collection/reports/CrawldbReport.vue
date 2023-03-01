@@ -1,21 +1,32 @@
 <template>
 
   <div class="row mt-3">
-    <template v-for="status in stats" :key="status.statusName">
+    <template v-if="stats && stats.length === 0">
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-3 mb-3">
-        <div class="card text-white" :class="status.statusName.includes('unfetched') ? 'bg-danger' : status.statusName.includes('fetched') ? 'bg-success' : 'bg-primary'">
+        <div class="card text-white bg-primary">
           <div class="card-body d-flex flex-column">
-            <h5 class="card-title text-uppercase">{{ status.statusName.replace(/^db_/,'') }} URL's</h5>
-            <span class="card-subtitle"><i class="fas fa-info-circle"></i> {{ desc[status.statusName] }}</span>
-            <h2 class="card-text text-end">{{ status.statusCount.toLocaleString() }}</h2>
-            <a href="#" class="stretched-link" @click.prevent="search = status.statusName"></a>
+            <h5 class="card-title text-uppercase">No Results</h5>
           </div>
-<!--          <div class="card-footer d-flex align-items-center justify-content-between">
-            <router-link class="small text-white stretched-link" to="/scheduler">View Details</router-link>
-            <div class="small text-white"><i class="fas fa-angle-right"></i></div>
-          </div>-->
         </div>
       </div>
+    </template>
+    <template v-else>
+      <template v-for="status in stats" :key="status.statusName">
+        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-3 mb-3">
+          <div class="card text-white" :class="status.statusName.includes('unfetched') ? 'bg-danger' : status.statusName.includes('fetched') ? 'bg-success' : 'bg-primary'">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title text-uppercase">{{ status.statusName.replace(/^db_/,'') }} URL's</h5>
+              <span class="card-subtitle"><i class="fas fa-info-circle"></i> {{ desc[status.statusName] }}</span>
+              <h2 class="card-text text-end">{{ status.statusCount.toLocaleString() }}</h2>
+              <a href="#" class="stretched-link" @click.prevent="statusName = status.statusName"></a>
+            </div>
+            <!--          <div class="card-footer d-flex align-items-center justify-content-between">
+                        <router-link class="small text-white stretched-link" to="/scheduler">View Details</router-link>
+                        <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                      </div>-->
+          </div>
+        </div>
+      </template>
     </template>
   </div>
 
@@ -23,6 +34,9 @@
     <div class="card-header">
       <i class="fas fa-sitemap me-1"></i>
       <b>Crawldb Report</b>
+      <div class="float-end">
+        <button class="btn btn-sm btn-primary float-end" type="button" @click.prevent="this.$router.go()">Reset</button>
+      </div>
     </div>
 
     <div class="card-body">
@@ -106,6 +120,7 @@ export default {
       },
       stats: null,
       search: '',
+      statusName: '',
       // sort: 'url,asc',
       data: null,
       page: 1,
@@ -146,7 +161,7 @@ export default {
         delete params.collectionId
         params.export = true
 
-        // url = new URL(process.env.VUE_APP_API_BASE_URL + '/api/webpage/search/findByWebPagesByCrawlDb_CollectionIdReport')
+        // url = new URL(process.env.VUE_APP_API_BASE_URL + '/api/webpage/search/findByWebPagesByCollectionIdReport')
         url = new URL(process.env.VUE_APP_API_BASE_URL + '/api/reports/crawldb/' + this.collection.id)
         url.search = new URLSearchParams(params)
 
@@ -172,6 +187,18 @@ export default {
       handler: async function () {
         this.page = 1
         this.loading = true
+        this.statusName = ''
+        await this.getCrawlDbStats()
+        await this.getCrawlDbTableData()
+        // await this.setExportBaseUrl()
+        this.loading = false
+      }
+    },
+    statusName: {
+      handler: async function () {
+        this.page = 1
+        this.loading = true
+        await this.getCrawlDbStats()
         await this.getCrawlDbTableData()
         // await this.setExportBaseUrl()
         this.loading = false
@@ -226,13 +253,11 @@ export default {
           });
     },
     async getCrawlDbStats() {
-      let params = {
-        sortColumn: 'url',
-        sortOrder: 'asc',
-        start: (this.page - 1) * this.pageSize,
-        rows: this.pageSize,
-        search: this.search
-      }
+      let params = this.getParams()
+      delete params.page
+      delete params.size
+      delete params.projection
+
       await ReportsService.get('/reports/crawldb/stats/'+this.collection.id, params)
           .then(response => {
             this.stats = response.data;
@@ -252,7 +277,7 @@ export default {
       }
 
       // await ReportsService.get('/reports/crawldb/'+this.collectionId, params)
-      await ReportsService.get('/webpage/search/findByWebPagesByCrawlDb_CollectionId'+sortParams , params)
+      await ReportsService.get('/webpage/search/findByWebPagesByCollectionId'+sortParams , params)
           .then(response => {
             this.data = response.data._embedded.webpage;
             this.recordsTotal = response.data.page.totalElements
@@ -306,6 +331,10 @@ export default {
         params.search = this.search
       }
 
+      if (this.statusName) {
+        params.statusName = this.statusName
+      }
+
       return params
     },
     // async setExportBaseUrl() {
@@ -317,7 +346,7 @@ export default {
     //     delete params.projection
     //     params.export = true
     //
-    //     let url = new URL(process.env.VUE_APP_API_BASE_URL + '/api/webpage/search/findByWebPagesByCrawlDb_CollectionIdReport')
+    //     let url = new URL(process.env.VUE_APP_API_BASE_URL + '/api/webpage/search/findByWebPagesByCollectionIdReport')
     //     url.search = new URLSearchParams(params)
     //
     //     this.sort.forEach(sortParam => {
