@@ -969,18 +969,22 @@ public class Crawler {
                 //conf.set("mapreduce.local.map.tasks.maximum", "1");
                 //conf.set("mapreduce.local.reduce.tasks.maximum", "1");
 
-                List<Collection> partOfCollections = collectionRepository.getPartOfCollectionsByCollectionId(Long.parseLong(jobInfo.getCollectionId()));
+//                List<Collection> partOfCollections = collectionRepository.getPartOfCollectionsByCollectionId(Long.parseLong(jobInfo.getCollectionId()));
+//
+//                if (partOfCollections.size() > 0) {
+//                    //List<String> collectionIds = partOfCollections.stream().map(Collection::getId).map(String::valueOf).collect(Collectors.toList());
+//                    List<Long> collectionIds = partOfCollections.stream().map(Collection::getId).collect(Collectors.toList());
+//                    collectionIds.add(Long.parseLong(jobInfo.getCollectionId()));
+//                    Collections.sort(collectionIds);
+//
+//                    //Set the collecitionIds for indexing
+//                    indexConf.set("moreIndexingFilter.collectionIDs", StringUtils.join(collectionIds, ","));
+//                }
+//
+//                sj.add("moreIndexingFilter.collectionIDs: " + indexConf.get("moreIndexingFilter.collectionIDs"));
 
-                if (partOfCollections.size() > 0) {
-                    //List<String> collectionIds = partOfCollections.stream().map(Collection::getId).map(String::valueOf).collect(Collectors.toList());
-                    List<Long> collectionIds = partOfCollections.stream().map(Collection::getId).collect(Collectors.toList());
-                    collectionIds.add(Long.parseLong(jobInfo.getCollectionId()));
-                    Collections.sort(collectionIds);
-
-                    //Set the collecitionIds for indexing
-                    indexConf.set("moreIndexingFilter.collectionIDs", StringUtils.join(collectionIds, ","));
-                }
-
+                //Set the collecitionIds for indexing
+                indexConf.set("moreIndexingFilter.collectionIDs", jobInfo.getCollectionId());
                 sj.add("moreIndexingFilter.collectionIDs: " + indexConf.get("moreIndexingFilter.collectionIDs"));
 
                 crawlStepLog.setArgs(sj.toString());
