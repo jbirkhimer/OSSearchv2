@@ -606,10 +606,3 @@ export default {
 }
 
 </style>
-
-<style lang="scss">
-@import '~bootstrap/scss/_functions';
-@import '~bootstrap/scss/_variables';
-@import '~bootstrap/scss/mixins/_breakpoints';
-@import "@/assets/styles/scss/v-multiselect-bs5";
-</style>

@@ -105,6 +105,9 @@ export default {
 </script>
 
 <style lang="scss">
+@import "vue-multiselect/dist/vue-multiselect.css";
+@import "@/assets/styles/scss/vue-multiselect-bootstrap5.scss";
+
 // Import Bootstrap variables for use within theme
 @import "~bootstrap/scss/functions.scss";
 @import "~bootstrap/scss/variables.scss";

@@ -246,7 +246,6 @@ import UserService from "../../services/user.service";
 import CollectionService from "../../services/collection.service";
 import RoleService from '../../services/role.service';
 import Multiselect from 'vue-multiselect'
-import 'vue-multiselect/dist/vue-multiselect.css'
 import useVuelidate from '@vuelidate/core'
 import {required, minLength, maxLength, sameAs, helpers,} from "@vuelidate/validators";
 import { createPopper } from '@popperjs/core';
@@ -498,11 +497,4 @@ export default {
   }
 }
 
-</style>
-
-<style lang="scss">
-@import '../../../node_modules/bootstrap/scss/functions';
-@import '../../../node_modules/bootstrap/scss/variables';
-@import '../../../node_modules/bootstrap/scss/mixins/breakpoints';
-@import "../../assets/styles/scss/v-multiselect-bs5";
 </style>

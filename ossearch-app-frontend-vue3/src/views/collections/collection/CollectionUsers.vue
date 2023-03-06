@@ -208,7 +208,3 @@ export default {
   },
 }
 </script>
-
-<style lang="scss">
-@import "@/assets/styles/scss/vue-multiselect-bootstrap5.scss";
-</style>
