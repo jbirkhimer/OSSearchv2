@@ -44,6 +44,7 @@ public class CrawlSchedulerJobInfo implements Serializable {
     private String jobGroup = "scheduled_crawl";
     private String jobStatus;
     private String jobClass;
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private boolean cronJob;

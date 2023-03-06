@@ -43,6 +43,7 @@ public class Collection {
 
     private String name;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private String siteUrl;
