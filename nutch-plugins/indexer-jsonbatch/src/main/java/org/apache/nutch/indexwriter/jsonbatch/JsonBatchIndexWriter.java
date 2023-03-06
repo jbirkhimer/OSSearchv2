@@ -46,6 +46,8 @@ public class JsonBatchIndexWriter implements IndexWriter {
 
     private String collectionID;
 
+    private JSONObject edanFieldMapping;
+
     @Override
     public void open(Configuration conf, String name) throws IOException {
         //Implementation not required
@@ -73,6 +75,8 @@ public class JsonBatchIndexWriter implements IndexWriter {
         }
 
         collectionID = String.join("|", config.get("moreIndexingFilter.collectionIDs", "0").split(" "));
+
+        edanFieldMapping = new JSONObject(config.get("edanFieldMapping"));
 
         Files.createDirectories(Paths.get(path));
     }

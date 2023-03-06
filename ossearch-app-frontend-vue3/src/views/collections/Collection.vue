@@ -44,7 +44,8 @@ export default {
         {name: 'searchTab', label: 'Search', icon: 'fas fa-search', type: 'dropdown',
           subTabs: [
             {name: 'collectionSearch', label: 'Response Config'},
-            {name: 'collectionSearchFaceting', label: 'Faceting'},
+            {name: 'collectionSearchEdanFieldMappingConfig', label: 'EDAN Field Mapping'},
+            {name: 'collectionSearchFaceting', label: 'OSS Faceting'},
             {name: 'collectionSearchKeymatch', label: 'Keymatch\'s'},
             {name: 'collectionOverlappingSearches', label: 'Overlapping Search\'s'},
             {name: 'collectionSearchPageResults', label: 'Page Result\'s'},

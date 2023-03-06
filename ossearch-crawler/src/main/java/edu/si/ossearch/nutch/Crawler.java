@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import edu.si.ossearch.OSSearchException;
 import edu.si.ossearch.collection.entity.CrawlConfig;
 import edu.si.ossearch.collection.entity.URLNormalizerPattern;
+import edu.si.ossearch.collection.entity.EDANFieldMapping;
 import edu.si.ossearch.collection.entity.UrlExclusionPattern;
 import edu.si.ossearch.collection.repository.CollectionRepository;
 import edu.si.ossearch.collection.repository.CrawlConfigRepository;
+import edu.si.ossearch.collection.repository.EDANFieldMappingRepository;
 import edu.si.ossearch.nutch.entity.Webpage;
 import edu.si.ossearch.nutch.entity.WebpagePK;
 import edu.si.ossearch.nutch.repository.WebpageRepository;
@@ -121,6 +123,9 @@ public class Crawler {
 
     @Autowired
     private CollectionRepository collectionRepository;
+
+    @Autowired
+    private EDANFieldMappingRepository edanFieldMappingRepository;
 
     @Autowired
     @Qualifier("master")
@@ -1051,6 +1056,12 @@ public class Crawler {
                 //Set the collecitionIds for indexing
                 indexConf.set("moreIndexingFilter.collectionIDs", jobInfo.getCollectionId());
                 sj.add("moreIndexingFilter.collectionIDs: " + indexConf.get("moreIndexingFilter.collectionIDs"));
+
+                EDANFieldMapping edanFieldMapping = edanFieldMappingRepository.findById(Long.valueOf(jobInfo.getCollectionId())).orElse(new EDANFieldMapping());
+
+                indexConf.set("edanFieldMapping", getJsonString(edanFieldMapping.getEdanContentFields()));
+
+                sj.add("edanFieldMapping: " + indexConf.get("edanFieldMapping"));
 
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);

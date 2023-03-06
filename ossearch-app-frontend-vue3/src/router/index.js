@@ -40,6 +40,7 @@ import CollectionSearchPageResults from "../views/collections/collection/search/
 import SearchReport from "../views/collections/collection/reports/SearchReport";
 import ParseChecker from "../views/collections/collection/ParseChecker.vue";
 import CollectionCrawlingUrlNormalizerPatterns from "../views/collections/collection/crawling/CollectionCrawlingUrlNormalizerPatterns.vue";
+import CollectionSearchEdanFieldMappingConfig from "../views/collections/collection/search/CollectionSearchEdanFieldMappingConfig.vue";
 const CrawlScheduler = () => import('../views/scheduler/CrawlScheduler');
 import SearchCounts from '../views/reports/search/SearchCounts';
 import SearchUrls from '../views/reports/search/SearchUrls';
@@ -138,6 +139,12 @@ const routes = [
         path: 'search/config',
         name: 'collectionSearch',
         component: CollectionSearchConfig,
+        props: true
+      },
+      {
+        path: 'search/edan_field_mapping',
+        name: 'collectionSearchEdanFieldMappingConfig',
+        component: CollectionSearchEdanFieldMappingConfig,
         props: true
       },
       {

@@ -37,6 +37,11 @@ class CollectionService {
     return api.put(url, body, {headers: {"Content-Type": "text/uri-list"}});
   }
 
+  addEdanFieldMappingCollections(url, body) {
+    //console.log('[collectionService] PUT url: '+url+',\nbody: ' + JSON.stringify(body, null, 2))
+    return api.put(url, body, {headers: {"Content-Type": "application/json"}});
+  }
+
   deleteCollection(url) {
     //console.log('[collectionService] DELETE url: '+url)
     return api.delete(url);
