@@ -82,7 +82,7 @@
                            label="name"
                            :searchable="false"
                            :placeholder="'Select Collections'"
-                           :allowEmpty="false"
+                           :allowEmpty="true"
                            :loading="loading"
               />
             </fieldset>
@@ -177,7 +177,7 @@ export default {
     },
     async getCollection() {
 
-      await CollectionService.getCollections('/collection/search/getCollectionByName', {name: this.$route.params.name, projection: 'collectionFormData'})
+      await CollectionService.getCollections('/collection/search/getCollectionByName', {name: this.$route.params.name, projection: 'overlappingCollections'})
           .then(response => {
             let data = response.data;
             this.collection = data;
