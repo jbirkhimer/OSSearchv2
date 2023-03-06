@@ -60,6 +60,7 @@ const routes = [
   },
   {
     path: '/login',
+    name: 'login',
     component: Login
   },
   // {
@@ -396,6 +397,7 @@ router.beforeEach((to, from, next) => {
   // trying to access a restricted page + not logged in
   // redirect to login page
   if (authRequired && !loggedIn) {
+    sessionStorage.setItem('redirectPath', to.path);
     next('/login');
   } else {
     next();

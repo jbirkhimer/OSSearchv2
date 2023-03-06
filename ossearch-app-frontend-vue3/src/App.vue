@@ -98,6 +98,7 @@ export default {
     async logOut() {
       await api.post("/auth/logout", {userId: this.$store.state.auth.user.id});
       this.$store.dispatch('auth/logout');
+      sessionStorage.setItem('redirectPath', this.$route.path);
       await this.$router.push({path: '/login'});
     },
   }

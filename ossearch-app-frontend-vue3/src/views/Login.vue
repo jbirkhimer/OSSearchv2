@@ -79,7 +79,8 @@ export default {
       this.$store.dispatch("auth/login", user)
           .then(
               () => {
-                this.$router.push("/dashboard");
+                this.$router.replace(sessionStorage.getItem('redirectPath') || "/dashboard");
+                sessionStorage.removeItem('redirectPath');
               },
               (error) => {
                 this.loading = false;
