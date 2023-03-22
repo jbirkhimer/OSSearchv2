@@ -114,7 +114,7 @@ public class Collection {
     private Set<PageResult> pageResults = new HashSet<>();
 
     //Collection Relationships
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name="included_collections",
             joinColumns=@JoinColumn(name="collectionId"),
             inverseJoinColumns=@JoinColumn(name="includedCollectionId")
@@ -123,7 +123,7 @@ public class Collection {
 //    @JsonManagedReference
     private Set<Collection> includedCollections = new HashSet<>();
 
-    @ManyToMany(cascade = CascadeType.ALL, mappedBy = "includedCollections", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "includedCollections", fetch = FetchType.LAZY)
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
     private Set<Collection> partOfCollections = new HashSet<>();
 
