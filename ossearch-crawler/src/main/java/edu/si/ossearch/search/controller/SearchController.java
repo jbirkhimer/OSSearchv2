@@ -6,6 +6,7 @@ import edu.si.ossearch.OSSearchException;
 import edu.si.ossearch.search.beans.request.Paging;
 import edu.si.ossearch.search.beans.request.Query;
 import edu.si.ossearch.search.service.SearchService;
+import edu.si.ossearch.search.util.http.RequestUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -61,7 +62,8 @@ public class SearchController {
         try {
             return searchService.search(query, paging, useHighlighting, edan, edanDebug);
         } catch (Exception | OSSearchException e) {
-            log.error("Problem with search!", e);
+            String rawQuery = RequestUtils.getRawQueryString();
+            log.error("Problem with search! rawQuery: {}", rawQuery, e);
             return ResponseEntity.status(200).contentType(MediaType.TEXT_HTML).body("No response available. Error: " + e.getMessage());
         }
     }

@@ -22,6 +22,7 @@ import edu.si.ossearch.search.service.SearchService;
 import edu.si.ossearch.search.util.http.RequestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -226,7 +227,12 @@ public class SearchServiceImpl implements SearchService {
             } catch (SolrException | IOException | SolrServerException e) {
                 searchLog.setErrors(e.getMessage());
                 searchLogRepository.save(searchLog);
-                throw new OSSearchException(e.getMessage());
+                String message = e.getMessage();
+                if (message.contains("org.apache.solr.search.SyntaxError")) {
+                    message = StringUtils.substringAfter(message, "SyntaxError: "); // message.substring(message.indexOf("Cannot parse"), message.length());
+                    message = StringEscapeUtils.escapeHtml4(message);
+                }
+                throw new OSSearchException(message);
             }
         } else {
             try {
@@ -530,7 +536,7 @@ public class SearchServiceImpl implements SearchService {
      * ex. q=(search terms AND "phrase search") OR other search terms AND type:jpg inmeta:gEra:1400..1930
      *
      */
-    private void processQueryTerms(SolrQuery solrQuery, Query q) throws Exception {
+    private void processQueryTerms(SolrQuery solrQuery, Query q) throws Exception, OSSearchException {
         //String regex = "[^a-zA-Z0-9%-:\"/+.&*?~=]";
         //regex = "((?=" + regex + ")|(?<=" + regex + "))";
 
@@ -547,11 +553,19 @@ public class SearchServiceImpl implements SearchService {
                     queryPart = queryPart.trim().replaceAll("\\s(AND|OR)$", "");
                     //Escaping Common Problem Special Characters for solr
                     queryPart = queryPart.replace("\\", "\\\\");
+                    queryPart = queryPart.replace("/", "\\/");
                     queryPart = queryPart.replace(":", "\\:");
                     /*queryPart = queryPart.replace("\\", "\\\\");
                     for (String chr : Arrays.asList("+", "-", "&", "|", "!", "(", ")", "{", "}", "[", "]", "^", "\"", "~", "?", ":", "/")) {
                         queryPart = queryPart.replace(chr, '\\' + chr);
                     }*/
+
+                    /*queryPart = removeDanglingChars(queryPart, "'", "\"");
+
+                    if (!isBalanced(queryPart)) {
+                        throw new OSSearchException("q parentheses are not balanced");
+                    }*/
+
                     solrQuery.setQuery(queryPart);
                 }
             }
@@ -754,6 +768,13 @@ public class SearchServiceImpl implements SearchService {
 
                             if (metaParts.length>1) {
                                 isPartialfields = metaParts[0].endsWith("~") ? true : isPartialfields;
+
+                                /*String lookup_key = searchMetaTagService.getMetaTagMapping().keySet().stream()
+                                        .filter(k -> metaParts[0].replaceAll("[~=:]$", "").contains(k))
+                                        .findAny()
+                                        .orElse(metaParts[0].replaceAll("[~=:]$", ""));
+
+                                String key = searchMetaTagService.getMetaTagMapping().getOrDefault(lookup_key, lookup_key);*/
 
                                 String key = searchMetaTagService.getMetaTagMapping().getOrDefault(metaParts[0].replaceAll("[~=:]$", ""), metaParts[0].replaceAll("[~=:]$", ""));
 
@@ -989,16 +1010,18 @@ public class SearchServiceImpl implements SearchService {
         Deque<Character> deque = new LinkedList<>();
         if (StringUtils.containsAny(str, '{' , '}', '[', ']', '(', ')')) {
             for (char ch: str.toCharArray()) {
-                if (ch == '{' || ch == '[' || ch == '(') {
-                    deque.addFirst(ch);
-                } else {
-                    if (!deque.isEmpty()
-                            && ((deque.peekFirst() == '{' && ch == '}')
-                            || (deque.peekFirst() == '[' && ch == ']')
-                            || (deque.peekFirst() == '(' && ch == ')'))) {
-                        deque.removeFirst();
+                if (Arrays.asList('{' , '}', '[', ']', '(', ')').contains(ch)) {
+                    if (ch == '{' || ch == '[' || ch == '(') {
+                        deque.addFirst(ch);
                     } else {
-                        return false;
+                        if (!deque.isEmpty()
+                                && ((deque.peekFirst() == '{' && ch == '}')
+                                || (deque.peekFirst() == '[' && ch == ']')
+                                || (deque.peekFirst() == '(' && ch == ')'))) {
+                            deque.removeFirst();
+                        } else {
+                            return false;
+                        }
                     }
                 }
             }
