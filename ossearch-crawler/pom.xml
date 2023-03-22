@@ -269,6 +269,16 @@
 
         <dependency>
             <groupId>..</groupId>
+            <artifactId>urlnormalizer-regex</artifactId>
+            <version>..</version>
+            <systemPath>${pom.basedir}/../nutch-plugins/target/plugins/urlnormalizer-regex/urlnormalizer-regex.jar</systemPath>
+            <type>jar</type>
+            <optional>true</optional>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>..</groupId>
             <artifactId>lib-regex-filter</artifactId>
             <version>..</version>
             <scope>system</scope>

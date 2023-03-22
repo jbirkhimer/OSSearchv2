@@ -55,6 +55,7 @@ export default {
             {name: 'collectionCrawlingConfig', label: 'Seed URL\'s'},
             {name: 'collectionCrawlingIncludeExcludeSiteUrls', label: 'Include/Exclude Site Urls'},
             {name: 'collectionCrawlingUrlExclusionPatterns', label: 'URL Exclusion Patterns'},
+            {name: 'collectionCrawlingUrlNormalizerPatterns', label: 'URL Normalizer Patterns'},
             {name: 'collectionCrawlingSitemaps', label: 'Sitemaps'},
             {name: 'collectionCrawlSchedule', label: 'Schedule'},
           ]

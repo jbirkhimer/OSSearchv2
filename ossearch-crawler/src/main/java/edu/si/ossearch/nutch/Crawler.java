@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import edu.si.ossearch.OSSearchException;
-import edu.si.ossearch.collection.entity.Collection;
 import edu.si.ossearch.collection.entity.CrawlConfig;
+import edu.si.ossearch.collection.entity.URLNormalizerPattern;
 import edu.si.ossearch.collection.entity.UrlExclusionPattern;
 import edu.si.ossearch.collection.repository.CollectionRepository;
 import edu.si.ossearch.collection.repository.CrawlConfigRepository;
@@ -22,16 +22,17 @@ import edu.si.ossearch.scheduler.repository.CrawlStepLogRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.nutch.crawl.*;
 import org.apache.nutch.fetcher.Fetcher;
 import org.apache.nutch.hostdb.UpdateHostDb;
+import org.apache.nutch.indexer.IndexerMapReduce;
 import org.apache.nutch.indexer.IndexingJob;
 import org.apache.nutch.parse.ParseSegment;
 import org.apache.nutch.tools.FileDumper;
+import org.apache.nutch.urlfilter.regex.RegexURLFilter;
 import org.apache.nutch.util.NutchConfiguration;
 import org.apache.nutch.util.SitemapProcessor;
 import org.apache.solr.client.solrj.SolrClient;
@@ -45,6 +46,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.CursorMarkParams;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.XML;
 import org.quartz.JobKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -74,11 +76,6 @@ import java.util.stream.Collectors;
 
 import static edu.si.ossearch.scheduler.entity.CrawlLog.State.*;
 import static edu.si.ossearch.scheduler.entity.CrawlLog.StepType.*;
-import static org.apache.nutch.crawl.CrawlDb.CRAWLDB_ADDITIONS_ALLOWED;
-import static org.apache.nutch.crawl.CrawlDbFilter.URL_FILTERING;
-import static org.apache.nutch.crawl.Injector.URL_FILTER_NORMALIZE_ALL;
-import static org.apache.nutch.urlfilter.regex.RegexURLFilter.URLFILTER_REGEX_FILE;
-import static org.apache.nutch.urlfilter.regex.RegexURLFilter.URLFILTER_REGEX_RULES;
 
 /**
  * @author jbirkhimer
@@ -178,6 +175,8 @@ public class Crawler {
 
     private String crawlUrlFilterRules = "";
     private String indexUrlFilterRules = "";
+
+    private Map<URLNormalizerPattern.Scope, JSONObject> scopedRegexUrlNormalizerRules = new HashMap<>();
 
     private boolean dump = false;
 
@@ -415,8 +414,12 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                if (filter || filterNormalizeAll || injectConf.getBoolean(URL_FILTERING, false) || injectConf.getBoolean(URL_FILTER_NORMALIZE_ALL, false)) {
-                    injectConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                if (filter || filterNormalizeAll || injectConf.getBoolean(CrawlDbFilter.URL_FILTERING, true) || injectConf.getBoolean(Injector.URL_FILTER_NORMALIZE_ALL, false)) {
+                    injectConf.set(RegexURLFilter.URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
+
+                if (normalize || filterNormalizeAll || injectConf.getBoolean(CrawlDbFilter.URL_NORMALIZING, true) || injectConf.getBoolean(Injector.URL_FILTER_NORMALIZE_ALL, false)) {
+                    setURLNormalizerRegexRules(URLNormalizerPattern.Scope.inject, injectConf);
                 }
 
                 new Injector(injectConf).inject(crawldbDir, seedDir, overwrite, update, normalize, filter, filterNormalizeAll);
@@ -469,8 +472,12 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                if (filter || sitemapConf.getBoolean("sitemap.url.filter", false)) {
-                    sitemapConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                if (filter || sitemapConf.getBoolean(SitemapProcessor.SITEMAP_URL_FILTERING, true)) {
+                    sitemapConf.set(RegexURLFilter.URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
+
+                if (normalize || sitemapConf.getBoolean(SitemapProcessor.SITEMAP_URL_NORMALIZING, true)) {
+                    setURLNormalizerRegexRules(URLNormalizerPattern.Scope._default, sitemapConf);
                 }
 
                 SitemapProcessor sitemapProcessor = new SitemapProcessor();
@@ -553,8 +560,12 @@ public class Crawler {
                 crawlStepLog.setArgs(updateHostDb_args.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                if (filter || updateHostDbConf.getBoolean("hostdb.url.filter", false)) {
-                    updateHostDbConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                if (filter || updateHostDbConf.getBoolean(UpdateHostDb.HOSTDB_URL_FILTERING, false)) {
+                    updateHostDbConf.set(RegexURLFilter.URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
+
+                if (normalize || updateHostDbConf.getBoolean(UpdateHostDb.HOSTDB_URL_NORMALIZING, false)) {
+                    setURLNormalizerRegexRules(URLNormalizerPattern.Scope._default, updateHostDbConf);
                 }
 
                 UpdateHostDb updateHostDb = new UpdateHostDb();
@@ -638,8 +649,12 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                if (filter) {
-                    generatorConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                if (filter || generatorConf.getBoolean(Generator.GENERATOR_FILTER, true)) {
+                    generatorConf.set(RegexURLFilter.URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
+
+                if (norm || generatorConf.getBoolean(Generator.GENERATOR_NORMALISE, true)) {
+                    setURLNormalizerRegexRules(URLNormalizerPattern.Scope.generate_host_count, generatorConf);
                 }
 
                 // generate(Path dbDir, Path segments, int numFetchers, long topN, long curTime, boolean filter, boolean norm, boolean force, int maxNumSegments, String expr, String hostdb)
@@ -693,7 +708,11 @@ public class Crawler {
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
                 if (fetcherConf.getBoolean("fetcher.filter.urls", false)) {
-                    fetcherConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                    fetcherConf.set(RegexURLFilter.URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
+
+                if (fetcherConf.getBoolean("fetcher.normalize.urls", false)) {
+                    setURLNormalizerRegexRules(URLNormalizerPattern.Scope.fetcher, fetcherConf);
                 }
 
                 new Fetcher(fetcherConf).fetch(sgmt[0], threads);
@@ -744,8 +763,12 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                if (parseConf.getBoolean("parse.filter.urls", false)) {
-                    parseConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                if (parseConf.getBoolean("parse.filter.urls", true)) {
+                    parseConf.set(RegexURLFilter.URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
+
+                if (parseConf.getBoolean("parse.normalize.urls", true)) {
+                    setURLNormalizerRegexRules(URLNormalizerPattern.Scope.outlink, parseConf);
                 }
 
                 new ParseSegment(parseConf).parse(sgmt[0]);
@@ -778,8 +801,8 @@ public class Crawler {
                 Map<String, String> updatedbArgs = jobInfo.getNutchStepArgs().getUpdatedb();
 
                 boolean normalize = crawlDbConf.getBoolean(CrawlDbFilter.URL_NORMALIZING, false);
-                boolean filter = crawlDbConf.getBoolean(URL_FILTERING, false);
-                boolean additionsAllowed = crawlDbConf.getBoolean(CRAWLDB_ADDITIONS_ALLOWED, true);
+                boolean filter = crawlDbConf.getBoolean(CrawlDbFilter.URL_FILTERING, false);
+                boolean additionsAllowed = crawlDbConf.getBoolean(CrawlDb.CRAWLDB_ADDITIONS_ALLOWED, true);
                 boolean force = false;
 
                 if (updatedbArgs.containsKey("normalize")) {
@@ -806,8 +829,12 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                if (filter || crawlDbConf.getBoolean("crawldb.url.filters", false)) {
-                    crawlDbConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                if (filter || crawlDbConf.getBoolean(CrawlDbFilter.URL_FILTERING, false)) {
+                    crawlDbConf.set(RegexURLFilter.URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
+
+                if (normalize || crawlDbConf.getBoolean(CrawlDbFilter.URL_NORMALIZING, false)) {
+                    setURLNormalizerRegexRules(URLNormalizerPattern.Scope.crawldb, crawlDbConf);
                 }
 
                 //TODO: update to use -dir <segments> | <seg1>...<segN>
@@ -855,8 +882,12 @@ public class Crawler {
                 crawlStepLog.setArgs(sj.toString());
                 crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                if (filter) {
-                    linksDbConf.set(URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                if (filter || linksDbConf.getBoolean(LinkDbFilter.URL_FILTERING, false)) {
+                    linksDbConf.set(RegexURLFilter.URLFILTER_REGEX_RULES, crawlUrlFilterRules);
+                }
+
+                if (normalize || linksDbConf.getBoolean(LinkDbFilter.URL_NORMALIZING, false)) {
+                    setURLNormalizerRegexRules(URLNormalizerPattern.Scope.linkdb, linksDbConf);
                 }
 
                 //TODO: update to use -dir <segments> | <seg1>...<segN>
@@ -996,8 +1027,12 @@ public class Crawler {
                 }
                 log.info(">>>>> index using urlfilter.regex.file: {}", indexConf.get("urlfilter.regex.file"));*/
 
-                if (filter) {
-                    indexConf.set(URLFILTER_REGEX_RULES, indexUrlFilterRules);
+                if (filter || indexConf.getBoolean(IndexerMapReduce.URL_FILTERING, false)) {
+                    indexConf.set(RegexURLFilter.URLFILTER_REGEX_RULES, indexUrlFilterRules);
+                }
+
+                if (normalize || indexConf.getBoolean(IndexerMapReduce.URL_NORMALIZING, false)) {
+                    setURLNormalizerRegexRules(URLNormalizerPattern.Scope.indexer, indexConf);
                 }
 
                 new IndexingJob(indexConf).index(crawldbDir, linkdb, Arrays.asList(sgmt), noCommit, deleteGone, params, filter, normalize, addBinaryContent, base64);
@@ -1366,6 +1401,8 @@ public class Crawler {
 
             setupRegexUrlFilterRules(jobId, jobKey);
 
+            setupRegexUrlNormalizerRules(jobId, jobKey);
+
             crawlStepLog.setState(FINISHED);
             crawlStepLogRepository.saveAndFlush(crawlStepLog);
         } catch (OSSearchException | Exception e) {
@@ -1575,7 +1612,7 @@ public class Crawler {
 
         log.debug("default regex urlfilter rules: {}", defaultFileRules);
 
-        String customFileRules = conf.get(URLFILTER_REGEX_FILE);
+        String customFileRules = conf.get(RegexURLFilter.URLFILTER_REGEX_FILE);
         rules.addAll(readFileRules(conf.getConfResourceAsReader(customFileRules)));
 
         log.debug("custom file regex urlfilter rules: {}", customFileRules);
@@ -1621,6 +1658,79 @@ public class Crawler {
 
         crawlUrlFilterRules = crawlRules.stream().collect(Collectors.joining("\n"));
         indexUrlFilterRules = indexRules.stream().collect(Collectors.joining("\n"));
+    }
+
+    private void setupRegexUrlNormalizerRules(String jobId, JobKey jobKey) throws OSSearchException, Exception {
+
+        String defaultNormalizerFileRules = "regex-normalize.xml";
+        JSONObject defaultNormalizerRules = XML.toJSONObject(conf.getConfResourceAsReader(defaultNormalizerFileRules), true);
+        log.debug("default regex normalizer rules: {}", defaultNormalizerRules);
+
+        String customNormalizerFileRules = conf.get("urlnormalizer.regex.file");
+        JSONObject customNormalizerRules = XML.toJSONObject(conf.getConfResourceAsReader(customNormalizerFileRules), true);
+        log.debug("custom file regex normalizer rules: {}", customNormalizerFileRules);
+
+        Set<Map<String,String>> defaultRules = new HashSet<>();
+
+        Arrays.asList(defaultNormalizerRules, customNormalizerRules).forEach(fileRules -> {
+            if (fileRules.has("regex-normalize") && fileRules.get("regex-normalize") instanceof JSONObject) {
+                JSONObject regex_normalize = fileRules.getJSONObject("regex-normalize");
+                if (regex_normalize.has("regex") && regex_normalize.get("regex") instanceof JSONArray) {
+                    JSONArray regex = regex_normalize.getJSONArray("regex");
+                    regex.iterator().forEachRemaining(rule -> {
+                        if (rule instanceof JSONObject) {
+                            Map<String, String> ruleMap = new HashMap<>();
+                            JSONObject ruleJson = ((JSONObject) rule);
+                            ruleJson.keys().forEachRemaining(key -> {
+                                if (ruleJson.get(key) instanceof String) {
+                                    ruleMap.put(key, ruleJson.getString(key));
+                                }
+                            });
+                            defaultRules.add(ruleMap);
+                        }
+                    });
+                }
+            }
+        });
+
+        EnumSet.allOf(URLNormalizerPattern.Scope.class).forEach(scope -> {
+            JSONObject rules = new JSONObject();
+            JSONObject regex_normalize = new JSONObject();
+            regex_normalize.put("regex", new JSONArray(defaultRules));
+            rules.put("regex-normalize", regex_normalize);
+            scopedRegexUrlNormalizerRules.put(scope, rules);
+        });
+
+
+        Optional.ofNullable(crawlConfig.getUrlNormalizerPatterns()).orElse(new HashSet<>())
+                .stream()
+                .forEach(urlNormalizerPattern -> {
+                    JSONObject rules = scopedRegexUrlNormalizerRules.get(urlNormalizerPattern.getScope());
+                    if (rules.has("regex-normalize") && rules.get("regex-normalize") instanceof JSONObject) {
+                        JSONObject regex_normalize = rules.getJSONObject("regex-normalize");
+                        if (regex_normalize.has("regex") && regex_normalize.get("regex") instanceof JSONArray) {
+                            JSONArray regex = regex_normalize.getJSONArray("regex");
+                            boolean exists = regex.toList().contains(urlNormalizerPattern.getRule());
+                            if (!exists) {
+                                regex.put(new JSONObject(urlNormalizerPattern.getRule()));
+                            }
+                        }
+                    }
+                });
+
+        String xml = XML.toString(scopedRegexUrlNormalizerRules.get(URLNormalizerPattern.Scope._default));
+        log.debug("default regex normalizer rules: {}", xml);
+
+        //set the default rules
+        conf.set("urlnormalizer.regex.rules", xml);
+    }
+
+    private void setURLNormalizerRegexRules(URLNormalizerPattern.Scope scope, Configuration conf) {
+        String xml = XML.toString(scopedRegexUrlNormalizerRules.get(scope));
+        log.debug("regex normalizer scope: {}, rules: {}", scope, xml);
+
+        //set the default rules
+        conf.set("urlnormalizer.regex.rules", xml);
     }
 
     /**

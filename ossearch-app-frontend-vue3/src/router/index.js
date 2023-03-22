@@ -39,6 +39,7 @@ import CollectionCreate from "../views/collections/CollectionCreate";
 import CollectionSearchPageResults from "../views/collections/collection/search/CollectionSearchPageResults";
 import SearchReport from "../views/collections/collection/reports/SearchReport";
 import ParseChecker from "../views/collections/collection/ParseChecker.vue";
+import CollectionCrawlingUrlNormalizerPatterns from "../views/collections/collection/crawling/CollectionCrawlingUrlNormalizerPatterns.vue";
 const CrawlScheduler = () => import('../views/scheduler/CrawlScheduler');
 import SearchCounts from '../views/reports/search/SearchCounts';
 import SearchUrls from '../views/reports/search/SearchUrls';
@@ -179,6 +180,12 @@ const routes = [
         path: 'crawling/url-exclusion-patterns',
         name: 'collectionCrawlingUrlExclusionPatterns',
         component: CollectionCrawlingUrlExclusionPatterns,
+        props: true
+      },
+      {
+        path: 'crawling/url-normalizer-patterns',
+        name: 'collectionCrawlingUrlNormalizerPatterns',
+        component: CollectionCrawlingUrlNormalizerPatterns,
         props: true
       },
       {

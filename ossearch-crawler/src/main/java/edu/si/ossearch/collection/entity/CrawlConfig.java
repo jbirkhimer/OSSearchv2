@@ -51,6 +51,10 @@ public class CrawlConfig {
 //    @Fetch(FetchMode.SELECT)
 //    private Set<RegexUrlFilters> regexUrlFilters;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
+    private Set<URLNormalizerPattern> urlNormalizerPatterns;
+
     //    @JsonIgnore
 //    @OneToMany(mappedBy = "crawlConfig", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 //    @Setter(AccessLevel.NONE)

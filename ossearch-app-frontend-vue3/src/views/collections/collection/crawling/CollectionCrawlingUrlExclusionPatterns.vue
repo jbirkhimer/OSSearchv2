@@ -31,7 +31,7 @@
           <div class="col-md-12">
             <div>
               <h3>URL Exclusion Patterns</h3>
-              <p>In some cases website owners may want pages to be crawled, but may not want those pages included in the search index. OSS provides the means for website owners to enter &quot;exclusions&quot;, either specific URLs or URL patterns, that OSS will ignore when indexing documents to the search collection.</p>
+              <p>In some cases website owners may want pages to be crawled, but may not want those pages included in the search index. OSS provides the means for website owners to enter &quot;exclusions&quot;, either specific URLs or URL patterns, that OSS will ignore when crawling or indexing documents to the search collection.</p>
 
               <p><i class="fas fa-lightbulb text-warning pe-2"></i><b class="pe-2">Quick Tip:</b>The best place to create your exclusions, when possible, is the <b>robots.txt</b> file; exclusions created here or in <router-link :to="{name: 'collectionCrawlingIncludeExcludeSiteUrls', params: {tabName: 'collectionCrawlingIncludeExcludeSiteUrls'}}">Include/Exclude Site URL's</router-link> affect only search results provided by OSWSS. Search engines like Google, Bing, Yahoo, Baidu, etc. will not apply exclusions added here or in <router-link :to="{name: 'collectionCrawlingIncludeExcludeSiteUrls', params: {tabName: 'collectionCrawlingIncludeExcludeSiteUrls'}}">Include/Exclude Site URL's</router-link></p>
 
@@ -45,54 +45,6 @@
                   </ul>
                 </li>
               </ul>
-
-              <p>OSS implements several exclusion patterns as well as accepting simple URL paths. Expressions are in the table below.</p>
-
-              <div class="table-responsive-sm">
-                <table class="table table-sm table-bordered accordion" style="width:100%;">
-                  <thead class="table-primary">
-                  <tr>
-                    <th scope="col" style="width: 7%">More Info</th>
-                    <th scope="col" v-for="(header, i) in tableOptions.exclusionTable.columns" :key="i">{{ header.label}}</th>
-                  </tr>
-                  </thead>
-                  <tbody>
-
-                  <template v-for="exclusionType in exclusionTable" :key="exclusionType">
-
-                    <tr data-bs-toggle="collapse" :data-bs-target="'#'+exclusionType.type" class="table-success">
-                      <th scope="row" class="text-center"><i class="bi bi-chevron-down"></i></th>
-                      <td><b>{{ exclusionType.type }}</b></td>
-                      <td v-html="exclusionType.description"></td>
-                    </tr>
-
-                    <tr>
-                      <td colspan="3" class="accordion-body collapse" :id="exclusionType.type" data-bs-parent=".table">
-                        <table class="table table-sm table-striped table-bordered mt-0 mb-0">
-                          <thead class="table-secondary">
-                          <tr>
-                            <th v-if="exclusionType.type === 'contains'" class="text-center">&lt;string&gt;</th>
-                            <th v-if="exclusionType.type === 'regex'" class="text-center">expression</th>
-                            <th>Description</th>
-                            <th>Example</th>
-                          </tr>
-                          </thead>
-                          <tbody>
-                          <tr v-for="example in exclusionType.table" :key="example" style="vertical-align: middle;">
-                            <td class="text-center">{{ example.exp }}</td>
-                            <td v-html="example.desc"></td>
-                            <td v-html="example.meaning"></td>
-                          </tr>
-                          </tbody>
-                        </table>
-                      </td>
-                    </tr>
-
-                  </template>
-
-                  </tbody>
-                </table>
-              </div>
 
               <p><i class="fas fa-lightbulb text-warning pe-2"></i><b class="pe-2">Quick Tip:</b>For regex URL exclusion patterns the first matching pattern determines whether a URL is included or ignored during indexing.</p>
               <p><b class="text-danger"><i class="fas fa-exclamation-circle"></i> Order matters drag rows to achive desired order</b></p>
@@ -133,10 +85,50 @@
               </ImportAddEditCheckSortableTable>
             </div>
           </div>
-
-
         </fieldset>
       </template>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <i class="bi bi-braces me-1"></i>
+      <b>Regex Quick Reference</b>
+      <div class="form-check form-switch float-end">
+        <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_showQuickReference'" v-model="showQuickReference">
+      </div>
+    </div>
+    <div class="card-body" v-if="showQuickReference">
+      <div class="row g-3">
+        <div class="col-md-12">
+          <div>
+            <p>OSS implements several exclusion patterns as well as accepting simple URL paths. Below are some of the most commonly used expressions and examples.</p>
+            <p>For more information and testing regex expressions see <a href="https://regex101.com/" target="_blank">https://regex101.com/</a> </p>
+
+            <div class="table-responsive-sm" v-for="exclusionType in exclusionTable" :key="exclusionType">
+              <table class="table table-sm table-striped table-bordered caption-top">
+<!--                <caption>{{ exclusionType.type }}</caption>-->
+                <thead class="table-secondary">
+                <tr><th class="text-center table-primary" colspan="3" v-html="exclusionType.description"></th></tr>
+                <tr>
+                  <th v-if="exclusionType.type === 'contains'" class="text-center">&lt;string&gt;</th>
+                  <th v-if="exclusionType.type === 'regex'" class="text-center">expression</th>
+                  <th>Description</th>
+                  <th>Example</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="example in exclusionType.table" :key="example" style="vertical-align: middle;">
+                  <td class="text-center">{{ example.exp }}</td>
+                  <td v-html="example.desc"></td>
+                  <td v-html="example.meaning"></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -169,7 +161,7 @@ export default {
     return {
       loading: false,
       error: null,
-      showJson: false,
+      showQuickReference: false,
       collection: null,
       isEditCrawlConfig: false,
       isSavingCrawlConfig: false,

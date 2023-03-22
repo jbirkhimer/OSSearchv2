@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.nutch.crawl.Injector;
 import org.apache.nutch.util.NutchConfiguration;
 import org.apache.solr.client.solrj.SolrClient;
+import org.json.XML;
 import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -34,10 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.Future;
 
 import static edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType.ADD_URLS;
@@ -294,5 +292,11 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
             log.error("Problem reading urls csv", ex);
         }
         return list;
+    }
+
+    @Override
+    public Map<String, Object> urlNormalizerPatterns() {
+        Configuration conf = NutchConfiguration.create();
+        return XML.toJSONObject(conf.getConfResourceAsReader("regex-normalize.xml"), true).toMap();
     }
 }

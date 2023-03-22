@@ -43,7 +43,7 @@
   <property>
       <name>plugin.includes</name>
       <!--<value>protocol-httpclient|urlfilter-regex|index-(basic|more)|query-(basic|site|url|lang)|indexer-solr|nutch-extensionpoints|protocol-httpclient|urlfilter-regex|parse-(text|html|msexcel|msword|mspowerpoint|pdf)|summary-basic|scoring-opic|urlnormalizer-(pass|regex|basic)|urlfilter-regex|parse-(html|tika|metatags)|index-(basic|anchor|more|metadata)</value>-->
-      <value>protocol-httpclient|urlfilter-(regex|validator)|parse-(html|tika|metatags)|index-(basic|anchor|more|metadata|static)|indexer-(solr|jsonbatch)|urlnormalizer-(pass|regex|basic)|index-blacklist-whitelist</value>
+      <value>protocol-httpclient|urlfilter-(regex|validator)|parse-(html|tika|metatags)|index-(basic|anchor|more|metadata|static)|indexer-(solr|jsonbatch)|urlnormalizer-(pass|regex|basic|querystring)|index-blacklist-whitelist</value>
       <description>Regular expression naming plugin directory names to
           include.  Any plugin not matching this expression is excluded.
           By default Nutch includes plugins to crawl HTML and various other

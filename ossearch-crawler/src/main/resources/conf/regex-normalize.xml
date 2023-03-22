@@ -81,7 +81,7 @@
   <!-- OSSEARCH: Taken from Nutch 2.x configs-->
 <!-- get rid of white spaces -->
 <regex>
-  <pattern> </pattern>
+  <pattern>\s</pattern>
   <substitution>%20</substitution>
 </regex>
 

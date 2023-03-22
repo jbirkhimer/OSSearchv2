@@ -134,6 +134,8 @@ public interface CollectionFormData {
 
         Set<UrlExclusionPatternFormData> getUrlExclusionPatterns();
 
+        Set<UrlNormalizerPatternFormData> getUrlNormalizerPatterns();
+
         Boolean getUseSitemap();
 
         Set<String> getSitemapUrls();
@@ -160,6 +162,14 @@ public interface CollectionFormData {
             UrlExclusionPattern.Scope getScope();
 
             Boolean getIgnoreCase();
+        }
+        interface UrlNormalizerPatternFormData {
+            String getPattern();
+
+            String getSubstitution();
+
+            @JsonSerialize(converter = UrlNormalizerPatternScopeConverter.class)
+            URLNormalizerPattern.Scope getScope();
         }
     }
 

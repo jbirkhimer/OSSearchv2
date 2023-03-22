@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author jbirkhimer
@@ -189,6 +190,23 @@ public class CrawlUtilsController {
         }
 
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(
+            summary = "get default url normalizer regex patterns",
+            responses = {@ApiResponse(content = @Content(mediaType = "application/json"))},
+            description = "Get a Default URLNormalizer Regex Patterns"
+    )
+    @GetMapping(value = "/urlnormalizer")
+    public ResponseEntity<Object> urlNormalizerPatterns() throws OSSearchException {
+
+        try {
+            Map<String, Object> output = crawlUtilsService.urlNormalizerPatterns();
+            return ResponseEntity.ok(output);
+        } catch (Exception e) {
+            log.error("urlnormalizer problem", e);
+            return ResponseEntity.internalServerError().contentType(MediaType.TEXT_PLAIN).body(e.getMessage());
+        }
     }
 
 }
