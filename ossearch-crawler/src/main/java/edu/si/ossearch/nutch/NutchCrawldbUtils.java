@@ -206,7 +206,7 @@ public class NutchCrawldbUtils implements Closeable {
             closeReaders();
         }
 
-        log.debug("crawldb dump: {}", crawldbData);
+        //log.debug("crawldb dump: {}", crawldbData);
         log.info("crawldbData url count: {}", crawldbData.size());
 
         return crawldbData;

@@ -257,6 +257,8 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
         webpageRepository.deleteAllByCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
 
         webpageRepository.saveAllAndFlush(webpageList);
+
+        log.info("****** Finished crawldb update for: {} ({}), url count: {} ******", jobName, jobInfo.getCollectionId(), webpageList.size());
         return new AsyncResult<>(null);
     }
 
