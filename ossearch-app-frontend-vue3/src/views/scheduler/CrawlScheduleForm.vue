@@ -293,8 +293,7 @@
         <i class="fas fa-code me-1"></i>
         <b>Parser HTML Blacklist</b>
         <div class="form-check form-switch float-end">
-          <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_parseHtmlBlacklist'"
-                 v-model="parseHtmlBlacklist">
+          <input class="form-check-input" type="checkbox" role="switch" :id="'flexSwitchCheck_parseHtmlBlacklist'" v-model="parseHtmlBlacklist">
         </div>
       </div>
       <div class="card-body" v-if="parseHtmlBlacklist">
@@ -305,23 +304,23 @@
           </div>
         </div>
         <div class="row g-3 mb-3">
-            <div class="text mb-3" style="white-space: pre-wrap;">
-              A comma-delimited list of css like tags to identify the elements which should NOT be parsed. Use this to tell the HTML parser to ignore the given elements, e.g. site navigation. It is allowed to only specify the element type (required), and optional its class name ('.') or ID ('#'). More complex expressions will not be parsed.
-            </div>
+          <div class="text mb-3" style="white-space: pre-wrap;">
+            A comma-delimited list of css like tags to identify the elements which should <b>NOT</b> be parsed. Use this to tell the HTML parser to ignore the given elements and their children, e.g. site navigation. It is allowed to only specify the element type (required), and optional its class name ('.') or ID ('#'). More complex expressions will not be parsed. <b class="text-danger">Note: that the elements and their children will be silently ignored by the parser.</b> Use either 'parser.html.blacklist' or 'parser.html.whitelist', but not both of them at once. If so, only the whitelist is used.
+          </div>
 
-            <div class="text mb-3" style="white-space: pre-wrap;">
-              Valid examples: div.header,span,p#test,div#main,ul,div.footercol
-            </div>
-            <div class="text mb-3" style="white-space: pre-wrap;">
-              Invalid expressions: div#head#part1,#footer,.inner#post Note that the elements and their children will be silently ignored by the parser, so verify the indexed content with Luke to confirm results. Use either 'parser.html.blacklist' or 'parser.html.whitelist', but not both of them at once. If so,only the whitelist is used.
-            </div>
+          <div class="text mb-3" style="white-space: pre-wrap;">
+            Valid examples: div.header,span,p#test,div#main,ul,div.footercol
+          </div>
+          <div class="text mb-3" style="white-space: pre-wrap;">
+            Invalid expressions: div#head#part1,#footer,.inner#post
+          </div>
         </div>
 
       </div>
     </div>
 
     <!-- Parser HTML Whitelist -->
-    <div class="card mb-4">
+<!--    <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-code me-1"></i>
         <b>Parser HTML Whitelist</b>
@@ -346,10 +345,10 @@
           </div>
         </div>
       </div>
-    </div>
+    </div>-->
 
     <!-- Parser HTML Text Blacklist -->
-    <div class="card mb-4">
+<!--    <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-code me-1"></i>
         <b>Parser HTML Text Blacklist</b>
@@ -374,7 +373,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div>-->
 
     <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
       <button type="button" class="btn btn-success" data-bs-dismiss="modal" @click="createCrawlSchedule()">Create</button>
