@@ -640,6 +640,21 @@ export default {
           delete this.jobData.cronExpression
           this.jobData.jobGroup = "custom_crawl"
         }
+        if (this.jobData.jobName) {
+          Object.entries(this.nutchSteps).forEach(
+              ([key, value]) => {
+                value.args.map(arg => {
+                  if (["nonormalize", "noNormalize", "noNorm", "normalize"].includes(arg.name)) {
+                    arg.desc = arg.desc +  " <a href='/collections/" + this.jobData.jobName + "/crawling/url-normalizer-patterns' target='_blank'>(See URL Normalizer Patterns)</a>"
+                  }
+                  if (["nofilter", "noFilter", "filter"].includes(arg.name)) {
+                    arg.desc = arg.desc + " <a href='/collections/" + this.jobData.jobName + "/crawling/url-exclusion-patterns' target='_blank'>(See URL Exclusion Patterns)</a>"
+                  }
+                })
+                console.log(key, value.args)
+              }
+          );
+        }
       }
     }
   },

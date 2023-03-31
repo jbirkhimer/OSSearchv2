@@ -540,8 +540,8 @@ export default {
           args: [
             {name: "overwrite", type: "checkbox", desc: "Overwite existing crawldb records by the injected records. Has precedence over 'update'", default: false},
             {name: "update", type: "checkbox", desc: "Update existing crawldb records with the injected records. Old metadata is preserved", default: false},
-            {name: "nonormalize", type: "checkbox", desc: "Do not normalize URLs before injecting", default: false},
-            {name: "nofilter", type: "checkbox", desc: "Do not apply URL filters to injected URLs", default: false},
+            {name: "nonormalize", type: "checkbox", desc: "Do not normalize URLs before injecting. <a href='/collections/" + this.jobName + "/crawling/url-normalizer-patterns' target='_blank'>(See URL Normalizer Patterns)</a>", default: false},
+            {name: "nofilter", type: "checkbox", desc: "Do not apply URL filters to injected URLs. <a href='/collections/" + this.jobName + "/crawling/url-exclusion-patterns' target='_blank'>(See URL Exclusion Patterns)</a>", default: false},
             {name: "filterNormalizeAll", type: "checkbox", desc: "Normalize and filter all URLs including the URLs of existing CrawlDb records", default: false}
           ]
         },
@@ -552,8 +552,8 @@ export default {
             {name: "threads", desc:"Number of threads created per mapper to fetch sitemap urls (default: 8)", default: 8},
             // {name: "force", type: "checkbox", desc:"force update even if CrawlDb appears to be locked <b class='text-danger'>(CAUTION advised)</b>"},
             {name: "noStrict", type: "checkbox", desc:"By default Sitemap parser rejects invalid urls. '-noStrict' disables that.", default: false},
-            {name: "noFilter", type: "checkbox", desc:"turn off URLFilters on urls (optional)", default: false},
-            {name: "noNormalize", type: "checkbox", desc:"turn off URLNormalizer on urls (optional)", default: false},
+            {name: "noFilter", type: "checkbox", desc:"turn off URLFilters on urls (optional). <a href='/collections/" + this.jobName + "/crawling/url-exclusion-patterns' target='_blank'>(See URL Exclusion Patterns)</a>", default: false},
+            {name: "noNormalize", type: "checkbox", desc:"turn off URLNormalizer on urls (optional). <a href='/collections/" + this.jobName + "/crawling/url-normalizer-patterns' target='_blank'>(See URL Normalizer Patterns)</a>", default: false},
           ]
         },
         generate: {
@@ -564,8 +564,8 @@ export default {
             // {name: "numFetchers", desc: "The number of fetch partitions. Default: Configuration key -> mapred.map.tasks -> 1 (in local mode), possibly multiple in deploy/distributed mode."},
             {name: "expr", desc: ""},
             {name: "adddays", desc: "Adds 'days' to the current time to facilitate crawling urls already fetched sooner then db.default.fetch.interval. Default: 0"},
-            {name: "noFilter", type: "checkbox", desc: "Whether to filter URLs or not is read from the crawl.generate.filter property in nutch-site.xml/nutch-default.xml configuration files. If the property is not found, the URLs are filtered. Same for the normalisation", default: false},
-            {name: "noNorm", type: "checkbox", desc: "The exact same applies for normalisation parameter as does for the filtering option above", default: false},
+            {name: "noFilter", type: "checkbox", desc: "Whether to filter URLs or not is read from the crawl.generate.filter property in nutch-site.xml/nutch-default.xml configuration files. If the property is not found, the URLs are filtered. Same for the normalisation. <a href='/collections/" + this.jobName + "/crawling/url-exclusion-patterns' target='_blank'>(See URL Exclusion Patterns)</a>", default: false},
+            {name: "noNorm", type: "checkbox", desc: "The exact same applies for normalisation parameter as does for the filtering option above. <a href='/collections/" + this.jobName + "/crawling/url-normalizer-patterns' target='_blank'>(See URL Normalizer Patterns)</a>", default: false},
             {name: "maxNumSegments", desc: "The (maximum) number of segments to be generated. Default: 1 -- Note: if multiple segments are generated, the limit -topN applies to the total number of URLs for all segments taken together, while generate.max.count is applied to every generated segment individually.", default: 1},
           ]
         },
@@ -578,16 +578,16 @@ export default {
         parse: {
           desc: "Parse a segment's pages.\nThe class parses contents in one segment. It assumes, under the given segment, the existence of ./fetcher_output/, which is typically generated after a non-parsing fetcher run (i.e., fetcher is started with option -noParsing or as default 'false' boolean value as specified in nutch-default.xml).\nContents in one segment are parsed and saved in these steps:\n1. ./fetcher_output/ and ./content/ are looped together (possibly by multiple ParserThreads), and content is parsed for each entry. The entry number and resultant ParserOutput are saved in ./parser.unsorted.\n2. ./parser.unsorted is sorted by entry number, result saved as ./parser.sorted.\n3. ./parser.sorted and ./fetcher_output/ are looped together. At each entry, ParserOutput is split into ParseDate and ParseText, which are saved in ./parse_data/ and ./parse_text/ respectively. Also updated is FetcherOutput with parsing status, which is saved in ./fetcher/.\nIn the end, ./fetcher/ should be identical to a directory produced as a result from the fetcher being run WITHOUT option -noParsing e.g. fetching and parsing in the same command. N.B. This is not suggested in a production environment.\nBy default, intermediates ./parser.unsorted and ./parser.sorted are removed at the end, unless option -noClean is used. However ./fetcher_output/ is kept intact.",
             args: [
-            {name: "noFilter", type: "checkbox", desc: "optional flag to NOT filtering URLs", default: false},
-            {name: "noNormalize", type: "checkbox", desc: "optional flag for NOT normalizing URLs", default: false}
+            {name: "noFilter", type: "checkbox", desc: "optional flag to NOT filtering URLs. <a href='/collections/" + this.jobName + "/crawling/url-exclusion-patterns' target='_blank'>(See URL Exclusion Patterns)</a>", default: false},
+            {name: "noNormalize", type: "checkbox", desc: "optional flag for NOT normalizing URLs. <a href='/collections/" + this.jobName + "/crawling/url-normalizer-patterns' target='_blank'>(See URL Normalizer Patterns)</a>", default: false}
           ]
         },
         updatedb: {
           desc: "Takes the output of the fetcher and updates the crawldb accordingly",
           args: [
             {name: "force", type: "checkbox", desc: "This argument will force an update even if the crawldb appears to be locked. <b class='text-danger'>(CAUTION: advised)</b>", default: false},
-            {name: "normalize", type: "checkbox", desc: "This argument uses any current URLNormalizer's on urls in crawldb and segment (usually not needed).", default: false},
-            {name: "filter", type: "checkbox", desc: "Pass this argument to use any current URLFilters on urls in the crawldb and segment. This can provide better quality results in certain applications.", default: false},
+            {name: "normalize", type: "checkbox", desc: "This argument uses any current URLNormalizer's on urls in crawldb and segment (usually not needed). <a href='/collections/" + this.jobName + "/crawling/url-normalizer-patterns' target='_blank'>(See URL Normalizer Patterns)</a>", default: false},
+            {name: "filter", type: "checkbox", desc: "Pass this argument to use any current URLFilters on urls in the crawldb and segment. This can provide better quality results in certain applications. <a href='/collections/" + this.jobName + "/crawling/url-exclusion-patterns' target='_blank'>(See URL Exclusion Patterns)</a>", default: false},
             {name: "noAdditions", type: "checkbox", desc: "If pass this parameter the updatedb command will only update already existing URLs, and will not add any newly discovered URLs during a fetch.", default: false}
           ]
         },
@@ -599,16 +599,16 @@ export default {
             {name: "checkNew", type: "checkbox", desc: "check new hosts", default: false},
             {name: "checkKnown", type: "checkbox", desc: "check known hosts", default: false},
             // {name: "force", type: "checkbox", desc: "force check", default: false},
-            {name: "filter", type: "checkbox", desc: "filtering enabled", default: false},
-            {name: "normalize", type: "checkbox", desc: "normalizing enabled", default: false}
+            {name: "filter", type: "checkbox", desc: "filtering enabled. <a href='/collections/" + this.jobName + "/crawling/url-exclusion-patterns' target='_blank'>(See URL Exclusion Patterns)</a>", default: false},
+            {name: "normalize", type: "checkbox", desc: "normalizing enabled. <a href='/collections/" + this.jobName + "/crawling/url-normalizer-patterns' target='_blank'>(See URL Normalizer Patterns)</a>", default: false}
           ]
         },
         invertlinks: {
           desc: "Create a linkdb from parsed segments\nMaintains an inverted link map, listing incoming links for each url.",
           args: [
             // {name: "force", type: "checkbox", desc: "This arguement forces an update even if linkdb appears to be locked  <b class='text-danger'>(CAUTION advised)</b", default: false},
-            {name: "noNormalize", type: "checkbox", desc: "We pass this if we don't normalize link URLs. This obtains us a true representation of incoming links within the linkdb.", default: false},
-            {name: "noFilter", type: "checkbox", desc: "This parameter avoids and doesn't apply any of our current URLFilters to link URLs.", default: false}
+            {name: "noNormalize", type: "checkbox", desc: "We pass this if we don't normalize link URLs. This obtains us a true representation of incoming links within the linkdb. <a href='/collections/" + this.jobName + "/crawling/url-normalizer-patterns' target='_blank'>(See URL Normalizer Patterns)</a>", default: false},
+            {name: "noFilter", type: "checkbox", desc: "This parameter avoids and doesn't apply any of our current URLFilters to link URLs. <a href='/collections/" + this.jobName + "/crawling/url-exclusion-patterns' target='_blank'>(See URL Exclusion Patterns)</a>", default: false}
           ]
         },
         dedup: {
@@ -625,8 +625,8 @@ export default {
             {name: "params", desc: "parameters passed to indexer plugins (via property indexer.additional.params)"},
             {name: "noCommit", type: "checkbox", desc:"do not call the commit method of indexer plugins", default: false},
             {name: "deleteGone", type: "checkbox", desc:"send deletion requests for 404s, redirects, duplicates", default: false},
-            {name: "filter", type: "checkbox", desc:"skip documents with URL rejected by configured URL filters", default: false},
-            {name: "normalize", type: "checkbox", desc:"normalize URLs before indexing"},
+            {name: "filter", type: "checkbox", desc:"skip documents with URL rejected by configured URL filters. <a href='/collections/" + this.jobName + "/crawling/url-exclusion-patterns' target='_blank'>(See URL Exclusion Patterns)</a>", default: false},
+            {name: "normalize", type: "checkbox", desc:"normalize URLs before indexing. <a href='/collections/" + this.jobName + "/crawling/url-normalizer-patterns' target='_blank'>(See URL Normalizer Patterns)</a>"},
             {name: "addBinaryContent", type: "checkbox", desc:"index raw/binary content in field `binaryContent`", default: false},
             {name: "base64", type: "checkbox", desc:"use Base64 encoding for binary content", default: false},
           ]
