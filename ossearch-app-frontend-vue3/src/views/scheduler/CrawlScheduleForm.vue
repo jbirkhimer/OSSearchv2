@@ -126,7 +126,7 @@
     </div>
 
     <!-- Basic Crawl Options -->
-    <div class="card mb-4" v-if="isAdmin">
+    <div class="card mb-4" v-if="isAdmin || isManager">
       <div class="card-header">
         <i class="fas fa-cog me-1"></i>
         <b>Basic Crawl Options</b>
@@ -154,7 +154,7 @@
     </div>
 
     <!-- Advanced Crawling -->
-    <div class="card mb-4" v-if="isAdmin">
+    <div class="card mb-4" v-if="isAdmin || isManager">
       <div class="card-header">
         <i class="fas fa-cogs me-1"></i>
         <b>Advanced Crawling</b> <b class="text-danger">(Advanced)</b>
@@ -244,7 +244,7 @@
     </div>
 
     <!-- Nutch Crawler Properties -->
-    <div class="card mb-4" v-if="isAdmin">
+    <div class="card mb-4" v-if="isAdmin || isManager">
       <div class="card-header">
         <i class="fas fa-tools me-1"></i>
         <b>Nutch Crawler Properties</b> <b class="text-danger">(Advanced)</b>
@@ -447,14 +447,30 @@ export default {
         numberOfRounds: 50,
         crawlOptions: {
           index: true,
+          size_fetchlist: '-1',
+          num_threads: '50',
           sitemaps_from_hostdb: 'once',
         },
         nutchStepArgs: {
-          index: {
-            deleteGone: true
-          }
+          /*index: {
+            deleteGone: true,
+            filter: true,
+            normalize: true
+          }*/
+          index: {deleteGone: true, filter: true, normalize: true},
+          generate: {topN: "-1"},
+          fetch: {threads: "50"},
+          sitemap: {threads: "50"}
         },
-        nutchProperties: {},
+        nutchProperties: {
+          "fetcher.server.min.delay":"0.1",
+          "fetcher.threads.fetch":"50",
+          "fetcher.threads.per.queue":"45",
+          "fetcher.threads.per.host":"45",
+          "http.timeout":"60000",
+          "http.redirect.max":"3",
+          "urlnormalizer.loop.count":"3"
+        },
       },
       crawlConfig: {
         crawlCronSchedule: '0 0 0 ? * FRI *',
@@ -487,7 +503,7 @@ export default {
         {name: "time_limit_fetch", type: "number", desc: "&lt;time_limit_fetch&gt; Number of minutes allocated to the fetching [default: 180]"},
         {name: "num_threads", type: "number", desc: "&lt;num_threads&gt; Number of threads for fetching / sitemap processing [default: 50]"},
         {name: "sitemaps_from_hostdb", type: "select", desc: "&lt;frequency&gt; Whether and how often to process sitemaps based on HostDB.\nSupported values are:\n- never\n- always (processing takes place in every iteration)\n- once [default] (processing only takes place in the first iteration)\n", options: [{label: "never", value: "never"}, {label: "always", value: "always"}, {label: "once", value: "once"}], default: "never"},
-        {name: "dedup_group", type: "select", desc: "&lgt;none|host|domain&gt; Deduplication group method [default: none]", options: [{label: "none", value: "none"}, {label: "host", value: "host"}, {label: "domain", value: "domain"}], default: "none"}
+        {name: "dedup_group", type: "select", desc: "&lt;none|host|domain&gt; Deduplication group method [default: none]", options: [{label: "none", value: "none"}, {label: "host", value: "host"}, {label: "domain", value: "domain"}], default: "none"}
       ],
       nutchSteps: {
         inject: {
@@ -540,9 +556,9 @@ export default {
         updatedb: {
           desc: "Takes the output of the fetcher and updates the crawldb accordingly",
           args: [
-            {name: "force", type: "checkbox", desc: "This arguement will force an update even if the crawldb appears to be locked. <b class='text-danger'>(CAUTION: advised)</b>", default: false},
-            {name: "normalize", type: "checkbox", desc: "This arguement uses any current URLNormalizer's on urls in crawldb and segment (usually not needed).", default: false},
-            {name: "filter", type: "checkbox", desc: "Pass this arguement to use any current URLFilters on urls in the crawldb and segment. This can provide better quality results in certain applications.", default: false},
+            {name: "force", type: "checkbox", desc: "This argument will force an update even if the crawldb appears to be locked. <b class='text-danger'>(CAUTION: advised)</b>", default: false},
+            {name: "normalize", type: "checkbox", desc: "This argument uses any current URLNormalizer's on urls in crawldb and segment (usually not needed).", default: false},
+            {name: "filter", type: "checkbox", desc: "Pass this argument to use any current URLFilters on urls in the crawldb and segment. This can provide better quality results in certain applications.", default: false},
             {name: "noAdditions", type: "checkbox", desc: "If pass this parameter the updatedb command will only update already existing URLs, and will not add any newly discovered URLs during a fetch.", default: false}
           ]
         },
@@ -636,6 +652,12 @@ export default {
         return this.currentUser['roles'].includes('ROLE_ADMIN');
       }
       return false;
+    },
+    isManager() {
+      if (this.currentUser && this.currentUser['roles']) {
+        return this.currentUser['roles'].includes('ROLE_MANAGER');
+      }
+      return false;
     }
   },
   methods: {
@@ -692,11 +714,25 @@ export default {
               numberOfRounds: 50,
               crawlOptions: {
                 index: true,
+                size_fetchlist: '-1',
+                num_threads: '50',
                 sitemaps_from_hostdb: 'once',
-                // num_threads: "150"
               },
-              nutchStepArgs: {},
-              nutchProperties: {},
+              nutchStepArgs: {
+                index: {deleteGone: true, filter: true, normalize: true},
+                generate: {topN: "-1"},
+                fetch: {threads: "50"},
+                sitemap: {threads: "50"}
+              },
+              nutchProperties: {
+                "fetcher.server.min.delay":"0.1",
+                "fetcher.threads.fetch":"50",
+                "fetcher.threads.per.queue":"45",
+                "fetcher.threads.per.host":"45",
+                "http.timeout":"60000",
+                "http.redirect.max":"3",
+                "urlnormalizer.loop.count":"3"
+              },
             }
 
             // if (this.crawlConfig.sitemapUrls.length > 0 && this.crawlConfig.useSitemap) {
@@ -780,7 +816,7 @@ export default {
         }
       }
 
-      if ("size_fetchlist" in event) {
+      if ("size_fetchlist" in event && Object.keys(event?.size_fetchlist).length !== 0) {
         this.jobData.nutchStepArgs['generate'] = {...this.jobData.nutchStepArgs['generate'], topN: event.size_fetchlist}
       } else {
         if (this.jobData.nutchStepArgs?.['generate']?.['topN']) {
@@ -841,10 +877,19 @@ export default {
               }
 
               this.jobData.cronExpression = this.crawlConfig.crawlCronSchedule
+              EventBus.dispatch('toast', {
+                type: 'success',
+                msg: this.jobData.jobName +' Crawl Config Updated!'
+              })
             })
             .catch(errors => {
               //console.log(errors);
-              this.error = errors
+              // this.error = errors
+              let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+              EventBus.dispatch('toast', {
+                type: 'danger',
+                msg: 'Error Updating '+this.jobData.jobName +' Crawl Config!' + content
+              })
             });
       }
     },
@@ -853,6 +898,10 @@ export default {
       if (this.jobData?.nutchStepArgs?.dedup?.compareOrder) {
         this.jobData.nutchStepArgs.dedup.compareOrder = this.jobData.nutchStepArgs.dedup.compareOrder.join(",")
       }
+
+      console.log("removeEmpty before saveCrawlJobSchedule", JSON.stringify(this.jobData, null, 2))
+      this.jobData = this.removeEmpty(this.jobData)
+      console.log("removeEmpty after saveCrawlJobSchedule", JSON.stringify(this.jobData, null, 2))
 
       //console.log("save saveCrawlJobSchedule", JSON.stringify(this.jobData, null, 2))
       await SchedulerService.createCrawlJob("/scheduler/schedule", JSON.stringify(this.jobData))
@@ -866,13 +915,23 @@ export default {
             this.error = errors
           });
     },
+    removeEmpty(obj) {
+      return JSON.parse(JSON.stringify(obj), (key, value) => {
+        if (value == null || value == '' || value == [] || value == {})
+          return undefined;
+        return value;
+      });
+    },
     async updateCrawlJobSchedule() {
 
       if (this.jobData?.nutchStepArgs?.dedup?.compareOrder) {
         this.jobData.nutchStepArgs.dedup.compareOrder = this.jobData.nutchStepArgs.dedup.compareOrder.join(",")
       }
 
-      //console.log("save updateCrawlJobSchedule", JSON.stringify(this.jobData, null, 2))
+      console.log("removeEmpty before updateCrawlJobSchedule", JSON.stringify(this.jobData, null, 2))
+      this.jobData = this.removeEmpty(this.jobData)
+      console.log("removeEmpty after updateCrawlJobSchedule", JSON.stringify(this.jobData, null, 2))
+
       await SchedulerService.updateCrawlJob("/scheduler/update", JSON.stringify(this.jobData))
           .then(response => {
             let data = response.data;
@@ -881,11 +940,19 @@ export default {
                 console.log("create CrawlJobSchedule", JSON.stringify(job, null, 2))
               }
             })
-
+            EventBus.dispatch('toast', {
+              type: 'success',
+              msg: this.jobData.jobName +' Crawl Job Scudule Updated!'
+            })
           })
           .catch(errors => {
             //console.log(errors);
-            this.error = errors
+            // this.error = errors
+            let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString();
+            EventBus.dispatch('toast', {
+              type: 'danger',
+              msg: 'Error Updating '+this.jobData.jobName +' Crawl Job Schedule!' + content
+            })
           });
     },
   }

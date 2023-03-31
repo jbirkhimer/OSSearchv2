@@ -75,7 +75,8 @@ public class ExportServiceImpl implements ExportService {
 
         ByteArrayInputStream byteArrayOutputStream;
 
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream(); Workbook workbook = new XSSFWorkbook();) {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+             Workbook workbook = new XSSFWorkbook();) {
 
             Sheet sheet = workbook.createSheet(name);
 

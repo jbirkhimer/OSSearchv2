@@ -531,7 +531,7 @@ export default {
         {name: "size_fetchlist", type: "number", desc: "&lt;size_fetchlist&gt; Number of URLs to fetch in one iteration [default: 50000]"},
         {name: "time_limit_fetch", type: "number", desc: "&lt;time_limit_fetch&gt; Number of minutes allocated to the fetching [default: 180]"},
         {name: "num_threads", type: "number", desc: "&lt;num_threads&gt; Number of threads for fetching / sitemap processing [default: 50]"},
-        {name: "sitemaps_from_hostdb", type: "select", desc: "&lt;frequency&gt; Whether and how often to process sitemaps based on HostDB.\nSupported values are:\n- never [default]\n- always (processing takes place in every iteration)\n- once (processing only takes place in the first iteration)\n", options: [{label: "never", value: "never"}, {label: "always", value: "always"}, {label: "once", value: "once"}], default: "never"},
+        {name: "sitemaps_from_hostdb", type: "select", desc: "&lt;frequency&gt; Whether and how often to process sitemaps based on HostDB.\nSupported values are:\n- never\n- always (processing takes place in every iteration)\n- once [default] (processing only takes place in the first iteration)\n", options: [{label: "never", value: "never"}, {label: "always", value: "always"}, {label: "once", value: "once"}], default: "never"},
         {name: "dedup_group", type: "select", desc: "&lt;none|host|domain&gt; Deduplication group method [default: none]", options: [{label: "none", value: "none"}, {label: "host", value: "host"}, {label: "domain", value: "domain"}], default: "none"}
       ],
       nutchSteps: {
@@ -807,7 +807,7 @@ export default {
       this.getCrawlConfig(this.selectedCollection.id, this.selectedCollection.name)
     },
     updateCrawlOptions(event) {
-      console.log("updateCrawlOptions event", event)
+      //console.log("updateCrawlOptions event", event)
       this.jobData.crawlOptions = event
 
       if ("num_tasks" in event) {
@@ -961,7 +961,6 @@ export default {
             })
           });
     },
-
     async startCrawl() {
       await SchedulerService.startCrawlJob("/scheduler/start", {jobName: this.jobData.jobName, jobGroup: this.jobData.jobGroup})
           .then(response => {
