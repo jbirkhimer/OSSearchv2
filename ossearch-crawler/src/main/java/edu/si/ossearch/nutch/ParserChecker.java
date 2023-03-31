@@ -230,7 +230,7 @@ public class ParserChecker {
 
       Metadata contentMeta = parseData.getContentMeta();
       Map<String, Object> contentMetaMap = getMetadata(contentMeta);
-      contentMetaMap.remove("strippedContent");
+      String strippedContent = ((String[]) contentMetaMap.remove("strippedContent"))[0];
       result.put("Content Metadata", contentMetaMap);
 
       Metadata parseMeta = parseData.getParseMeta();
@@ -238,7 +238,8 @@ public class ParserChecker {
       result.put("Parse Metadata", parseMetaMap);
 
       if (dumpText) {
-        result.put("text", parse.getText());
+        result.put("raw_text", parse.getText());
+        result.put("parse_text", strippedContent.replaceAll("\\n", " "));
       }
     }
 

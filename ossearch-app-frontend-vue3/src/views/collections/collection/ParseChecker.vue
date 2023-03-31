@@ -28,7 +28,10 @@
             <li><b>Parse Metadata</b>: such as <i>CharEncodingForConversion</i>,
               <i>OriginalCharEncoding</i>, <i>language</i>, etc.
             </li>
-            <li><b>ParseText</b>: The page parse text which varies in length depending
+            <li><b>RawText</b>: The page raw text before any parse filters are applied. Varies in length depending
+              on <code>content.length</code> configuration.
+            </li>
+            <li><b>ParseText</b>: The page parse text after any parse filters are applied. Varies in length depending
               on <code>content.length</code> configuration.
             </li>
           </ol>
@@ -176,8 +179,13 @@
               </li>
 
               <li class="list-group-item d-flex justify-content-start align-items-start">
+                <div class="me-2 fw-bold text-nowrap">Raw Text:</div>
+                <div class="text-wrap">{{ data.result.raw_text}}</div>
+              </li>
+
+              <li class="list-group-item d-flex justify-content-start align-items-start">
                 <div class="me-2 fw-bold text-nowrap">Parse Text:</div>
-                <div class="text-wrap">{{ data.result.text}}</div>
+                <div class="text-wrap">{{ data.result.parse_text}}</div>
               </li>
             </template>
           </ul>
