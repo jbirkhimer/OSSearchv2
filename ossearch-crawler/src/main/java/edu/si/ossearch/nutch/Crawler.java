@@ -24,6 +24,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.nutch.crawl.*;
 import org.apache.nutch.fetcher.Fetcher;
@@ -31,8 +33,10 @@ import org.apache.nutch.hostdb.UpdateHostDb;
 import org.apache.nutch.indexer.IndexerMapReduce;
 import org.apache.nutch.indexer.IndexingJob;
 import org.apache.nutch.parse.ParseSegment;
+import org.apache.nutch.segment.SegmentMerger;
 import org.apache.nutch.tools.FileDumper;
 import org.apache.nutch.urlfilter.regex.RegexURLFilter;
+import org.apache.nutch.util.HadoopFSUtil;
 import org.apache.nutch.util.NutchConfiguration;
 import org.apache.nutch.util.SitemapProcessor;
 import org.apache.solr.client.solrj.SolrClient;
@@ -142,6 +146,7 @@ public class Crawler {
     private Path seedDir;
     private Path sitemapDir;
     private Path segmentsDir;
+    private Path segmentsMergeDir;
     private Path linkdb;
     private Path hostdb;
     private int currentRound = 0;
@@ -248,7 +253,8 @@ public class Crawler {
                 index(list.toArray(new Path[list.size()]));
             }
 
-            deleteSegmentDirsOlderThanFetchInterval();
+            segmentMerger();
+            //deleteSegmentDirsOlderThanFetchInterval();
 
             if (!stopFlag.get()) {
                 log.info("Crawl loop finished with {} iterations", currentRound);
@@ -339,43 +345,60 @@ public class Crawler {
             }
         }
 
-        if (!stopFlag.get()) {
-            // Then, we fetch
-            fetcher(sgmt);
-        }
+        try {
+            if (!stopFlag.get()) {
+                // Then, we fetch
+                fetcher(sgmt);
+            }
 
-        if (!stopFlag.get()) {
-            // parse
-            parse(sgmt);
-        }
+            if (!stopFlag.get()) {
+                // parse
+                parse(sgmt);
+            }
 
-        if (!stopFlag.get()) {
-            // updatedb
-            updatedb(sgmt);
-        }
+            if (!stopFlag.get()) {
+                // updatedb
+                updatedb(sgmt);
+            }
 
-        if (!stopFlag.get() && hostdbupdate) {
-            hostdbUpdate();
-        }
+            if (!stopFlag.get() && hostdbupdate) {
+                hostdbUpdate();
+            }
 
-        if (!stopFlag.get()) {
-            // invertlinks
-            invertlinks(sgmt);
-        }
+            if (!stopFlag.get()) {
+                // invertlinks
+                invertlinks(sgmt);
+            }
 
-        if (!stopFlag.get()) {
-            // dedup
-            dedup();
-        }
+            if (!stopFlag.get()) {
+                // dedup
+                dedup();
+            }
 
-        if (!stopFlag.get()) {
+            if (!stopFlag.get()) {
             /*List<Path> segments = new ArrayList<>();
             segments.add(sgmt);*/
 
-            if (!jobInfo.isRecrawl() || jobInfo.getJobType() != JobType.RECRAWL) {
-                // index
-                index(sgmt);
+                if (!jobInfo.isRecrawl() || jobInfo.getJobType() != JobType.RECRAWL) {
+                    // index
+                    index(sgmt);
+                }
             }
+
+        } catch (Exception | OSSearchException e) {
+            log.error(e.getMessage(), e);
+            errorFlag.set(true);
+            //delete segment
+            for (Path dir : sgmt) {
+                File directory = new File(dir.toString());
+                log.debug("deleting failed segment dir: {}", directory.getAbsolutePath());
+                try {
+                    FileUtils.deleteDirectory(directory);
+                } catch (IOException ex) {
+                    log.error("Problem deleting failed segment dir: {}", directory, ex);
+                }
+            }
+            throw new OSSearchException(e);
         }
 
         return false;
@@ -1053,6 +1076,65 @@ public class Crawler {
         }
     }
 
+    private void segmentMerger() throws OSSearchException {
+        CrawlStepLog crawlStepLog = createCrawlStepLog(SEGMENT_MERGER, RUNNING);
+
+        if (!stopFlag.get()) {
+            try {
+
+                FileSystem fs = segmentsDir.getFileSystem(conf);
+                FileStatus[] fstats = fs.listStatus(segmentsDir, HadoopFSUtil.getPassDirectoriesFilter(fs));
+                Path[] sgmt = HadoopFSUtil.getPaths(fstats);
+
+                Configuration segMergeConf = new Configuration(conf);
+                segMergeConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+
+                Map<String, String> segMergeArgs = jobInfo.getNutchStepArgs().getSegmentMerger();
+                boolean filter = Boolean.parseBoolean(segMergeArgs.getOrDefault("filter", "false"));
+                boolean normalize = Boolean.parseBoolean(segMergeArgs.getOrDefault("normalize", "false"));
+
+                StringJoiner sj = new StringJoiner(", ");
+                sj.add("segments: " + Arrays.asList(sgmt));
+                sj.add("filter: " + filter);
+                sj.add("normalize: " + normalize);
+
+                crawlStepLog.setArgs(sj.toString());
+                crawlStepLogRepository.saveAndFlush(crawlStepLog);
+
+                if (filter || segMergeConf.getBoolean("segment.merger.filter", false)) {
+                    segMergeConf.set("segment.merger.filter", crawlUrlFilterRules);
+                }
+
+                if (normalize || segMergeConf.getBoolean("segment.merger.normalizer", false)) {
+                    setURLNormalizerRegexRules(URLNormalizerPattern.Scope._default, segMergeConf);
+                }
+
+                SegmentMerger segmentMerger = new SegmentMerger();
+                segmentMerger.setConf(conf);
+
+                segmentMerger.merge(segmentsMergeDir, Arrays.asList(sgmt).toArray(new Path[0]), filter, normalize, 0);
+
+                FileUtils.deleteDirectory(new File(segmentsDir.toString()));
+                boolean movedSegMergeDir = new File(segmentsMergeDir.toString()).renameTo(new File(segmentsDir.toString()));
+
+                if (movedSegMergeDir == false) {
+                    throw new OSSearchException("Failed to move segmentMergeDir: "+ segmentsMergeDir +"!");
+                }
+
+                crawlStepLog.setState(FINISHED);
+                crawlStepLogRepository.saveAndFlush(crawlStepLog);
+
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+                updateCrawlStepLogError(crawlStepLog, e.getMessage());
+                throw new OSSearchException(e);
+            }
+        } else {
+            log.info("STOPPING {}", SEGMENT_MERGER);
+            updateCrawlStepLogStopped(crawlStepLog);
+        }
+    }
+
     public void reindex() throws OSSearchException {
         CrawlStepLog crawlStepLog = createCrawlStepLog(REINDEX, RUNNING);
 
@@ -1117,9 +1199,11 @@ public class Crawler {
     }
 
     /**
+     * Deprecated merge all segments instead using segment merger
      * Cleanup segments older than db.fetch.interval.default [default: 2592000 sec (30 days)] or db.fetch.interval.max [default: 7776000 sec (90 days)]
      * @throws OSSearchException
      */
+    @Deprecated
     private void deleteSegmentDirsOlderThanFetchInterval() throws OSSearchException {
         Integer fetchInterval = conf.getInt("db.fetch.interval.default", 2592000);
 
@@ -1562,6 +1646,8 @@ public class Crawler {
             // will produce its own collection of files. Each collection
             // is called a segment.
             segmentsDir = new Path(dbDir, "segments");
+
+            segmentsMergeDir = new Path(dbDir, "MERGEDsegments");
 
             // the linkdb directory:
             linkdb = new Path(dbDir, "linkdb");

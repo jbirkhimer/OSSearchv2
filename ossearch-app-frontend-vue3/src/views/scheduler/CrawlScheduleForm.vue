@@ -601,6 +601,14 @@ export default {
             {name: "addBinaryContent", type: "checkbox", desc:"index raw/binary content in field `binaryContent`", default: false},
             {name: "base64", type: "checkbox", desc:"use Base64 encoding for binary content", default: false},
           ]
+        },
+        segmentMerger: {
+          desc: "Takes several segments and merges their data together. Only the latest versions of data is retained. Optionally, you can apply current URLFilters to remove prohibited URL's.\nAlso, it's possible to slice the resulting segment into chunks of fixed size.\n\nImportant Notes:\n\nWhich parts are merged?\nIt doesn't make sense to merge data from segments, which are at different stages of processing (e.g. one unfetched segment, one fetched but not parsed, and one fetched and parsed). Therefore, prior to merging, the tool will determine the lowest common set of input data, and only this data will be merged. This may have some unintended consequences: e.g. if majority of input segments are fetched and parsed, but one of them is unfetched, the tool will fall back to just merging fetchlists, and it will skip all other data from all segments.\n\nMerging fetchlists\nMerging segments, which contain just fetchlists (i.e. prior to fetching) is not recommended, because this tool (unlike the Generator doesn't ensure that fetchlist parts for each map task are disjoint.\n\nDuplicate content\nMerging segments removes older content whenever possible (see below). However, this is NOT the same as de-duplication, which in addition removes identical content found at different URL's. In other words, running DeleteDuplicates is still necessary.\nFor some types of data (especially ParseText) it's not possible to determine which version is really older. Therefore the tool always uses segment names as timestamps, for all types of input data. Segment names are compared in forward lexicographic order (0-9a-zA-Z), and data from segments with \"higher\" names will prevail. It follows then that it is extremely important that segments be named in an increasing lexicographic order as their creation time increases.",
+          args: [
+            {name: "filter", type: "checkbox", desc:"skip documents with URL rejected by configured URL filters.", default: false},
+            {name: "normalize", type: "checkbox", desc:"normalize URL via current URLNormalizers.", default: false},
+            //{name: "slice", desc:"create many output segments, each containing {slice} number of URLs", default: 0}
+          ]
         }
       },
       isChecked: {},

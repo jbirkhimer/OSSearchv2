@@ -88,6 +88,13 @@ public class NutchStepArgs implements Serializable {
     @Column(name = "_index")
     private Map<String, String> index = new HashMap<>();
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "step_args_segmentmerger_mapping",
+            joinColumns = {@JoinColumn(name = "step_args_id", referencedColumnName = "id")})
+    @MapKeyColumn(name = "segmentmerger_option_name")
+    @Column(name = "_segmentmerger")
+    private Map<String, String> segmentMerger = new HashMap<>();
+
     @CreationTimestamp
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdDate;

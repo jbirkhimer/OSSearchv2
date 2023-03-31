@@ -90,6 +90,8 @@ public interface CrawlSchedulerJobInfoInfo {
 
         Map<String, String> getIndex();
 
+        Map<String, String> getSegmentMerger();
+
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         Date getCreatedDate();
 
