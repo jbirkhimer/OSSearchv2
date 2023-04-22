@@ -1,10 +1,10 @@
 <template>
 
-  <div class="alert alert-warning d-flex justify-content-center align-items-center fw-bold" role="alert">
+<!--  <div class="alert alert-warning d-flex justify-content-center align-items-center fw-bold" role="alert">
     <i class="bi bi-cone-striped text-warning"></i>
     <div>Preview</div>
     <i class="bi bi-cone-striped text-warning"></i>
-  </div>
+  </div>-->
 
   <div v-if="error" class="container-fluid px-4 error">
     {{ error }}
@@ -174,7 +174,7 @@
     </div>
   </div>
 
-  <div v-if="!loading" class="card mt-4 mb-4">
+<!--  <div v-if="!loading" class="card mt-4 mb-4">
     <div class="card-header">
       <i class="fas fa-file-code me-1"></i>
       <b>IndexedStructured Mapping</b>
@@ -219,7 +219,7 @@
               </div>
 
               <div v-if="indexedstructuredAttributeType.includes(k)" class="col">
-<!--                <div class="card card-body mb-3" >-->
+&lt;!&ndash;                <div class="card card-body mb-3" >&ndash;&gt;
                   <div class="row g-3 align-items-center mb-3" v-for="(attr_row, attr_i) in data.content.indexedStructured[k]" :key="attr_i">
 
                     <div class="col">
@@ -251,14 +251,14 @@
                     </div>
 
                   </div>
-<!--                </div>-->
+&lt;!&ndash;                </div>&ndash;&gt;
 
                 <button v-if="isEditIndexedStructured" class="btn btn-sm btn-primary bi-plus-lg me-md-2" type="button" @click="data.content.indexedStructured[k].push({ label: '', content: '' })">Meta Field Mapping</button>
 
               </div>
 
               <div v-else class="col-sm-3">
-<!--                <div class="row g-2 mb-3" v-for="(entry, j) in v" :key="entry">
+&lt;!&ndash;                <div class="row g-2 mb-3" v-for="(entry, j) in v" :key="entry">
                   <div class="col-sm-12">
                     <div class="form-floating">
                       <select class="form-control-sm form-select" :id="'indexedStructured_term' + i" :ref="'indexedStructured_term' + i" placeholder="Choose IndexedStructured" v-model="data.content.indexedStructured[k][j]">
@@ -269,7 +269,7 @@
                     </div>
                   </div>
                 </div>
-                <button v-if="isEditIndexedStructured" class="btn btn-sm btn-primary bi-plus-lg me-md-2 float-end" type="button" @click="data.content.indexedStructured[k].push('')">Meta Field Mapping</button>-->
+                <button v-if="isEditIndexedStructured" class="btn btn-sm btn-primary bi-plus-lg me-md-2 float-end" type="button" @click="data.content.indexedStructured[k].push('')">Meta Field Mapping</button>&ndash;&gt;
                 <Multiselect :id="'indexedStructured_term' + i"  style="min-height: fit-content"
                              v-model="data.content.indexedStructured[k]"
                              :options="indexedFieldsList"
@@ -295,7 +295,7 @@
       </template>
 
     </div>
-  </div>
+  </div>-->
 
 
 
@@ -366,7 +366,7 @@
   </div>
 
   <!-- JSON Review -->
-  <div class="card mb-4">
+<!--  <div class="card mb-4">
     <div class="card-header">
       <i class="fas fa-info-circle me-1"></i>
       <b>EDAN IndexedStructured Terms</b>
@@ -385,10 +385,10 @@
         <li>nmaiculture_* ???</li>
       </ul>
     </div>
-  </div>
+  </div>-->
 
   <!-- JSON Review -->
-  <div class="card mb-4">
+<!--  <div class="card mb-4">
     <div class="card-header">
       <i class="fas fa-info-circle me-1"></i>
       <b>Notes</b>
@@ -444,7 +444,7 @@
                       }]
               </pre>
     </div>
-  </div>
+  </div>-->
 
 </template>
 
@@ -490,7 +490,7 @@ export default {
           image: null,
           description: null,
           freetext: {},
-          indexedStructured: {}
+          // indexedStructured: {}
         },
       },
       content: {

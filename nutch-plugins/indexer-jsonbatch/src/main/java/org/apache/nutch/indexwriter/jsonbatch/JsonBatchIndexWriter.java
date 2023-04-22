@@ -1,6 +1,5 @@
 package org.apache.nutch.indexwriter.jsonbatch;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.nutch.indexer.IndexWriter;
@@ -10,13 +9,16 @@ import org.apache.nutch.indexer.NutchField;
 import org.apache.nutch.util.TableUtil;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
-import org.apache.solr.common.util.Utils;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
@@ -47,6 +49,7 @@ public class JsonBatchIndexWriter implements IndexWriter {
     private String collectionID;
 
     private JSONObject edanFieldMapping;
+    private boolean useEdanMapping = true;
 
     @Override
     public void open(Configuration conf, String name) throws IOException {
@@ -135,6 +138,24 @@ public class JsonBatchIndexWriter implements IndexWriter {
 
         jsonString = new ObjectMapper().writeValueAsString(source);*/
 
+
+        try {
+            JSONObject json = useEdanMapping ? edanFieldMapping(doc) : defaultOutput(doc);
+
+            jsonString = json.toString();
+
+            inputDocs.add(jsonString);
+            totalAdds++;
+        } catch (Exception e) {
+            LOG.error("ERROR: Problem writing EDAN doc for id: "+doc.getFieldValue("id"), e);
+        }
+
+        if (inputDocs.size() == batchSize) {
+            push();
+        }
+    }
+
+    private JSONObject defaultOutput(NutchDocument doc) throws MalformedURLException {
         final SolrInputDocument inputDoc = new SolrInputDocument();
 
         for (final Map.Entry<String, NutchField> e : doc) {
@@ -189,15 +210,159 @@ public class JsonBatchIndexWriter implements IndexWriter {
             }
         });
 
+        return json;
+    }
 
-        jsonString = json.toString();
+    private JSONObject edanFieldMapping(NutchDocument doc) throws MalformedURLException {
+        /*{ "id": "",
+            "title": "Indoor Portrait of a Couple Sitting on a Chair | National Museum of African American History and Cul",
+            "type": "webpage",
+            "url": "",
+            "status": 0,
+            "content": {
+                "collectionID": 188,
+                "collection_name": "asian_art_dev",
+                "page_title": "page title",
+                "page_content": "page content",
+                "page_url": "page url",
+                "page_meta": {
+                    "meta_key": "meta_value pairs of all meta tags"
+                },
+                "image": null,
+                "description": null,
+                "freetext": {},
+                "indexedStructured": {}
+            }
+        }*/
+        JSONObject json = keyOrderedJSON();
 
-        inputDocs.add(jsonString);
-        totalAdds++;
+        json.put("id", TableUtil.reverseUrl((String) doc.getFieldValue("id")));
+        json.put("url", doc.getFieldValue("url"));
+        json.put("title", doc.getFieldNames().contains("title") ? doc.getFieldValue("title"): "No Title");
+        json.put("type", "webpage");
+        json.put("status", 0);
 
-        if (inputDocs.size() == batchSize) {
-            push();
+        // add timestamp when fetched, for deduplication
+        if (doc.getFieldNames().contains("tstamp")) {
+            json.put("tstamp", doc.getFieldValue("tstamp"));
         }
+
+        // Add time related meta info. Add last-modified if present. Index date as
+        // last-modified, or, if that's not present, use fetch time.
+        if (doc.getFieldNames().contains("date")) {
+            json.put("date", doc.getFieldValue("date"));
+        }
+        if (doc.getFieldNames().contains("lastModified")) {
+            json.put("lastModified", doc.getFieldValue("lastModified"));
+        }
+
+        //OSS specific indexing timestamp
+        json.put("_last_time_updated", DateTimeFormatter.ISO_INSTANT.format(new Date().toInstant()));
+
+        if (!weightField.isEmpty()) {
+            json.put(weightField, doc.getWeight());
+        }
+
+        JSONObject edanContentFieldMapping = edanFieldMapping.getJSONObject("content");
+
+        JSONObject content = keyOrderedJSON();
+        content.put("collectionID", collectionID);
+        content.put("collection_name", edanContentFieldMapping.getString("collection_name"));
+
+        content.put("page_title", doc.getFieldNames().contains("title") ? stripNonCharCodepoints((String) doc.getFieldValue("title")) : "No Title");
+
+        if (doc.getFieldNames().contains("content")) {
+            content.put("page_content", stripNonCharCodepoints((String) doc.getFieldValue("content")));
+        }
+
+        content.put("page_url", doc.getFieldValue("url"));
+
+        if (!edanContentFieldMapping.isNull("image")) {
+            String field = edanContentFieldMapping.getString("image").replace(" ", "__").replace(":", "_");
+            if (doc.getFieldNames().contains(field)) {
+                content.put("image", doc.getFieldValue(field));
+            }
+        }
+        if (!edanContentFieldMapping.isNull("description")) {
+            String field = edanContentFieldMapping.getString("description").replace(" ", "__").replace(":", "_");
+            if (doc.getFieldNames().contains(field)) {
+                content.put("description", doc.getFieldValue(field));
+            }
+        }
+
+        content.put("page_meta", keyOrderedJSON());
+
+        if (doc.getFieldNames().contains("meta__all_metatags")) {
+            doc.getField("meta__all_metatags").getValues().forEach(value -> {
+                String metaField = ((String) value).replace(" ", "__").replace(":", "_");
+                if (doc.getFieldNames().contains(metaField)) {
+                    doc.getField(metaField).getValues().forEach(v -> content.getJSONObject("page_meta").accumulate(((String) value).replace("meta_", ""), v));
+                }
+            });
+        }
+
+        if (!edanContentFieldMapping.isNull("freetext")) {
+            JSONObject freetext = processFreeText(doc, edanContentFieldMapping.getJSONObject("freetext"));
+            content.put("freetext", freetext);
+        }
+
+        json.put("content", content);
+
+        return json;
+    }
+
+    private JSONObject keyOrderedJSON() {
+        return keyOrderedJSON("{}");
+    }
+
+    private JSONObject keyOrderedJSON(String jsonString) {
+        return new JSONObject(jsonString) {
+            /**
+             * changes the value of JSONObject.map to a LinkedHashMap in order to maintain
+             * order of keys.
+             */
+            @Override
+            public JSONObject put(String key, Object value) throws JSONException {
+                try {
+                    Field map = JSONObject.class.getDeclaredField("map");
+                    map.setAccessible(true);
+                    Object mapValue = map.get(this);
+                    if (!(mapValue instanceof LinkedHashMap)) {
+                        map.set(this, new LinkedHashMap<>());
+                    }
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+                return super.put(key, value);
+            }
+        };
+    }
+
+    private JSONObject processFreeText(NutchDocument doc, JSONObject edanFreeTextFieldMapping) {
+        JSONObject freetext = new JSONObject();
+
+        edanFreeTextFieldMapping.keys().forEachRemaining(key -> {
+
+            JSONArray freetextEntries = edanFreeTextFieldMapping.getJSONArray(key);
+
+            freetextEntries.iterator().forEachRemaining(freetextEntry -> {
+
+                String contentMetaFieldMapping = ((JSONObject)freetextEntry).getString("content").replace(" ", "__").replace(":", "_");
+
+                if (doc.getFieldNames().contains(contentMetaFieldMapping)) {
+
+                    doc.getField(contentMetaFieldMapping).getValues().forEach(value -> {
+                        JSONObject mappedFreetextEntry = new JSONObject(freetextEntry.toString());
+                        mappedFreetextEntry.put("content", value);
+                        freetext.accumulate(key, mappedFreetextEntry);
+                    });
+
+                }
+            });
+        });
+
+
+        return freetext;
     }
 
     static String stripNonCharCodepoints(String input) {

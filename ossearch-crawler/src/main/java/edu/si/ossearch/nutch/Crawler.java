@@ -1057,7 +1057,17 @@ public class Crawler {
                 indexConf.set("moreIndexingFilter.collectionIDs", jobInfo.getCollectionId());
                 sj.add("moreIndexingFilter.collectionIDs: " + indexConf.get("moreIndexingFilter.collectionIDs"));
 
-                EDANFieldMapping edanFieldMapping = edanFieldMappingRepository.findById(Long.valueOf(jobInfo.getCollectionId())).orElse(new EDANFieldMapping());
+                EDANFieldMapping edanFieldMapping = edanFieldMappingRepository.findById(Long.valueOf(jobInfo.getCollectionId()))
+                        .orElseGet(() -> {
+                            Map<String, Object> content = new HashMap<>();
+                            content.put("collectionID", jobInfo.getCollectionId());
+                            content.put("collection_name", jobInfo.getCollectionName());
+
+                            EDANFieldMapping fieldMapping = new EDANFieldMapping();
+                            fieldMapping.getEdanContentFields().put("content", content);
+
+                            return fieldMapping;
+                        });
 
                 indexConf.set("edanFieldMapping", getJsonString(edanFieldMapping.getEdanContentFields()));
 

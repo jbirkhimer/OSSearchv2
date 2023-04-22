@@ -11,6 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 @Getter
@@ -25,7 +26,7 @@ public class EDANFieldMapping implements Serializable {
 
     @Convert(converter = HashMapConverter.class)
     @Column(columnDefinition = "TEXT")
-    private Map<String, Object> edanContentFields;
+    private Map<String, Object> edanContentFields = new HashMap<>();
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
