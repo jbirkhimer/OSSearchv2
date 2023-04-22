@@ -1189,9 +1189,10 @@ public class Crawler {
                     FileUtils.moveDirectory(new File(dbDir.toString()), new File(dbDir + "_backup_" + new Date().getTime()));
                 }
 
-                Optional<List<Webpage>> webpages = webpageRepository.findAllByCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
+                //Optional<List<Webpage>> webpages = webpageRepository.findAllByCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
+                //webpageRepository.deleteAll(webpages.get());
 
-                webpageRepository.deleteAll(webpages.get());;
+                webpageRepository.deleteAllByCollectionId(Integer.valueOf(jobInfo.getCollectionId()));
 
                 crawl();
 
