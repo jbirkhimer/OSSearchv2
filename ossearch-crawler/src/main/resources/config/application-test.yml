@@ -90,7 +90,7 @@ ossearch:
     appKey: xxxxxxxxxxx
 
 logging:
-  #  config: config/logback.xml
+  config: config/logback-spring.xml
   file:
     name: logs/${spring.application.name}.log
   level:

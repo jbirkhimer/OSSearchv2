@@ -1099,7 +1099,6 @@ export default {
       this.jobData.reindex = true;
       this.jobData.jobType = 'REINDEX'
       this.jobData.recrawl = false;
-      this.jobData.nutchStepArgs.index.deleteGone = true
       await this.updateCrawlConfig()
       await this.updateCrawlJobSchedule()
       await this.startCrawl()
