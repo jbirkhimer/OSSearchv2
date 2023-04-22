@@ -34,6 +34,13 @@
   <substitution>$4</substitution>
 </regex>
 
+<!-- removes destination paths from urls (such as destination=archives/components/sova-nmai-ac-001-ref10029) -->
+<!--<regex>
+  &lt;!&ndash;<pattern>(?i)(destination=.*?)(\?|&amp;|#|$)</pattern>&ndash;&gt;
+  <pattern>(?i)\?((destination|(?&lt;!archives\?|search\?)page|edan_q)=.*?)(\?|&amp;|#|$)</pattern>
+  <substitution></substitution>
+</regex>-->
+
 <!-- changes default pages into standard for /index.html, etc. into /
 <regex>
   <pattern>/((?i)index|default)\.((?i)js[pf]{1}?[afx]?|cgi|cfm|asp[x]?|[psx]?htm[l]?|php[3456]?)(\?|&amp;|#|$)</pattern>
