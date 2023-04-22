@@ -542,12 +542,12 @@ public class SearchServiceImpl implements SearchService {
 
         if (q.getQ() != null && !q.getQ().isEmpty()) {
 
-            String[] queryParts = splitOnWordList(q.getQ(), specialTerms, "(?=", ")\\b");
+            String[] queryParts = splitOnWordList(q.getQ(), specialTerms, "(?<=^|\\s|$)(?=", ")");
 
             log.debug("q split: {}", Arrays.toString(queryParts));
 
             for (String queryPart : queryParts) {
-                if (stringContainsItemFromList(queryPart, specialTerms).isPresent()) {
+                if (stringContainsItemFromList(queryPart, specialTerms)) {
                     parseSpecialTerms(solrQuery, queryPart);
                 } else {
                     queryPart = queryPart.trim().replaceAll("\\s(AND|OR)$", "");
@@ -802,7 +802,7 @@ public class SearchServiceImpl implements SearchService {
                                 if (fq.get(fq.size()-1).equals("AND") || fq.get(fq.size()-1).equals("OR")) {
 
                                     // lookbehind to see if we have a metaTag or field
-                                    if (stringContainsItemFromList(fq.get(fq.size()-2), searchMetaTagService.getMetaTagMapping().values().toArray(new String[0])).isPresent()) {
+                                    if (stringContainsItemFromList(fq.get(fq.size()-2), searchMetaTagService.getMetaTagMapping().values().toArray(new String[0]))) {
 
                                         isPartialfields = fq.get(fq.size() - 2).endsWith("*") ? true : isPartialfields;
 
@@ -1086,8 +1086,12 @@ public class SearchServiceImpl implements SearchService {
         return pattern.split(inputStr);
     }
 
-    public static Optional<String> stringContainsItemFromList(String inputStr, String[] specialTerms) throws Exception {
-        return Arrays.stream(specialTerms).filter(inputStr::contains).findAny();
+    public static boolean stringContainsItemFromList(String inputStr, String[] specialTerms) throws Exception {
+        return Arrays.stream(specialTerms).map(specialTerm -> specialTerm+":")
+                .filter(inputStr::contains)
+                .anyMatch(specialTerm ->
+                        Arrays.stream(inputStr.split("\\s+")).anyMatch(part -> part.startsWith(specialTerm) || part.startsWith("-"+specialTerm))
+                );
     }
 
     private String getJsonString(Object entity) throws Exception {
