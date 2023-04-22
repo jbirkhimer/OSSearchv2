@@ -192,6 +192,35 @@ public class CrawlUtilsController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "merge segments", responses = {
+            @ApiResponse(description = "Successful Operation", responseCode = "200", content = {@Content(mediaType = "application/csv"), @Content(mediaType = "application/json")})
+    })
+    @GetMapping(value = "/crawldb/mergeSegments")
+    public ResponseEntity<Object> mergeSegments(@RequestParam(value = "jobName") String jobName,
+                                           @RequestParam(value = "jobGroup", required = false, defaultValue = DEFAULT_JOB_GROUP_NAME) String jobGroup
+    ) throws OSSearchException {
+
+        if (jobName == null || jobGroup == null) {
+            return ResponseEntity.badRequest().body("jobName must not be null");
+        }
+
+        try {
+            boolean isJobRunning = jobService.isJobRunning(jobName, jobGroup);
+            boolean isAddUrlJobRunning = jobService.isJobRunning(jobName, "add_urls");
+
+            if (isJobRunning || isAddUrlJobRunning) {
+                throw new OSSearchException("A crawl is currently running for this collection. Try again when the crawl is finished or stop the current crawl and try again!");
+            }
+
+            crawlUtilsService.async_mergeSegments(jobName, jobGroup);
+        } catch (Exception e) {
+            log.error("ERROR: /crawldb/mergeSegments request failed for {}!", jobName, e);
+            return ResponseEntity.internalServerError().contentType(MediaType.TEXT_PLAIN).body(e.getMessage());
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
     @Operation(
             summary = "get default url normalizer regex patterns",
             responses = {@ApiResponse(content = @Content(mediaType = "application/json"))},

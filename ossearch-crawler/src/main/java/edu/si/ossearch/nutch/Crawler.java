@@ -253,7 +253,9 @@ public class Crawler {
                 index(list.toArray(new Path[list.size()]));
             }
 
-            segmentMerger();
+            if (!stopFlag.get()) {
+                segmentMerger();
+            }
             //deleteSegmentDirsOlderThanFetchInterval();
 
             if (!stopFlag.get()) {
@@ -389,19 +391,28 @@ public class Crawler {
             log.error(e.getMessage(), e);
             errorFlag.set(true);
             //delete segment
-            for (Path dir : sgmt) {
-                File directory = new File(dir.toString());
-                log.debug("deleting failed segment dir: {}", directory.getAbsolutePath());
-                try {
-                    FileUtils.deleteDirectory(directory);
-                } catch (IOException ex) {
-                    log.error("Problem deleting failed segment dir: {}", directory, ex);
-                }
-            }
+            deleteSegment(sgmt);
             throw new OSSearchException(e);
         }
 
+        if (stopFlag.get()) {
+            //delete segment
+            deleteSegment(sgmt);
+        }
+
         return false;
+    }
+
+    private void deleteSegment(Path[] sgmt) {
+        for (Path dir : sgmt) {
+            File directory = new File(dir.toString());
+            log.debug("deleting failed segment dir: {}", directory.getAbsolutePath());
+            try {
+                FileUtils.deleteDirectory(directory);
+            } catch (IOException ex) {
+                log.error("Problem deleting failed segment dir: {}", directory, ex);
+            }
+        }
     }
 
     private void inject() throws OSSearchException {

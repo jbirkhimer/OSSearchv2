@@ -18,7 +18,10 @@ public interface CrawlUtilsService {
     void addUrls(String jobName, String jobGroup, boolean crawl, List<String> urls) throws IOException, ClassNotFoundException, InterruptedException, OSSearchException;
 
     @Async
-    Future<Void> async_updateDb(String jobName, String jobGroup);
+    Future<Void> async_updateDb(String jobName, String jobGroup) throws OSSearchException;
+
+    @Async
+    Future<Void> async_mergeSegments(String jobName, String jobGroup) throws OSSearchException;
 
     List<String> readAll(MultipartFile file);
 

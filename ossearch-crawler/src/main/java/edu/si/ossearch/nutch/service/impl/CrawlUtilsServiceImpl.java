@@ -17,9 +17,18 @@ import edu.si.ossearch.scheduler.entity.NutchStepArgs;
 import edu.si.ossearch.scheduler.repository.CrawlSchedulerJobInfoRepository;
 import edu.si.ossearch.scheduler.service.JobService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.nutch.crawl.CrawlDatum;
 import org.apache.nutch.crawl.Injector;
+import org.apache.nutch.parse.ParseData;
+import org.apache.nutch.parse.ParseText;
+import org.apache.nutch.protocol.Content;
+import org.apache.nutch.segment.SegmentMerger;
+import org.apache.nutch.util.HadoopFSUtil;
 import org.apache.nutch.util.NutchConfiguration;
 import org.apache.solr.client.solrj.SolrClient;
 import org.json.XML;
@@ -239,8 +248,23 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
 
     @Async
     @Override
-    public Future<Void> async_updateDb(String jobName, String jobGroup) {
+    public Future<Void> async_updateDb(String jobName, String jobGroup) throws OSSearchException {
+
+        boolean isJobRunning = jobService.isJobRunning(jobName, jobGroup);
+        boolean isAddUrlJobRunning = jobService.isJobRunning(jobName, "add_urls");
+
+        if (isJobRunning || isAddUrlJobRunning) {
+            throw new OSSearchException("A crawl is currently running for this collection. Try again when the crawl is finished or stop the current crawl and try again!");
+        }
+
+        jobService.pauseJob(jobName, jobGroup);
+
         CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(jobName, jobGroup);
+
+        if (jobInfo == null) {
+            jobService.resumeJob(jobName, jobGroup);
+            throw new OSSearchException("UpdateDb error! Crawl config does not exists for collection: "+jobName+"!");
+        }
 
         Configuration conf = NutchConfiguration.create();
         conf.set("hadoop.tmp.dir", "hadoop_tmp");
@@ -256,8 +280,101 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
 
         webpageRepository.saveAllAndFlush(webpageList);
 
+        jobService.resumeJob(jobName, jobGroup);
+
         log.info("****** Finished crawldb update for: {} ({}), url count: {} ******", jobName, jobInfo.getCollectionId(), webpageList.size());
         return new AsyncResult<>(null);
+    }
+
+    @Async
+    @Override
+    public Future<Void> async_mergeSegments(String jobName, String jobGroup) throws OSSearchException {
+
+        boolean isJobRunning = jobService.isJobRunning(jobName, jobGroup);
+        boolean isAddUrlJobRunning = jobService.isJobRunning(jobName, "add_urls");
+
+        if (isJobRunning || isAddUrlJobRunning) {
+            throw new OSSearchException("A crawl is currently running for this collection. Try again when the crawl is finished or stop the current crawl and try again!");
+        }
+
+        jobService.pauseJob(jobName, jobGroup);
+
+        CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(jobName, jobGroup);
+
+        if (jobInfo == null) {
+            jobService.resumeJob(jobName, jobGroup);
+            throw new OSSearchException("MergeSegments error! Crawl config does not exists for collection: "+jobName+"!");
+        }
+
+        try {
+
+            Configuration conf = NutchConfiguration.create();
+            conf.set("hadoop.tmp.dir", "hadoop_tmp");
+            Path crawlBaseDir = getCrawlBaseDir(jobInfo);
+            Path dbDir = new Path(crawlBaseDir, "db");
+            Path segmentsDir = new Path(dbDir, "crawldb");
+            Path segmentsMergeDir = new Path(dbDir, "MERGEDsegments");
+
+            FileSystem fs = segmentsDir.getFileSystem(conf);
+            FileStatus[] fstats = fs.listStatus(segmentsDir, HadoopFSUtil.getPassDirectoriesFilter(fs));
+            Path[] sgmt = HadoopFSUtil.getPaths(fstats);
+
+            checkSegments(sgmt, conf);
+
+            SegmentMerger segmentMerger = new SegmentMerger();
+            segmentMerger.setConf(conf);
+
+            segmentMerger.merge(segmentsMergeDir, Arrays.asList(sgmt).toArray(new Path[0]), false, false, 0);
+
+            FileUtils.deleteDirectory(new File(segmentsDir.toString()));
+            boolean movedSegMergeDir = new File(segmentsMergeDir.toString()).renameTo(new File(segmentsDir.toString()));
+
+            if (movedSegMergeDir == false) {
+                throw new OSSearchException("Failed to move segmentMergeDir: " + segmentsMergeDir + "!");
+            }
+        } catch (Exception e) {
+            jobService.resumeJob(jobName, jobGroup);
+            throw new OSSearchException("Merge Segments Failed!!!", e);
+        }
+
+        jobService.resumeJob(jobName, jobGroup);
+
+        log.info("****** Finished merge segments for: {} ({}) ******", jobName, jobInfo.getCollectionId());
+        return new AsyncResult<>(null);
+    }
+
+    private void checkSegments(Path[] segs, Configuration conf) throws OSSearchException, IOException {
+        for (int i = 0; i < segs.length; i++) {
+            FileSystem fs = segs[i].getFileSystem(conf);
+            if (!fs.exists(segs[i])) {
+                throw new OSSearchException("Segment dir" + segs[i].toString() + "does not exist");
+                //log.warn("Input dir {} doesn't exist, skipping.", segs[i]);
+                //segs[i] = null;
+                //continue;
+            }
+            Path cDir = new Path(segs[i], Content.DIR_NAME);
+            Path gDir = new Path(segs[i], CrawlDatum.GENERATE_DIR_NAME);
+            Path fDir = new Path(segs[i], CrawlDatum.FETCH_DIR_NAME);
+            Path pDir = new Path(segs[i], CrawlDatum.PARSE_DIR_NAME);
+            Path pdDir = new Path(segs[i], ParseData.DIR_NAME);
+            Path ptDir = new Path(segs[i], ParseText.DIR_NAME);
+
+            if (fs.exists(cDir) && fs.exists(gDir) && fs.exists(fDir) && fs.exists(pDir) && fs.exists(pdDir) && fs.exists(ptDir)) {
+                log.info("SegmentMerger: adding {}", segs[i]);
+            } else {
+                StringBuilder sb = new StringBuilder();
+                sb.append(Content.DIR_NAME + ", ");
+                sb.append(CrawlDatum.GENERATE_DIR_NAME + ", ");
+                sb.append(CrawlDatum.FETCH_DIR_NAME + ", ");
+                sb.append(CrawlDatum.PARSE_DIR_NAME + ", ");
+                sb.append(ParseData.DIR_NAME + ", ");
+                sb.append(ParseText.DIR_NAME);
+                throw new OSSearchException("Segment dir" + segs[i].toString() + "missing one of " + sb.toString() + "dir!");
+                //log.info("SegmentMerger: removing {}", segs[i]);
+                //segs[i] = null;
+            }
+        }
+        //segs = Arrays.stream(segs).filter(seg -> seg != null).toArray(Path[]::new);
     }
 
     private Path getCrawlBaseDir(CrawlSchedulerJobInfo jobInfo) {
