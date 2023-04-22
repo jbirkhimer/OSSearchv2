@@ -1,7 +1,8 @@
 package edu.si.ossearch.security.controllers;
 
 import edu.si.ossearch.security.exception.TokenRefreshException;
-import edu.si.ossearch.security.models.*;
+import edu.si.ossearch.security.jwt.JwtUtils;
+import edu.si.ossearch.security.models.RefreshToken;
 import edu.si.ossearch.security.payload.request.LogOutRequest;
 import edu.si.ossearch.security.payload.request.LoginRequest;
 import edu.si.ossearch.security.payload.request.TokenRefreshRequest;
@@ -10,10 +11,16 @@ import edu.si.ossearch.security.payload.response.MessageResponse;
 import edu.si.ossearch.security.payload.response.TokenRefreshResponse;
 import edu.si.ossearch.security.repository.RoleRepository;
 import edu.si.ossearch.security.repository.UserRepository;
-import edu.si.ossearch.security.jwt.JwtUtils;
+import edu.si.ossearch.security.repository.projections.LoggedInUserProjectionClass;
 import edu.si.ossearch.security.services.RefreshTokenService;
 import edu.si.ossearch.security.services.UserDetailsImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,9 +30,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
@@ -146,6 +154,20 @@ public class AuthController {
     public ResponseEntity<?> logoutUser(@Valid @RequestBody LogOutRequest logOutRequest) {
         refreshTokenService.deleteByUserId(logOutRequest.getUserId());
         return ResponseEntity.ok(new MessageResponse("Log out successful!"));
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping(value = "/loggedinusers")
+    @Operation(summary = "Returns the users that are logged in", responses = {@ApiResponse(content = @Content(mediaType = "application/json"))})
+    public ResponseEntity<?> getLoggedInUsers() {
+
+        try {
+            List<LoggedInUserProjectionClass> answer = userRepository.getLoggedInUsers();
+            return ResponseEntity.status(HttpStatus.OK).body(answer);
+        } catch (Exception e) {
+            log.error("Problem getting logged in users!", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
 }
