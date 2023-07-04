@@ -287,7 +287,7 @@ export default {
           crawlCronSchedule: '0 0 0 ? * FRI *',
           cronEditorData: "{\"name\":\"Weekly\",\"editorData\":{\"dateTime\":\"00:00\",\"daysOfWeek\":[6]}}"
         },
-        responseType: 'html',
+        responseType: 'xml',
         resultsPerPage: 10,
         resultLimit: 0,
         includeFields: ['title', 'content', 'url'],
