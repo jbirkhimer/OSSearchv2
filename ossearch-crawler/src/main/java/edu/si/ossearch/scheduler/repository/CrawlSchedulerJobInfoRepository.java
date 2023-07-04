@@ -1,6 +1,7 @@
 package edu.si.ossearch.scheduler.repository;
 
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
@@ -8,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+
+import java.util.Optional;
 
 /**
  * @author jbirkhimer
@@ -32,4 +35,7 @@ public interface CrawlSchedulerJobInfoRepository extends JpaRepository<CrawlSche
 
     CrawlSchedulerJobInfo findByJobNameAndJobGroup(String jobName, String jobGroup);
 
+    @Operation(summary = "Find CrawlSchedulerJobInfo id by jobName and jobGroup")
+    @Query("select j.id from CrawlSchedulerJobInfo j where j.jobName = :jobName and j.jobGroup = :jobGroup")
+    Optional<Long> findIdByJobNameAndJobGroup(String jobName, String jobGroup);
 }

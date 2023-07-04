@@ -88,9 +88,9 @@ public class CrawlConfig {
     private String crawlCronSchedule;
     private String cronEditorData;
 
-    @OneToOne(mappedBy = "crawlConfig", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private Collection collection;
+//    @OneToOne(mappedBy = "crawlConfig", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+//    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+//    private Collection collection;
 
     @CreationTimestamp
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

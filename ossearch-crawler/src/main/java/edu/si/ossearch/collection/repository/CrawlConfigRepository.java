@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
@@ -14,6 +15,7 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 public interface CrawlConfigRepository extends JpaRepository<CrawlConfig, Long> {
 
     @Operation(summary = "Find crawl config by collection name")
+    @Query("select cfg from CrawlConfig cfg left outer join Collection c on cfg.id = c.crawlConfig.id where c.name = :name")
     CrawlConfig getCrawlConfigByCollectionName(@Param("name") String name);
 
 }

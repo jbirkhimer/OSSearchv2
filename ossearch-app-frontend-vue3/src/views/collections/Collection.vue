@@ -88,7 +88,7 @@ export default {
   created() {
     if (this.isAdmin) {
       this.tabs.push({name: 'changeHistory', label: 'Change History', icon: 'fas fa-history'})
-      this.tabs.push({name: 'backupRestore', label: 'Backup/Restore', icon: 'fas fa-database'})
+      this.tabs.push({name: 'backupRestoreCollection', label: 'Backup/Restore', icon: 'fas fa-database'})
     }
     // watch the params of the route to fetch the data again
     this.$watch(

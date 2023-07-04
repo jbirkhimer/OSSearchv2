@@ -97,7 +97,7 @@ public class Collection {
 //    private Boolean requiredField = false; //TODO: is this needed for anything ??? Yes means use dynamicNavigation
     private Boolean useFacets = false;
 
-    @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Setter(AccessLevel.NONE)
     private Set<DynamicNavigation> dynamicNavigations = new HashSet<>();
 
@@ -109,8 +109,8 @@ public class Collection {
         }
     }
 
-    @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @Setter(AccessLevel.NONE)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "collection_id")
     private Set<PageResult> pageResults = new HashSet<>();
 
     //Collection Relationships
@@ -128,7 +128,7 @@ public class Collection {
     private Set<Collection> partOfCollections = new HashSet<>();
 
     //Crawler related information
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "crawl_config_id", nullable = false)
     private CrawlConfig crawlConfig;
 

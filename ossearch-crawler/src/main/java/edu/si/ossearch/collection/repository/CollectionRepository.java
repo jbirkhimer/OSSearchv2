@@ -1,14 +1,10 @@
 package edu.si.ossearch.collection.repository;
 
 import edu.si.ossearch.collection.entity.Collection;
-import edu.si.ossearch.collection.entity.DynamicNavigation;
-import edu.si.ossearch.collection.entity.projections.CollectionIdNameInfo;
-import edu.si.ossearch.collection.entity.projections.CollectionSearchData;
 import edu.si.ossearch.collection.entity.projections.CollectionTableData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

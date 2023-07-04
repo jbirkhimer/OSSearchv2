@@ -50,6 +50,10 @@
             <i class="fas fa-server me-2"></i>
             System
           </router-link>
+          <router-link class="nav-link" to="/backupRestore">
+            <i class="fas fa-history me-2"></i>
+            Bulk Backup/Restore
+          </router-link>
         </template>
 
         <router-link class="nav-link" to="/about">

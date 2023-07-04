@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../views/Login';
 import store from '@/store';
 import Collections from '../views/collections/Collections';
@@ -18,7 +18,7 @@ import IndexedUrlsReport from "../views/collections/collection/reports/IndexedUr
 import UrlReport from "../views/collections/collection/reports/UrlReport";
 import CrawldbReport from "../views/collections/collection/reports/CrawldbReport";
 import ChangeHistory from "../views/collections/collection/ChangeHistory";
-import BackupRestore from "../views/collections/collection/BackupRestore";
+import BackupRestoreCollection from "../views/collections/collection/BackupRestoreCollection.vue";
 import CollectionOverview from "../views/collections/collection/CollectionOverview";
 import CollectionSearchConfig from "../views/collections/collection/search/CollectionSearchConfig";
 import CollectionSearchFacetConfig from "../views/collections/collection/search/CollectionSearchFacetConfig";
@@ -36,6 +36,9 @@ import SearchReport from "../views/collections/collection/reports/SearchReport";
 import ParseChecker from "../views/collections/collection/ParseChecker.vue";
 import CollectionCrawlingUrlNormalizerPatterns from "../views/collections/collection/crawling/CollectionCrawlingUrlNormalizerPatterns.vue";
 import CollectionSearchEdanFieldMappingConfig from "../views/collections/collection/search/CollectionSearchEdanFieldMappingConfig.vue";
+import BackupRestore from "../views/BackupRestore.vue";
+
+// lazy-loaded
 const CrawlScheduler = () => import('../views/scheduler/CrawlScheduler');
 import SearchCounts from '../views/reports/search/SearchCounts';
 import SearchUrls from '../views/reports/search/SearchUrls';
@@ -230,8 +233,8 @@ const routes = [
       },
       {
         path: 'backupRestore',
-        name: 'backupRestore',
-        component: BackupRestore,
+        name: 'backupRestoreCollection',
+        component: BackupRestoreCollection,
         props: true
       },
       {
@@ -343,6 +346,12 @@ const routes = [
     name: 'backend',
     // lazy-loaded
     component: ServerStatus
+  },
+  {
+    path: '/backupRestore',
+    name: 'backupRestore',
+    component: BackupRestore,
+    props: true
   },
   {
     path: '/about',
