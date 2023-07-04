@@ -1,11 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../views/Login';
-// import Register from '../views/other/Register';
-// lazy-loaded
-// const Profile = () => import('../views/other/Profile.vue')
-// const BoardAdmin = () => import('../views/other/BoardAdmin.vue')
-// const BoardModerator = () => import('../views/other/BoardModerator.vue')
-// const BoardUser = () => import('../views/other/BoardUser.vue')
+import store from '@/store';
 import Collections from '../views/collections/Collections';
 import Collection from "../views/collections/Collection";
 import Dashboard from "../views/Dashboard";
@@ -47,6 +42,11 @@ import SearchUrls from '../views/reports/search/SearchUrls';
 const Users = () => import('../views/users/Users');
 const ServerStatus = () => import('../views/ServerStatus');
 
+// const Profile = () => import('../views/other/Profile.vue')
+// const BoardAdmin = () => import('../views/other/BoardAdmin.vue')
+// const BoardModerator = () => import('../views/other/BoardModerator.vue')
+// const BoardUser = () => import('../views/other/BoardUser.vue')
+
 const routes = [
   {
     path: '/',
@@ -65,34 +65,6 @@ const routes = [
     name: 'login',
     component: Login
   },
-  // {
-  //   path: '/register',
-  //   component: Register
-  // },
-  // {
-  //   path: '/profile',
-  //   name: 'profile',
-  //   // lazy-loaded
-  //   component: Profile
-  // },
-  // {
-  //   path: '/admin',
-  //   name: 'admin',
-  //   // lazy-loaded
-  //   component: BoardAdmin,
-  // },
-  // {
-  //   path: '/mod',
-  //   name: 'moderator',
-  //   // lazy-loaded
-  //   component: BoardModerator,
-  // },
-  // {
-  //   path: '/user',
-  //   name: 'user',
-  //   // lazy-loaded
-  //   component: BoardUser,
-  // },
   {
     path: '/collections',
     name: 'collections',
@@ -278,7 +250,8 @@ const routes = [
   {
     path: '/collections/create',
     name: 'collectionCreate',
-    component: CollectionCreate
+    component: CollectionCreate,
+    beforeEnter: isAdmin
   },
   {
     path: '/scheduler',
@@ -290,6 +263,7 @@ const routes = [
     path: '/scheduler/create',
     name: 'crawlScheduleForm',
     component: CrawlScheduleForm,
+    beforeEnter: isAdmin,
     props: true
   },
   {
@@ -366,7 +340,8 @@ const routes = [
   {
     path: '/users/create',
     name: 'userForm',
-    component: UserForm
+    component: UserForm,
+    beforeEnter: isAdmin
   },
   {
     path: '/backend',
@@ -390,13 +365,13 @@ const routes = [
     // which is lazy-loaded when the route is visited.
     component: () => import(/* webpackChunkName: 'about' */ '../views/FAQ.vue')
   }
-]
+];
 
 const router = createRouter({
   linkActiveClass: "active",
   history: createWebHistory(process.env.BASE_URL),
   routes
-})
+});
 
 // see the following for auth and navgard info
 // https://github.com/vuejs/vue-router/tree/dev/examples/auth-flow
@@ -418,4 +393,13 @@ router.beforeEach((to, from, next) => {
   }
 });
 
-export default router
+function isAdmin (to, from, next) {
+  let user = store.state.auth.user;
+  if (user && user.roles && user.roles.includes('ROLE_ADMIN')) {
+    next();
+  } else {
+    next('/');
+  }
+}
+
+export default router;
