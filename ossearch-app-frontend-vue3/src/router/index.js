@@ -42,11 +42,6 @@ import SearchUrls from '../views/reports/search/SearchUrls';
 const Users = () => import('../views/users/Users');
 const ServerStatus = () => import('../views/ServerStatus');
 
-// const Profile = () => import('../views/other/Profile.vue')
-// const BoardAdmin = () => import('../views/other/BoardAdmin.vue')
-// const BoardModerator = () => import('../views/other/BoardModerator.vue')
-// const BoardUser = () => import('../views/other/BoardUser.vue')
-
 const routes = [
   {
     path: '/',
