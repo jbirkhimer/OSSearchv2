@@ -409,13 +409,15 @@ public class Crawler {
     }
 
     private void deleteSegment(Path[] sgmt) {
-        for (Path dir : sgmt) {
-            File directory = new File(dir.toString());
-            log.debug("deleting failed segment dir: {}", directory.getAbsolutePath());
-            try {
-                FileUtils.deleteDirectory(directory);
-            } catch (IOException ex) {
-                log.error("Problem deleting failed segment dir: {}", directory, ex);
+        if (sgmt != null) {
+            for (Path dir : sgmt) {
+                File directory = new File(dir.toString());
+                log.debug("deleting failed segment dir: {}", directory.getAbsolutePath());
+                try {
+                    FileUtils.deleteDirectory(directory);
+                } catch (IOException ex) {
+                    log.error("Problem deleting failed segment dir: {}", directory, ex);
+                }
             }
         }
     }
@@ -1115,42 +1117,49 @@ public class Crawler {
             try {
 
                 FileSystem fs = segmentsDir.getFileSystem(conf);
-                FileStatus[] fstats = fs.listStatus(segmentsDir, HadoopFSUtil.getPassDirectoriesFilter(fs));
-                Path[] sgmt = HadoopFSUtil.getPaths(fstats);
+                if (fs.exists(segmentsDir)) {
+                    FileStatus[] fstats = fs.listStatus(segmentsDir, HadoopFSUtil.getPassDirectoriesFilter(fs));
+                    Path[] sgmt = HadoopFSUtil.getPaths(fstats);
 
-                Configuration segMergeConf = new Configuration(conf);
-                segMergeConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
+                    Configuration segMergeConf = new Configuration(conf);
+                    segMergeConf.set("nutch.conf.uuid", UUID.randomUUID().toString());
 
-                Map<String, String> segMergeArgs = jobInfo.getNutchStepArgs().getSegmentMerger();
-                boolean filter = Boolean.parseBoolean(segMergeArgs.getOrDefault("filter", "false"));
-                boolean normalize = Boolean.parseBoolean(segMergeArgs.getOrDefault("normalize", "false"));
+                    Map<String, String> segMergeArgs = jobInfo.getNutchStepArgs().getSegmentMerger();
+                    boolean filter = Boolean.parseBoolean(segMergeArgs.getOrDefault("filter", "false"));
+                    boolean normalize = Boolean.parseBoolean(segMergeArgs.getOrDefault("normalize", "false"));
 
-                StringJoiner sj = new StringJoiner(", ");
-                sj.add("segments: " + Arrays.asList(sgmt));
-                sj.add("filter: " + filter);
-                sj.add("normalize: " + normalize);
+                    StringJoiner sj = new StringJoiner(", ");
+                    sj.add("segments: " + Arrays.asList(sgmt));
+                    sj.add("filter: " + filter);
+                    sj.add("normalize: " + normalize);
 
-                crawlStepLog.setArgs(sj.toString());
-                crawlStepLogRepository.saveAndFlush(crawlStepLog);
+                    crawlStepLog.setArgs(sj.toString());
+                    crawlStepLogRepository.saveAndFlush(crawlStepLog);
 
-                if (filter || segMergeConf.getBoolean("segment.merger.filter", false)) {
-                    segMergeConf.set("segment.merger.filter", crawlUrlFilterRules);
-                }
+                    if (filter || segMergeConf.getBoolean("segment.merger.filter", false)) {
+                        segMergeConf.set("segment.merger.filter", crawlUrlFilterRules);
+                    }
 
-                if (normalize || segMergeConf.getBoolean("segment.merger.normalizer", false)) {
-                    setURLNormalizerRegexRules(URLNormalizerPattern.Scope._default, segMergeConf);
-                }
+                    if (normalize || segMergeConf.getBoolean("segment.merger.normalizer", false)) {
+                        setURLNormalizerRegexRules(URLNormalizerPattern.Scope._default, segMergeConf);
+                    }
 
-                SegmentMerger segmentMerger = new SegmentMerger();
-                segmentMerger.setConf(conf);
+                    SegmentMerger segmentMerger = new SegmentMerger();
+                    segmentMerger.setConf(conf);
 
-                segmentMerger.merge(segmentsMergeDir, Arrays.asList(sgmt).toArray(new Path[0]), filter, normalize, 0);
+                    segmentMerger.merge(segmentsMergeDir, Arrays.asList(sgmt).toArray(new Path[0]), filter, normalize, 0);
 
-                FileUtils.deleteDirectory(new File(segmentsDir.toString()));
-                boolean movedSegMergeDir = new File(segmentsMergeDir.toString()).renameTo(new File(segmentsDir.toString()));
+                    FileUtils.deleteDirectory(new File(segmentsDir.toString()));
+                    boolean movedSegMergeDir = new File(segmentsMergeDir.toString()).renameTo(new File(segmentsDir.toString()));
 
-                if (movedSegMergeDir == false) {
-                    throw new OSSearchException("Failed to move segmentMergeDir: "+ segmentsMergeDir +"!");
+                    if (movedSegMergeDir == false) {
+                        throw new OSSearchException("Failed to move segmentMergeDir: " + segmentsMergeDir + "!");
+                    }
+                } else {
+                    StringJoiner sj = new StringJoiner(", ");
+                    sj.add("segments: segments dir "+segmentsDir.toString()+" does not exist skipping merge");
+                    crawlStepLog.setArgs(sj.toString());
+                    crawlStepLogRepository.saveAndFlush(crawlStepLog);
                 }
 
                 crawlStepLog.setState(FINISHED);
@@ -1812,6 +1821,17 @@ public class Crawler {
             }
         });
 
+        Set<URLNormalizerPattern> urlNormalizerPatterns = Optional.ofNullable(crawlConfig.getUrlNormalizerPatterns()).orElse(new HashSet<>());
+
+        //add any default normalizers rules from crawlconfig to the defaultRules
+        urlNormalizerPatterns.stream()
+                .forEach(urlNormalizerPattern -> {
+                    if (urlNormalizerPattern.getScope() == URLNormalizerPattern.Scope._default) {
+                        defaultRules.add(urlNormalizerPattern.getRule());
+                    }
+                });
+
+        //init map of scoped rules using the defaults
         EnumSet.allOf(URLNormalizerPattern.Scope.class).forEach(scope -> {
             JSONObject rules = new JSONObject();
             JSONObject regex_normalize = new JSONObject();
@@ -1821,8 +1841,8 @@ public class Crawler {
         });
 
 
-        Optional.ofNullable(crawlConfig.getUrlNormalizerPatterns()).orElse(new HashSet<>())
-                .stream()
+        //add any scoped normalizers rules from crawlconfig to the defaultRules
+        urlNormalizerPatterns.stream()
                 .forEach(urlNormalizerPattern -> {
                     JSONObject rules = scopedRegexUrlNormalizerRules.get(urlNormalizerPattern.getScope());
                     if (rules.has("regex-normalize") && rules.get("regex-normalize") instanceof JSONObject) {
