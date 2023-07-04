@@ -76,14 +76,14 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     }
 
     @Transactional
-    Privilege createPrivilegeIfNotFound(final String name) {
+    public Privilege createPrivilegeIfNotFound(final String name) {
         Privilege privilege = privilegeRepository.findByName(name).orElse(new Privilege(name));
         privilege = privilegeRepository.saveAndFlush(privilege);
         return privilege;
     }
 
     @Transactional
-    Role createRoleIfNotFound(final String name, final List<Privilege> privileges) {
+    public Role createRoleIfNotFound(final String name, final List<Privilege> privileges) {
         Role role = roleRepository.findByName(name).orElse(new Role(name));
         role.setPrivileges(privileges);
         role = roleRepository.saveAndFlush(role);
@@ -91,7 +91,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     }
 
     @Transactional
-    User createUserIfNotFound(final String email, final String firstName, final String lastName, final String username, final String password, boolean enabled, final Set<Role> roles) {
+    public User createUserIfNotFound(final String email, final String firstName, final String lastName, final String username, final String password, boolean enabled, final Set<Role> roles) {
         User user = userRepository.findByUsername(username).orElseGet(() -> {
             User u = new User();
             u.setFirstName(firstName);
