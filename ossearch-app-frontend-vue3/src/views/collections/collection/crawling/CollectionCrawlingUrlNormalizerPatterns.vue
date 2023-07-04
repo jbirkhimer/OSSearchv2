@@ -12,7 +12,7 @@
   <div v-if="!loading" class="card mt-4 mb-4">
     <div class="card-header">
       <i class="fas fa-spider me-1"></i>
-      <b>URL Normalizer regex patterns</b>
+      <b>URL Normalizer Regex Patterns</b>
       <div class="float-end">
         <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEditCrawlConfig = JSON.parse(JSON.stringify(collection)); isEditCrawlConfig = !isEditCrawlConfig" v-if="!isEditCrawlConfig">Edit</button>
         <button v-if="isEditCrawlConfig" class="btn btn-sm btn-success me-md-2" type="button" @click="saveCrawlConfig()">Save</button>
@@ -30,8 +30,8 @@
         <div class="row g-3">
           <div class="col-md-12">
             <div>
-              <h3>Default URL Normalizer regex patterns</h3>
-              <p>OSS implements several URL Normalizer regex patterns globally by default during all crawling steps. Default URL Normalizer patters are in the table below.</p>
+              <h3>Default URL Normalizer Regex Patterns</h3>
+              <p>OSS implements several URL normalizer regex patterns globally by default during all crawling steps. Default URL normalizer patters are in the table below.</p>
               <div class="table-responsive-sm">
                 <table class="table table-sm" style="width:100%;">
                   <thead class="table-primary">
@@ -62,9 +62,9 @@
 
           <div class="row mt-3 g-3">
             <div class="col-md-12">
-              <h3>Custom Scoped URL Normalizer regex patterns</h3>
-              <p>Custom Scoped URL Normalizer regex patterns to apply to urls while crawling. Enter Scoped URL Normalizer regex patters in the table below.</p>
-              <p>For an example URL Normalizer regex pattern where several site urls have dynamically generated parameters added to the url but all the urls have the exact same page content see <a href="https://regex101.com/r/K9bImQ/1" target="_blank">https://regex101.com/r/K9bImQ/1</a>. Cases like the one in this example can cause infinite crawling. Using the URL Normalizer regex pattern and substitution can help prevent this. In this example we would use and empty string for substitution so that any matching pattern will be stripped from the url. We would also apply this URL Normalizer rule to the default, crawldb, or outlink scope.</p>
+              <h3>Custom Scoped URL Normalizer Regex Patterns</h3>
+              <p>Custom scoped URL normalizer regex patterns to apply to urls while crawling. Enter scoped URL normalizer regex patters in the table below.</p>
+              <p>For example URL normalizer regex patterns where several site urls have dynamically generated parameters added to the url but all the urls have the exact same page content see <a href="https://regex101.com/r/K9bImQ/1" target="_blank">https://regex101.com/r/K9bImQ/1</a>. Cases like the one in this example can cause infinite crawling. Using the URL normalizer regex pattern and substitution can help prevent this. In this example we would use an empty string for substitution so that any matching pattern will be stripped from the url. We would also apply this URL normalizer rule to the default, crawldb, or outlink scope.</p>
 
               <ul class="list-unstyled">
                 <li><b>Scope Descriptions:</b>
@@ -74,6 +74,11 @@
                     </template>
                   </ul>
                 </li>
+              </ul>
+
+              <ul class="list-unstyled">
+                <li><b class="text-danger"><i class="fas fa-exclamation-circle"></i> *** Scoped URL Normalizer Patters are <u>NOT</u> enabled by default! *** You may need to enable the normalize flag or disable the nonormalize flag of the crawl step associated with the scope you are using.</b></li>
+                <li><b class="text-danger">See <a :href="'/scheduler/scheduled_crawl/'+$route.params.name"><em>Advanced Crawling</em> section in Scheduled Crawl Configuration Details</a> for crawl steps and args.</b></li>
               </ul>
 
               <ImportAddEditCheckTable
@@ -147,15 +152,15 @@ export default {
   },
   data() {
     let normalizerScope = [
-      {label: "default", value: "_default", desc: "Scope used by default for all URL normalizers."},
-      {label: "partition", value: "partition", desc: "Scope used by {@link org.apache.nutch.crawl.URLPartitioner}."},
-      {label: "generate_host_count", value: "generate_host_count", desc: "Scope used by {@link org.apache.nutch.crawl.Generator}."},
-      {label: "fetcher", value: "fetcher", desc: "Scope used by {@link org.apache.nutch.fetcher.Fetcher} when processing redirect URLs."},
-      {label: "crawldb", value: "crawldb", desc: "Scope used when updating the CrawlDb with new URLs."},
-      {label: "linkdb", value: "linkdb", desc: "Scope used when updating the LinkDb with new URLs."},
-      {label: "inject", value: "inject", desc: "Scope used by {@link org.apache.nutch.crawl.Injector}."},
-      {label: "outlink", value: "outlink", desc: "Scope used when constructing new {@link org.apache.nutch.parse.Outlink} instances."},
-      {label: "indexer", value: "indexer", desc: "Scope used when indexing URLs."},
+      {label: "default", value: "_default", desc: "Scope used by default for all URL normalizers and crawl steps."},
+      {label: "partition", value: "partition", desc: "Scope used by Generate step"},
+      {label: "generate_host_count", value: "generate_host_count", desc: "Scope used by Generate Step."},
+      {label: "fetcher", value: "fetcher", desc: "Scope used by Fetch Step and when processing redirect URLs."},
+      {label: "crawldb", value: "crawldb", desc: "Scope used when updating the CrawlDb with new URLs. Used by Updatedb Step"},
+      {label: "linkdb", value: "linkdb", desc: "Scope used when updating the LinkDb with new URLs. Used by Invertlinks Step"},
+      {label: "inject", value: "inject", desc: "Scope used by Inject Step"},
+      {label: "outlink", value: "outlink", desc: "Scope used when constructing new outlink instances. Used by Parse Step"},
+      {label: "indexer", value: "indexer", desc: "Scope used when indexing URLs. Used by Indexing Step."},
     ]
     return {
       loading: false,
