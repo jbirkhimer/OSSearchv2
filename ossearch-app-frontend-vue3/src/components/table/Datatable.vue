@@ -1,6 +1,6 @@
 <template>
   <div>
-    <table :id="id" class="table table-sm table-hover align-middle table-header-hover" style="width:100%">
+    <table :id="id" class="table table-sm align-middle table-header-hover" :class="(tableHover ? 'table-hover ' : '') + (tableBorder ? ' table-bordered' : '')"  style="width:100%">
       <slot name="caption"/>
       <thead class="table-primary">
         <slot name="table-head">
@@ -19,24 +19,24 @@
         </slot>
       </thead>
 
-      <tbody>
-      <tr v-if="loading">
-        <td :colspan="tableOptions.columns.length + 2" class="text-center">
-          <div v-if="loading" class="d-flex flex-column align-items-center justify-content-center">
-            <div class="row">
-              <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
+      <tbody :id="id+'_tbody'">
+        <tr v-if="loading">
+          <td :colspan="tableOptions.columns.length + 2" class="text-center">
+            <div v-if="loading" class="d-flex flex-column align-items-center justify-content-center">
+              <div class="row">
+                <div class="spinner-border" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+              <div class="row">
+                <strong>Loading</strong>
               </div>
             </div>
-            <div class="row">
-              <strong>Loading</strong>
-            </div>
-          </div>
-        </td>
-      </tr>
-      <template v-if="!loading">
-        <slot name="table-body"/>
-      </template>
+          </td>
+        </tr>
+        <template v-if="!loading">
+          <slot name="table-body"/>
+        </template>
       </tbody>
 
     </table>
@@ -68,6 +68,14 @@ export default {
     responsive: {
       type: Boolean,
       default: true
+    },
+    tableHover: {
+      type: Boolean,
+      default: true
+    },
+    tableBorder: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
