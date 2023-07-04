@@ -56,13 +56,14 @@
     </div>
 
     <!-- Modal -->
-    <Modal v-if="selectedCollection" id="deleteCollectionModal">
+    <Modal v-if="selectedCollection" id="deleteCollectionModal" modalClass="modal-lg">
       <template v-slot:header>
         <h5 class="modal-title text-black">Delete Collection</h5>
       </template>
       <template v-slot:body>
-        <p>Are you sure you want to delete collection <b>{{ selectedCollection.name }}</b>!</p>
-        <p class="text-danger"><b>This can not be undone!</b></p>
+        <p>Are you sure you want to delete collection <b>{{ selectedCollection.name }}</b>! This will also delete the crawl schedule for this collection!</p>
+        <p class="text-danger text-uppercase"><b>This can not be undone without backing up the collection and crawl schedule first!</b></p>
+        <p class="text-danger"><b>Backup the collection and crawl schedule <a :href="'/collections/' + selectedCollection.name + '/backupRestore'">HERE</a> !</b></p>
       </template>
       <template v-slot:button-action>
         <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
@@ -83,6 +84,7 @@ import CollectionService from "../../services/collection.service"
 import EventBus from "../../common/EventBus";
 import cronstrue from 'cronstrue';
 import ServerStatusService from "../../services/server-status.service";
+import SchedulerService from '../../services/scheduler.service'
 
 export default {
   name: "Collections",
@@ -195,24 +197,49 @@ export default {
       }
       return 0
     },
-    deleteCollection(url) {
-      CollectionService.deleteCollection(url)
-          .then(response => {
-            console.log("deleteCollection response:", response.data)
-            // for (let i = 0; i < this.tableData.length; i++) {
-            //   if (this.tableData[i].id == res.data) {
-            //     this.tableData.splice(i, 1);
-            //   }
-            // }
+    async deleteCollection(url) {
+      let jobName = this.selectedCollection.name
 
-            // this.getCollections();
-            this.items.splice(this.items.findIndex(({id}) => id == this.selectedCollection.id), 1);
-            this.selectedCollection = null
+      await CollectionService.deleteCollection(url)
+        .then(response => {
+          console.log("deleteCollection response:", response.data)
+          this.items.splice(this.items.findIndex(({id}) => id == this.selectedCollection.id), 1);
+
+          EventBus.dispatch('toast', {
+            type: 'success',
+            msg: this.selectedCollection.name + ' deleted'
           })
-          .catch(errors => {
-            //console.log(errors);
-            this.error = errors
-          });
+
+          this.selectedCollection = null
+        })
+        .catch(errors => {
+          // console.log(errors);
+          // this.error = errors
+          let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString()
+          EventBus.dispatch('toast', {
+            type: 'danger',
+            msg: 'Deleting ' + this.selectedCollection.name + ' failed! ' + content
+          })
+        })
+
+      await SchedulerService.deleteCrawlJob('/scheduler/delete', { jobName: jobName })
+        .then(response => {
+          let data = response.data
+          console.log('delete CrawlJobSchedule', JSON.stringify(data, null, 2))
+          EventBus.dispatch('toast', {
+            type: 'success',
+            msg: JSON.stringify(data, null, 2)
+          })
+        })
+        .catch(errors => {
+          // console.log(errors);
+          // this.error = errors
+          let content = (errors.response && errors.response.data && errors.response.data.message) || errors.message || errors.toString()
+          EventBus.dispatch('toast', {
+            type: 'danger',
+            msg: jobName + ' ' + content
+          })
+        })
       // this.getCollections()
     },
     selectCollection(collection) {
