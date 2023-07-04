@@ -511,11 +511,12 @@ export default {
           })
       return text
     },*/
-    checkIsValid() {
-
-      if (this.collection.name.length === 0 || !this.isValidName) {
-        this.validationMessage = 'Must provide a valid collection name!'
-        return false
+    checkIsValid () {
+      if (!this.loading) {
+        if (this.collection.name.length === 0 || !this.isValidName) {
+          this.validationMessage = 'Must provide a valid collection name!'
+          return false
+        }
       }
 
       this.validationMessage = ''
