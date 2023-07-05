@@ -88,7 +88,7 @@
         </div>
         <div v-else class="row">
           <div class="col-5">
-            <h5>Select System Backups to Restore</h5>
+            <h5>System Backups Available</h5>
             <TreeView
               v-model:tree="treeDisplayData"
               v-model:selected="serverFiles"
@@ -96,7 +96,7 @@
           </div>
 
           <div class="col-7">
-            <p>Selected System Backups to Restore:</p>
+            <h5>Selected System Backups to Restore:</h5>
             <div class="tableFixHead">
               <Datatable
                 :loading="loading"
@@ -433,7 +433,7 @@
   <Modal
     id="localBackupRestoreStatusModal"
     modalClass="modal-xl modal-dialog-scrollable"
-    @cancel="localRestoreStatus = null"
+    @cancel="localRestoreStatus = null; uploadedFiles = []; serverFiles = []"
   >
     <template v-slot:header>
       <h5 class="modal-title text-black">Restore Details:</h5>
@@ -488,7 +488,7 @@
       </table>
     </template>
     <template v-slot:footer>
-      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click.prevent="localRestoreStatus = null">Close</button>
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click.prevent="localRestoreStatus = null; uploadedFiles = []; serverFiles = []">Close</button>
     </template>
   </Modal>
 

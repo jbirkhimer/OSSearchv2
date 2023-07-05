@@ -107,7 +107,9 @@
                 <a
                   href="#"
                   class="btn link-danger"
-                  @click="deleteBackup(row.file)"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteSystemBackupModal"
+                  @click.prevent="backupFileForView = row"
                   ><i class="fa fa-times-circle"></i
                 ></a>
               </div>
@@ -375,6 +377,40 @@
         @click="restoreLocalBackup(selectedFiles)"
       >
         Restore
+      </button>
+    </template>
+  </Modal>
+
+  <!-- Delete System Backup Modal -->
+  <Modal
+      id="deleteSystemBackupModal"
+      @cancel="backupFileForView = {}"
+  >
+    <template v-slot:header>
+      <h5 class="modal-title text-black">
+        Delete System Backup File
+      </h5>
+    </template>
+    <template v-slot:body>
+      <h5 class="text-danger">Are you sure you want to delete this system backup?</h5>
+      {{backupFileForView.file}}
+    </template>
+    <template v-slot:footer>
+      <button
+          type="button"
+          class="btn btn-danger"
+          data-bs-dismiss="modal"
+          @click.prevent="deleteBackup(backupFileForView.file)"
+      >
+        Yes
+      </button>
+      <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+          @click.prevent="backupFileForView = {}"
+      >
+        No
       </button>
     </template>
   </Modal>
@@ -704,6 +740,7 @@ export default {
         });
     },
     async backupCollection() {
+      this.loading = true;
       await api
         .get("/utils/backup/collection/" + this.collection.id, {
           params: {
@@ -729,8 +766,10 @@ export default {
           this.error = errors;
         });
       await this.getAvailableBackups();
+      this.loading = false;
     },
     async getBackupFile(file) {
+      this.loading = true;
       let name = this.collection.name + "_" + this.collection.id;
       this.backupFileForView.filename = file;
       await api
@@ -745,8 +784,10 @@ export default {
           // console.log(errors);
           this.error = errors;
         });
+      this.loading = false;
     },
     async deleteBackup(file) {
+      this.loading = true;
       await api
         .delete("/utils/backup/collection/" + this.collection.id + "/" + file)
         .then((response) => {
@@ -759,6 +800,7 @@ export default {
           // console.log(errors);
           this.error = errors;
         });
+      this.loading = false;
     },
     print(value) {
       return JSON.stringify(value, null, 2);
