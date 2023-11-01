@@ -9,6 +9,9 @@
         <div class="oss-result-url">
             <span th:utext="${result.url}"></span>
         </div>
-        <div class="oss-result-snippet" th:utext="${result.getOrDefault('content', 'No Content Found...')}"></div>
+        <div class="oss-result-snippet"><span th:utext="${result.getOrDefault('content', 'No Content Found...')}"></span></div>
+        <th:block th:each="field : ${result.keySet()}" th:if="${not #lists.contains({'title', 'url', 'content'}, field)}">
+            <div class="oss-result-snippet"><b th:utext="${ field + ': '}"></b><span th:utext="${result.getOrDefault(field, 'No Content Found...')}"/></div>
+        </th:block>
     </div>
 </div>

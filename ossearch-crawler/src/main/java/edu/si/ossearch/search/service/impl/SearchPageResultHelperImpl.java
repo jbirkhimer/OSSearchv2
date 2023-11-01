@@ -4,6 +4,7 @@ import edu.si.ossearch.collection.entity.PageResult;
 import edu.si.ossearch.search.beans.result.GM;
 import edu.si.ossearch.search.beans.request.Paging;
 import edu.si.ossearch.search.beans.request.Query;
+import edu.si.ossearch.search.service.SearchMetaTagService;
 import edu.si.ossearch.search.service.SearchPageResultHelperService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -11,6 +12,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -20,6 +22,8 @@ import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 import org.thymeleaf.templateresolver.StringTemplateResolver;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.*;
 
 /**
@@ -28,6 +32,9 @@ import java.util.*;
 @Slf4j
 @Service
 public class SearchPageResultHelperImpl implements SearchPageResultHelperService {
+
+    @Autowired
+    SearchMetaTagService searchMetaTagService;
 
     private static HashMap<String, String> pageResultTokenMapping;
 
@@ -62,7 +69,7 @@ public class SearchPageResultHelperImpl implements SearchPageResultHelperService
     }
 
     @Override
-    public String generatePageResult(Query query, PageResult pageResult, Paging paging, QueryResponse rsp, List<GM> keymatches, Boolean edan) {
+    public String generatePageResult(Query query, PageResult pageResult, Paging paging, QueryResponse rsp, List<GM> keymatches, Boolean edan) throws UnsupportedEncodingException {
 
         Map<String, Object> solrParams = (HashMap) rsp.getResponseHeader().toMap(new HashMap()).get("params");
         int startIndex = Integer.parseInt(String.valueOf(solrParams.get("start")));
@@ -70,7 +77,7 @@ public class SearchPageResultHelperImpl implements SearchPageResultHelperService
         long numFound = rsp.getResults().getNumFound();
         int currentPage = (int) Math.ceil(startIndex / pageSize) + 1;
 
-        List<Map<String, String>> solrResults = processSolrResults(rsp);
+        List<Map<String, String>> solrResults = processSolrResults(rsp, query.getGetfields());
 
         TemplateEngine templateEngine = new SpringTemplateEngine();
         templateEngine.addTemplateResolver(htmlTemplateResolver());
@@ -122,7 +129,7 @@ public class SearchPageResultHelperImpl implements SearchPageResultHelperService
         }
     }
 
-    private List<Map<String, String>> processSolrResults(QueryResponse rsp) {
+    private List<Map<String, String>> processSolrResults(QueryResponse rsp, String getFields) throws UnsupportedEncodingException {
 
         List<Map<String, String>> resultsList = new ArrayList<>();
 
@@ -155,6 +162,16 @@ public class SearchPageResultHelperImpl implements SearchPageResultHelperService
             //content = content != null && !content.isEmpty() ? StringEscapeUtils.escapeHtml4(content) : "No content found";
             content = content != null && !content.isEmpty() ? content : "No content found...";
             result.put("content", content);
+
+            if (getFields != null && !getFields.isEmpty()) {
+                for (String field : getFields.split("\\.")) {
+                    field = URLDecoder.decode(field, "utf-8");
+                    String solrField = field.equals("topicids") ? field : searchMetaTagService.getMetaTagMapping().get(field);
+                    if (solrField != null && !solrField.isEmpty()) {
+                        result.put(field, doc.getFieldValue(solrField) instanceof Collection ? String.join(", ", (Iterable<? extends CharSequence>) doc.getFieldValue(solrField)) : String.valueOf(doc.getOrDefault(solrField, "none")));
+                    }
+                }
+            }
 
             resultsList.add(result);
         }

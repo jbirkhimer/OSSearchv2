@@ -6,6 +6,7 @@ import edu.si.ossearch.search.beans.request.Paging;
 import edu.si.ossearch.search.beans.request.Query;
 import org.apache.solr.client.solrj.response.QueryResponse;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 /**
@@ -13,5 +14,5 @@ import java.util.List;
  */
 public interface SearchPageResultHelperService {
 
-    String generatePageResult(Query query, PageResult pageResult, Paging paging, QueryResponse solrResults, List<GM> keymatches, Boolean edan);
+    String generatePageResult(Query query, PageResult pageResult, Paging paging, QueryResponse solrResults, List<GM> keymatches, Boolean edan) throws UnsupportedEncodingException;
 }
