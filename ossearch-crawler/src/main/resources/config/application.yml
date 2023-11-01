@@ -138,6 +138,7 @@ springdoc:
     doc-expansion: none
 
 ossearch:
+  disable-searchlog-db-updates: false
   embedded-vuejs: true
   allowedOrigins: "http://0.0.0.0:3000,http://localhost:3000,http://127.0.0.1:3000"
   jwt:

@@ -98,7 +98,7 @@ public class Query implements Serializable {
      * @param start
      */
     @Min(0)
-    private long start = 0; // {0..999} scroll into the search results (constraint: start+num <= 1000)
+    private int start = 0; // {0..999} scroll into the search results (constraint: start+num <= 1000)
     @Min(1)
     @Max(200)
     private int num = 10; // {1..100} max results per request     (default is 10)

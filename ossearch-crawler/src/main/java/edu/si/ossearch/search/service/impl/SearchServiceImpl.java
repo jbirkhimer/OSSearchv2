@@ -76,6 +76,10 @@ public class SearchServiceImpl implements SearchService {
     @NonNull
     String solrCollection;
 
+    @Value(value = "${ossearch.disable-searchlog-db-updates}")
+    @NonNull
+    boolean disableSearchLogDbUpdates;
+
     @Autowired
     @Qualifier("slave")
     private SolrClient solrClient;
@@ -136,26 +140,27 @@ public class SearchServiceImpl implements SearchService {
         SearchLog searchLog = new SearchLog(query);
         searchLog.setRequestIp(RequestUtils.getRemoteIP());
         searchLog.setRawQuery(RequestUtils.getRawQueryString());
-        searchLog.setHeaders(new JSONObject(RequestUtils.getHeaders()).toString());
+        //searchLog.setHeaders(new JSONObject(RequestUtils.getHeaders()).toString());
 
         Optional<Collection> optionalCollection = collectionRepository.getByName(query.getSite());
 
         if (!optionalCollection.isPresent()) {
-            searchLog.setErrors("Collection Not Found for site: " + query.getSite());
-            searchLogRepository.saveAndFlush(searchLog);
             return ResponseEntity.noContent().build();
         }
 
         Collection collection = optionalCollection.get();
 
-        searchLog.setCollectionId(collection.getId());
-        searchLogRepository.save(searchLog);
-
+        searchLog.setCollectionId(Math.toIntExact(collection.getId()));
+        if (!disableSearchLogDbUpdates) {
+            searchLogRepository.save(searchLog);
+        }
 
         List<String> outputTypes = Arrays.asList("html", "xml", "xml_no_dtd", "json");
         if (!outputTypes.contains(query.getOutput())) {
             searchLog.setErrors("No Output Type of " + query.getOutput());
-            searchLogRepository.saveAndFlush(searchLog);
+            if (!disableSearchLogDbUpdates) {
+                searchLogRepository.saveAndFlush(searchLog);
+            }
             return ResponseEntity.status(200).contentType(MediaType.TEXT_HTML).body("No response available.");
         }
 
@@ -218,15 +223,19 @@ public class SearchServiceImpl implements SearchService {
         if (!edan) {
             try {
                 log.info("search request solr query: {}", solrQuery.jsonStr());
-                searchLog.setSolrQuery(solrQuery.jsonStr());
+                //searchLog.setSolrQuery(solrQuery.jsonStr());
                 rsp = solrClient.query(solrCollection, solrQuery);
-                searchLog.setDocsFound(rsp.getResults().getNumFound());
+                searchLog.setDocsFound(Math.toIntExact(rsp.getResults().getNumFound()));
                 searchLog.setQueryTime(rsp.getQTime());
-                searchLog.setElapsedTime(rsp.getElapsedTime());
-                searchLogRepository.save(searchLog);
+                searchLog.setElapsedTime(Math.toIntExact(rsp.getElapsedTime()));
+                if (!disableSearchLogDbUpdates) {
+                    searchLogRepository.save(searchLog);
+                }
             } catch (SolrException | IOException | SolrServerException e) {
                 searchLog.setErrors(e.getMessage());
-                searchLogRepository.save(searchLog);
+                if (!disableSearchLogDbUpdates) {
+                    searchLogRepository.save(searchLog);
+                }
                 String message = e.getMessage();
                 if (message.contains("org.apache.solr.search.SyntaxError")) {
                     message = StringUtils.substringAfter(message, "SyntaxError: "); // message.substring(message.indexOf("Cannot parse"), message.length());
@@ -239,25 +248,31 @@ public class SearchServiceImpl implements SearchService {
                 MultiValueMap<String, String> edanRequest = EdanUtils.getMultiValueMap(solrQuery, useHighlighting);
                 URI uri = edanClient.getURI(edanRequest);
                 log.info("search request edan query: {}", uri.getQuery());
-                searchLog.setSolrQuery(uri.getQuery());
+                //searchLog.setSolrQuery(uri.getQuery());
                 EdanResponse edanResponse = edanClient.sendRequest(uri);
                 List<String> fieldsFilter = Arrays.asList(solrQuery.getFields().split(","));
                 //Collections.addAll(fieldsFilter, solrQuery.getFacetFields());
                 rsp = EdanUtils.convertQueryResponse(edanRequest, edanResponse, fieldsFilter);
-                searchLog.setDocsFound(rsp.getResults().getNumFound());
+                searchLog.setDocsFound(Math.toIntExact(rsp.getResults().getNumFound()));
                 searchLog.setQueryTime(rsp.getQTime());
-                searchLog.setElapsedTime(rsp.getElapsedTime());
-                searchLogRepository.save(searchLog);
+                searchLog.setElapsedTime(Math.toIntExact(rsp.getElapsedTime()));
+                if (!disableSearchLogDbUpdates) {
+                    searchLogRepository.save(searchLog);
+                }
             } catch (Exception e) {
                 searchLog.setErrors(e.getMessage());
-                searchLogRepository.save(searchLog);
+                if (!disableSearchLogDbUpdates) {
+                    searchLogRepository.save(searchLog);
+                }
                 throw new OSSearchException(e.getMessage());
             }
         }
 
         log.info("search request finished: {}", searchLog);
 
-        searchLogRepository.saveAndFlush(searchLog);
+        if (!disableSearchLogDbUpdates) {
+            searchLogRepository.saveAndFlush(searchLog);
+        }
 
         if (query.getOutput() == null || query.getOutput().isEmpty() || query.getOutput().equals("html")) {
             return createHtmlResponse(rsp, query, paging, collection, edan, searchLog);

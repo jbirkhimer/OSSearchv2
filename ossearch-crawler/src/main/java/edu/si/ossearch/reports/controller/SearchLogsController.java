@@ -49,7 +49,7 @@ public class SearchLogsController {
     @GetMapping("/searchlog/search/keywordCountsBetweenDatesByCollectionId")
     public @ResponseBody ResponseEntity<?> keywordCountsBetweenDatesByCollectionId(@RequestParam(value = "startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                                    @RequestParam(value = "endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
-                                                                                   @RequestParam(value = "collectionId") Long collectionId,
+                                                                                   @RequestParam(value = "collectionId") Integer collectionId,
                                                                                    @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText,
                                                                                    Pageable pageable,
                                                                                    ServletWebRequest webRequest) {
@@ -69,13 +69,13 @@ public class SearchLogsController {
     @GetMapping("/searchlog/search/searchLogChartData")
     public @ResponseBody ResponseEntity<?> searchLogChartData(@RequestParam(value = "startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                                    @RequestParam(value = "endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
-                                                                                   @RequestParam(value = "collectionId", required = false) Long collectionId,
+                                                                                   @RequestParam(value = "collectionId", required = false) Integer collectionId,
                                                                                    @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText) {
 
         List<CollectionRepository.CollectionIdNameInfoTest> userCollections = collectionRepository.findAllCollectionsByOwnerAndUsers();
-        List<Long> collectionIds = userCollections.stream()
-                .filter(collection -> collectionId != null ? collection.getId() == collectionId : true)
-                .map(collection -> collection.getId())
+        List<Integer> collectionIds = userCollections.stream()
+                .filter(collection -> collectionId != null ? Math.toIntExact(collection.getId()) == collectionId : true)
+                .map(collection -> Math.toIntExact(collection.getId()))
                 .collect(Collectors.toList());
 
         List<SearchLogChart> chartData = searchLogRepository.searchLogChartData(collectionIds, startDate, endDate, searchText);

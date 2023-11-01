@@ -69,6 +69,7 @@ management:
       enabled: false
 
 ossearch:
+  disable-searchlog-db-updates: true
   embedded-vuejs: true
   allowedOrigins: "http://0.0.0.0:3000,http://localhost:3000,http://127.0.0.1:3000,http://10.0.0.95:3000,http://jbirkhimer.myquotient.net:3000,http://ossearchv2:8080,http://0.0.0.0:8484,http://localhost:8484,http://127.0.0.1:8484,http://10.0.0.95:8484,http://jbirkhimer.myquotient.net:8484"
   jwt:

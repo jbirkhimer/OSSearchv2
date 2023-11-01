@@ -32,46 +32,56 @@ public class SearchLog implements Serializable {
     private Long id;
 
     @JsonProperty(value = "collectionId")
-    private Long collectionId;
+    @Column(columnDefinition = "SMALLINT")
+    private Integer collectionId;
 
+    @Column(columnDefinition = "VARCHAR(50)")
     private String site;
 
+    @Column(columnDefinition = "VARCHAR(50)")
     private String client;
 
     private String query;
 
+    @Column(columnDefinition = "VARCHAR(50)")
     private String fields;
 
+//    @Column(columnDefinition = "TINYINT")
+    @Column(columnDefinition = "MEDIUMINT")
     private Integer numRows;
 
-    private Long start;
+    @Column(columnDefinition = "MEDIUMINT")
+    private Integer start;
 
     @JsonProperty(value = "responseType")
+    @Column(columnDefinition = "VARCHAR(50)")
     private String responseType;
 
+    @Column(columnDefinition = "MEDIUMINT")
     private Integer pageNumber;
 
     @JsonProperty(value = "docsFound")
-    private Long docsFound;
+    @Column(columnDefinition = "INT")
+    private Integer docsFound;
 
+    @Column(columnDefinition = "SMALLINT")
     private Integer queryTime;
 
     @JsonProperty(value = "elapsedTime")
-    private Long elapsedTime;
+    @Column(columnDefinition = "MEDIUMINT")
+    private Integer elapsedTime;
 
-    @Column(columnDefinition = "TEXT")
     private String rawQuery;
 
-    @Column(columnDefinition = "TEXT")
-    private String headers;
+//    @Column(columnDefinition = "TEXT")
+//    private String headers;
 
     @JsonProperty(value = "requestIp")
+    @Column(columnDefinition = "VARCHAR(50)")
     private String requestIp;
 
-    @Column(columnDefinition = "TEXT")
-    private String solrQuery;
-
-    @Column(columnDefinition = "TEXT")
+//    @Column(columnDefinition = "TEXT")
+//    private String solrQuery;
     private String errors;
 
     @CreationTimestamp

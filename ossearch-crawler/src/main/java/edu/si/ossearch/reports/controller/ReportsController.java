@@ -65,7 +65,7 @@ public class ReportsController {
     @Operation(summary = "get keywords", responses = {@ApiResponse( content = {@Content(mediaType = "application/json"), @Content(mediaType = "application/csv"), @Content(mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), @Content(mediaType = "application/pdf")})})
     public @ResponseBody ResponseEntity<?> keywordsBetweenDatesByCollectionId(@RequestParam(value = "startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                               @RequestParam(value = "endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
-                                                                              @PathVariable(value = "collectionId") Long collectionId,
+                                                                              @PathVariable(value = "collectionId") Integer collectionId,
                                                                               @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText,
                                                                               @RequestParam(value = "exportType", required = false) String exportType,
                                                                               @RequestParam(value = "sort", defaultValue = "id,asc") List<String> sortList) {
@@ -99,7 +99,7 @@ public class ReportsController {
     @Operation(summary = "get keyword counts", responses = {@ApiResponse( content = {@Content(mediaType = "application/json"), @Content(mediaType = "application/csv"), @Content(mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), @Content(mediaType = "application/pdf")})})
     public @ResponseBody ResponseEntity<?> keywordCountsBetweenDatesByCollectionIdExport(@RequestParam(value = "startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                                          @RequestParam(value = "endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
-                                                                                         @PathVariable(value = "collectionId") Long collectionId,
+                                                                                         @PathVariable(value = "collectionId") Integer collectionId,
                                                                                          @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText,
                                                                                          @RequestParam(value = "exportType", required = false) String exportType,
                                                                                          Pageable pageable,
@@ -327,7 +327,7 @@ public class ReportsController {
     @Operation(summary = "get daily search counts", responses = {@ApiResponse( content = {@Content(mediaType = "application/json"), @Content(mediaType = "application/csv"), @Content(mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), @Content(mediaType = "application/pdf")})})
     public @ResponseBody ResponseEntity<?> dailySearchCountsBetweenDatesByCollectionId(@RequestParam(value = "startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                               @RequestParam(value = "endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
-                                                                              @PathVariable(value = "collectionId") Long collectionId,
+                                                                              @PathVariable(value = "collectionId") Integer collectionId,
                                                                               @RequestParam(value = "searchText", required = false, defaultValue = "") String searchText,
                                                                               @RequestParam(value = "exportType", required = false) String exportType,
                                                                               @RequestParam(value = "sort", defaultValue = "id,asc") List<String> sortList) {

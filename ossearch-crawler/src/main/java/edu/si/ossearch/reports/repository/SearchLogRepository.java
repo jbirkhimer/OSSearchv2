@@ -73,7 +73,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             " and s.createdDate between :startDate and :endDate")
     Optional<Page<SearchLog>> totalCountForAllCollectionsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                                     @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
-                                                                                    @Param("collectionId") Long collectionId,
+                                                                                    @Param("collectionId") Integer collectionId,
                                                                                     @Param("searchText") @Nullable String searchText,
                                                                                     Pageable pageable);
     @RestResource(path = "totalCountForAllCollectionsBetweenDatesByCollectionIdReport", rel = "customFindMethod")
@@ -87,7 +87,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             " and s.createdDate between :startDate and :endDate")
     Optional<List<SearchLogInfo>> totalCountForAllCollectionsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                                         @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
-                                                                                        @Param("collectionId") Long collectionId,
+                                                                                        @Param("collectionId") Integer collectionId,
                                                                                         @Param("searchText") @Nullable String searchText,
                                                                                         Sort sort);
     @Query(value = "select count(s.id) as count, s.site as site, s.collection_id as collectionId from search_log s inner join (" + collectionsByOwnerUserAdmin + ") cj on cj.id = s.collection_id group by s.site, s.collection_id order by count desc", nativeQuery = true)
@@ -108,7 +108,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             " and s.createdDate between :startDate and :endDate")
     Optional<Page<SearchLog>> keywordsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                  @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
-                                                                 @Param("collectionId") Long collectionId,
+                                                                 @Param("collectionId") Integer collectionId,
                                                                  @Param("searchText") @Nullable String searchText,
                                                                  Pageable pageable);
     @RestResource(path = "keywordsBetweenDatesByCollectionIdReport", rel = "customFindMethod")
@@ -118,7 +118,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             " and s.createdDate between :startDate and :endDate")
     Optional<List<SearchLogKeywordsView>> keywordsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                  @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
-                                                                 @Param("collectionId") Long collectionId,
+                                                                 @Param("collectionId") Integer collectionId,
                                                                  @Param("searchText") @Nullable String searchText,
                                                                  Sort sort);
 
@@ -137,7 +137,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             nativeQuery = true)
     Optional<Page<SearchLogKeywordCountsView>> keywordCountsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                                        @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
-                                                                                       @Param("collectionId") Long collectionId,
+                                                                                       @Param("collectionId") Integer collectionId,
                                                                                        @Param("searchText") @Nullable String searchText,
                                                                                        Pageable pageable);
 
@@ -156,7 +156,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             " and createdDate between :startDate and :endDate" +
             " GROUP BY YEAR(createdDate), MONTHNAME(createdDate), DATE(createdDate), site" +
             " ORDER BY site, DATE(createdDate)")
-    List<SearchLogChart> searchLogChartData(@Param("collectionIds") List<Long> collectionIds,
+    List<SearchLogChart> searchLogChartData(@Param("collectionIds") List<Integer> collectionIds,
                                             @Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                             @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
                                             @Param("searchText") @Nullable String searchText);
