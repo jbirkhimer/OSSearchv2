@@ -167,6 +167,7 @@ ossearch:
     path: /metadata/v2.0/metadata/search.htm
     appId: xxxxxxxxxxxx
     appKey: xxxxxxxxxxx
+  spam-keywords: .net,.com,.org,telegram,whatsapp
 
 logging:
   #  config: config/logback.xml

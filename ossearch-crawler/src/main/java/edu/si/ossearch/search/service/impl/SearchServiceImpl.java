@@ -16,6 +16,7 @@ import edu.si.ossearch.search.beans.request.Paging;
 import edu.si.ossearch.search.beans.request.Query;
 import edu.si.ossearch.reports.entity.SearchLog;
 import edu.si.ossearch.reports.repository.SearchLogRepository;
+import edu.si.ossearch.search.service.QueryFeatures;
 import edu.si.ossearch.search.service.SearchMetaTagService;
 import edu.si.ossearch.search.service.SearchPageResultHelperService;
 import edu.si.ossearch.search.service.SearchService;
@@ -99,6 +100,9 @@ public class SearchServiceImpl implements SearchService {
     @Autowired
     SearchPageResultHelperService pageResultHelperService;
 
+    @Autowired
+    QueryFeatures queryFeatures;
+
     static String[] specialTerms = {"allinanchor", "allintext", "allintitle", "allinurl", "cache", "daterange", "ext", "-ext", "filetype", "-filetype", "inmeta", "intext", "intitle", "inurl", "info", "link", "site", "wildcard"};
 
     static Map<String, String> specialTermFieldMapping;
@@ -149,6 +153,12 @@ public class SearchServiceImpl implements SearchService {
         }
 
         Collection collection = optionalCollection.get();
+
+        if (queryFeatures.isSpam(query.getQ(), Math.toIntExact(collection.getId()))) {
+            String rawQuery = RequestUtils.getRawQueryString();
+            log.warn("Filter potential spam request! rawQuery: {}", rawQuery);
+            return ResponseEntity.noContent().build();
+        }
 
         searchLog.setCollectionId(Math.toIntExact(collection.getId()));
         if (!disableSearchLogDbUpdates) {

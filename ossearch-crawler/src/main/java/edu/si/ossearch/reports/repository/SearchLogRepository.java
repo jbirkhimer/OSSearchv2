@@ -101,6 +101,10 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
         Integer getCollectionId();
     }
 
+    @RestResource(path = "keywordFrequency", rel = "customFindMethod")
+    @Query(value = "select count(s.query) as frequency from SearchLog s where  s.collectionId = :collectionId and s.query = :searchText group by s.query")
+    int keywordFrequency(@Param("searchText") @Nullable String searchText, @Param("collectionId") Integer collectionId);
+
     @RestResource(path = "keywordsBetweenDatesByCollectionId", rel = "customFindMethod")
     @Query(value = "select s from SearchLog s" +
             " where s.collectionId = :collectionId" +
