@@ -433,6 +433,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!--<directories>conf</directories>-->
                     <!--<workingDirectory>${build.directory}</workingDirectory>
                     <directories>conf</directories>
                     <jvmArguments>-Dloader.path=conf</jvmArguments>-->

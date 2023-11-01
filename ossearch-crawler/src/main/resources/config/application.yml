@@ -20,7 +20,7 @@ spring:
     serialization:
       indent_output: true
       fail-on-empty-beans: false
-
+    date-format: yyyy-MM-dd'T'HH:mm:ss'Z'
   output:
     ansi:
       enabled: always
@@ -170,7 +170,7 @@ ossearch:
   spam-keywords: .net,.com,.org,telegram,whatsapp
 
 logging:
-  #  config: config/logback.xml
+#  config: config/logback-spring.xml
   file:
     name: ./logs/${spring.application.name}.log
   logback:

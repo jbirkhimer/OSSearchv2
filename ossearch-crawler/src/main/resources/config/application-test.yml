@@ -95,8 +95,8 @@ logging:
   file:
     name: logs/${spring.application.name}.log
   level:
-    root: info
-    org.apache.hadoop.mapred: DEBUG
+    root: INFO
+    org.apache.hadoop.mapred: INFO
     org.hibernate.SQL: INFO
 #    org.springframework.web.method.HandlerMethod: TRACE
     org.hibernate.type.descriptor.sql.BasicBinder: INFO
