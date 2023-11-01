@@ -84,8 +84,8 @@ spring:
       initialize-schema: never
 
   ldap:
-    urls: ldap://xxxxxxxxx
-    port: 389
+    urls: ldaps://xxxxxxxxx
+    port: 636
     base: xxxxxxxxx
     username: xxxxxxxxx
     password: xxxxxxxxx
