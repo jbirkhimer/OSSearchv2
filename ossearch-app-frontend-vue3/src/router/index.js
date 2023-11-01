@@ -38,6 +38,9 @@ import CollectionCrawlingUrlNormalizerPatterns from "../views/collections/collec
 import CollectionSearchEdanFieldMappingConfig from "../views/collections/collection/search/CollectionSearchEdanFieldMappingConfig.vue";
 import BackupRestore from "../views/BackupRestore.vue";
 
+import Tutorial from '../views/tutorial/Tutorial';
+import TutorialCreateCollection from '../views/tutorial/collection/TutorialCreateCollection.vue';
+
 // lazy-loaded
 const CrawlScheduler = () => import('../views/scheduler/CrawlScheduler');
 import SearchCounts from '../views/reports/search/SearchCounts';
@@ -360,6 +363,20 @@ const routes = [
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: () => import(/* webpackChunkName: 'about' */ '../views/About.vue')
+  },
+  {
+    path: '/tutorial',
+    name: 'tutorial',
+    component: Tutorial,
+    props: true,
+    children: [
+      {
+        path: 'collection/create',
+        name: 'tutorialCreateCollection',
+        component: TutorialCreateCollection,
+        props: true
+      }
+    ]
   },
   {
     path: '/FAQ',

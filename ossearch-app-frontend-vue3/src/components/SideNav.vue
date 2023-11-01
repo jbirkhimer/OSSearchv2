@@ -60,6 +60,41 @@
           <i class="fas fa-question me-2"></i>
           About
         </router-link>
+
+        <li class="nav-item">
+          <a href="#" class="nav-link collapsed" data-bs-toggle="collapse" data-bs-target="#collapseTutorials" aria-expanded="false" aria-controls="collapseTutorials">
+            <i class="fas fa-book me-2"></i>
+            Tutorials
+            <i class="fas fa-angle-down ms-auto float-end sb-sidenav-collapse-arrow"></i>
+          </a>
+        </li>
+        <div class="collapse" id="collapseTutorials">
+          <ul class="nav flex-column mb-auto ms-4">
+            <router-link class="nav-link" to="/tutorial/collection/create">
+              Create Collection
+            </router-link>
+<!--            <router-link class="nav-link" to="/tutorial/collection/config">
+              <i class="fas fa-chart-line me-2"></i>
+              Configure Collection
+            </router-link>
+            <router-link class="nav-link" to="/tutorial/crawl-shedule/create">
+              <i class="fas fa-link me-2"></i>
+              Create Crawl Schedules
+            </router-link>
+            <router-link class="nav-link" to="/tutorial/crawl-shedule/config">
+              <i class="fas fa-link me-2"></i>
+              Create Crawl Schedules
+            </router-link>
+            <router-link class="nav-link" to="/tutorial/crawling">
+              <i class="fas fa-link me-2"></i>
+              Crawling
+            </router-link>
+            <router-link class="nav-link" to="/tutorial/indexing">
+              <i class="fas fa-link me-2"></i>
+              Indexing
+            </router-link>-->
+          </ul>
+        </div>
         <router-link class="nav-link" to="/faq">
           <i class="fas fa-question me-2"></i>
           FAQ
