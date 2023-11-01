@@ -3,14 +3,14 @@
 
     <!--First Button-->
     <li :class="{ disabled: onFirstPage }" class="page-item">
-      <a @click.prevent="setPage(firstPage)" class="page-link btn-sm" rel="prev" aria-label="Previous">
+      <a @click.prevent="setPage(firstPage)" role="button" class="page-link btn btn-sm" rel="prev" aria-label="First">
         <span aria-hidden="true">First</span>
       </a>
     </li>
 
     <!--Prev Button-->
     <li :class="{ disabled: onFirstPage }" class="page-item">
-      <a @click.prevent="prevPage" class="page-link btn-sm" rel="prev" aria-label="Previous">
+      <a @click.prevent="prevPage" role="button" class="page-link btn-sm" rel="prev" aria-label="Previous">
         <span aria-hidden="true">Previous</span>
       </a>
     </li>
@@ -18,21 +18,21 @@
     <!--Page Buttons-->
     <li v-for="paginator in paginators" :key="paginator.value"
         :class="{ active: paginator.value === currentPage, disabled: !paginator.enable}" class="page-item">
-      <a @click.prevent="setPage(paginator.value)" class="page-link btn-sm" :disabled="!paginator.enable">
+      <a @click.prevent="setPage(paginator.value)" role="button" class="page-link btn-sm" :disabled="!paginator.enable">
         <span>{{ paginator.value.toLocaleString() }}</span>
       </a>
     </li>
 
     <!--Next Button-->
     <li :class="{ disabled: onLastPage }" class="page-item">
-      <a @click.prevent="nextPage" class="page-link btn-sm" rel="next" aria-label="Next">
+      <a @click.prevent="nextPage" role="button" class="page-link btn-sm" rel="next" aria-label="Next">
         <span aria-hidden="true">Next</span>
       </a>
     </li>
 
     <!--Last Button-->
     <li :class="{ disabled: onLastPage }" class="page-item">
-      <a @click.prevent="setPage(lastPage)" class="page-link btn-sm" rel="next" aria-label="Next">
+      <a @click.prevent="setPage(lastPage)" role="button" class="page-link btn-sm" rel="next" aria-label="Last">
         <span aria-hidden="true">Last</span>
       </a>
     </li>
