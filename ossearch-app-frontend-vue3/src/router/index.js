@@ -37,9 +37,11 @@ import ParseChecker from "../views/collections/collection/ParseChecker.vue";
 import CollectionCrawlingUrlNormalizerPatterns from "../views/collections/collection/crawling/CollectionCrawlingUrlNormalizerPatterns.vue";
 import CollectionSearchEdanFieldMappingConfig from "../views/collections/collection/search/CollectionSearchEdanFieldMappingConfig.vue";
 import BackupRestore from "../views/BackupRestore.vue";
+import Reindex from "../views/Reindex.vue";
 
 import Tutorial from '../views/tutorial/Tutorial';
 import TutorialCreateCollection from '../views/tutorial/collection/TutorialCreateCollection.vue';
+
 
 // lazy-loaded
 const CrawlScheduler = () => import('../views/scheduler/CrawlScheduler');
@@ -354,6 +356,12 @@ const routes = [
     path: '/backupRestore',
     name: 'backupRestore',
     component: BackupRestore,
+    props: true
+  },
+  {
+    path: '/reindex',
+    name: 'reindex',
+    component: Reindex,
     props: true
   },
   {

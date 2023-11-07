@@ -54,6 +54,10 @@
             <i class="fas fa-history me-2"></i>
             Bulk Backup/Restore
           </router-link>
+          <router-link class="nav-link" to="/reindex">
+            <i class="fas fa-history me-2"></i>
+            Reindex
+          </router-link>
         </template>
 
         <router-link class="nav-link" to="/about">
