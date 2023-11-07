@@ -87,9 +87,9 @@ export default {
       }
       return false;
     },
-    isModerator() {
+    isManager() {
       if (this.currentUser && this.currentUser['roles']) {
-        return this.currentUser['roles'].includes('ROLE_MODERATOR');
+        return this.currentUser['roles'].includes('ROLE_MANAGER');
       }
       return false;
     }

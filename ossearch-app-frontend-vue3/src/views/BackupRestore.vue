@@ -17,7 +17,15 @@
           :destination="collectionsToBackup"
           label="name"
           @onChangeList="onChangeList"
-        />
+        >
+          <template v-slot:source>
+            <h5>Collections Available for Backup</h5>
+          </template>
+          <template v-slot:destination>
+            <h5>Selected For Backup</h5>
+          </template>
+        </DualListBox>
+
 
         <fieldset :disabled="!collectionsToBackup.length">
           <div class="row justify-content-end align-items-end mt-3">

@@ -67,7 +67,7 @@
                   </div>
                 </td>
                 <td v-if="key.name === 'logs'" class="ps-4">
-                  <router-link class="btn-link link-primary" :to="{name: 'crawlLogs', params: { jobName: job.jobName, jobGroup: job.groupName }}"><i class="fas fa-eye"></i></router-link>
+                  <router-link class="btn-link link-primary" :to="{name: 'crawlLogs', params: { jobName: job.jobName, jobGroup: job.groupName }}" target="_blank"><i class="fas fa-eye"></i></router-link>
                 </td>
                 <td v-if="key.name === 'control'" class="justify-content-evenly text-center">
                   <div class="btn-group btn-group-sm align-items-center">
@@ -118,7 +118,7 @@
                 </td>
                 <td v-if="column.name === 'view'" class="justify-content-evenly text-center">
 <!--                    <router-link class="btn link-primary" :to="{ name: 'crawlSteps', params: { jobName: crawlLog?.jobConfig?.jobName, jobGroup: crawlLog?.jobConfig?.jobGroup, jobId: crawlLog?.jobId }}"><i class="fas fa-eye"></i></router-link>-->
-                    <router-link class="btn link-primary" :to="{ name: 'crawlSteps', params: { jobName: crawlLog.jobKey.split('.')[1], jobGroup: crawlLog.jobKey.split('.')[0], jobId: crawlLog?.jobId }}"><i class="fas fa-eye"></i></router-link>
+                    <router-link class="btn link-primary" :to="{ name: 'crawlSteps', params: { jobName: crawlLog.jobKey.split('.')[1], jobGroup: crawlLog.jobKey.split('.')[0], jobId: crawlLog?.jobId }}" target="_blank"><i class="fas fa-eye"></i></router-link>
                 </td>
                 <td v-if="column.name === 'errors'" class="text-danger text-truncate" style="max-width: 250px;"
                     data-bs-toggle="tooltip" data-bs-placement="top" :title="crawlLog[column.name]">

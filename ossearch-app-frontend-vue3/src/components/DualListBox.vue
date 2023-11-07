@@ -1,7 +1,9 @@
 <template>
   <div class="row align-items-center flex-nowrap">
     <div class="col-6 flex-shrink-1">
-      <h5>Collections Available for Backup</h5>
+      <slot name="source">
+        <h5>Source</h5>
+      </slot>
       <div class="input-group mb-2">
         <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Select</button>
         <ul class="dropdown-menu">
@@ -33,7 +35,9 @@
     </div>
 
     <div class="col-6 flex-shrink-1">
-      <h5>Selected For Backup</h5>
+      <slot name="destination">
+        <h5>Destination</h5>
+      </slot>
       <div class="input-group mb-2">
         <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Select</button>
         <ul class="dropdown-menu">
