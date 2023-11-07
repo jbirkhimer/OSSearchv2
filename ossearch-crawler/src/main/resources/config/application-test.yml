@@ -18,9 +18,9 @@ spring:
 
   data:
     solr:
-      host: http://localhost:8984/solr
-      slave: http://localhost:8984/solr
-      collection: external-v1_FULL
+      host: http://localhost:8983/solr
+      slave: http://localhost:8983/solr
+      collection: external
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
