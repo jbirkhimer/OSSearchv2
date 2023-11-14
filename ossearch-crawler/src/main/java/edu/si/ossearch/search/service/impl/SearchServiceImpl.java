@@ -223,8 +223,12 @@ public class SearchServiceImpl implements SearchService {
             solrQuery.setHighlight(true);
             solrQuery.addHighlightField("title");
             solrQuery.addHighlightField("content");
-            solrQuery.setHighlightSimplePre("<b>");
-            solrQuery.setHighlightSimplePost("</b>");
+//            solrQuery.setHighlightSimplePre("<b>");
+//            solrQuery.setHighlightSimplePost("</b>");
+//            solrQuery.setParam("hl.tag.pre", "<b>");
+//            solrQuery.setParam("hl.tag.post", "</b>");
+            solrQuery.add("hl.fragmentsBuilder", "colored");
+            solrQuery.add("hl.method", "fastVector");
             solrQuery.setHighlightFragsize(120);
             solrQuery.add("hl.usePhraseHighlighter","true");
         }
