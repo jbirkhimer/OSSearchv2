@@ -16,10 +16,7 @@ import edu.si.ossearch.search.beans.request.Paging;
 import edu.si.ossearch.search.beans.request.Query;
 import edu.si.ossearch.reports.entity.SearchLog;
 import edu.si.ossearch.reports.repository.SearchLogRepository;
-import edu.si.ossearch.search.service.QueryFeatures;
-import edu.si.ossearch.search.service.SearchMetaTagService;
-import edu.si.ossearch.search.service.SearchPageResultHelperService;
-import edu.si.ossearch.search.service.SearchService;
+import edu.si.ossearch.search.service.*;
 import edu.si.ossearch.search.util.http.RequestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -142,7 +139,7 @@ public class SearchServiceImpl implements SearchService {
 
         //log and save request to db
         SearchLog searchLog = new SearchLog(query);
-        searchLog.setRequestIp(RequestUtils.getRemoteIP());
+//        searchLog.setRequestIp(RequestUtils.getRemoteIP());
         searchLog.setRawQuery(RequestUtils.getRawQueryString());
         //searchLog.setHeaders(new JSONObject(RequestUtils.getHeaders()).toString());
 
@@ -291,7 +288,7 @@ public class SearchServiceImpl implements SearchService {
         if (query.getOutput() == null || query.getOutput().isEmpty() || query.getOutput().equals("html")) {
             return createHtmlResponse(rsp, query, paging, collection, edan, searchLog);
         } else if (query.getOutput().equals("xml") || query.getOutput().equals("xml_no_dtd")) {
-            return createXmlResponse(rsp, query, paging, collection, searchLog, edan);
+            return createXmlResponse(rsp, query, paging, collection, searchLog, edan, RequestUtils.getRemoteIP());
         } else if (query.getOutput().equals("json")) {
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(rsp.getResults());
         }
@@ -326,7 +323,7 @@ public class SearchServiceImpl implements SearchService {
         solrQuery.setRows(pageSize);
     }
 
-    private ResponseEntity<Object> createXmlResponse(QueryResponse rsp, Query query, Paging paging, Collection collection, SearchLog searchLog, Boolean edan) throws Exception {
+    private ResponseEntity<Object> createXmlResponse(QueryResponse rsp, Query query, Paging paging, Collection collection, SearchLog searchLog, Boolean edan, String remoteIP) throws Exception {
 
         GSP gsp = new GSP();
         gsp.setQ(query.getQ());
@@ -347,7 +344,7 @@ public class SearchServiceImpl implements SearchService {
         params.add(new PARAM("proxyreload", query.isProxyreload() ? 1 : 0, query.isProxyreload() ? 1 : 0));
         params.add(new PARAM("oe", query.getOe(), query.getOe(), query.getOe(), query.getOe()));
         params.add(new PARAM("ie", query.getIe(), query.getIe(), query.getIe(), query.getIe()));
-        params.add(new PARAM("ip", searchLog.getRequestIp(), searchLog.getRequestIp()));
+        params.add(new PARAM("ip", remoteIP, remoteIP));
 
         //Check q string for any keymatch.SearchTerm's that wee need to add to the results
         processKeymatch(gsp.getGM(), query.getQ(), collection.getKeymatches());

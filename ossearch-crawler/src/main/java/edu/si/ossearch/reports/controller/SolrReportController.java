@@ -116,7 +116,8 @@ public class SolrReportController {
                 collectionIds.add(String.valueOf(collection.getId()));
             });
 
-            totalCountQquery.setQuery("collectionID:(" + String.join(" ", collectionIds) + ")");
+            totalCountQquery.setQuery("*:*");
+            totalCountQquery.setFilterQueries("collectionID:(" + String.join(" ", collectionIds) + ")");
             totalCountQquery.setRows(0);
 
             QueryResponse totalCountRsp = solrClient.query(solrCollection, totalCountQquery);

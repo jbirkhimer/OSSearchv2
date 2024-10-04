@@ -15,6 +15,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;
+import org.springframework.data.util.Streamable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.lang.Nullable;
 
@@ -46,13 +47,13 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
     @Query(value = "select count(s.id) from search_log s" +
             " where s.collection_id in (" + collectionsByOwnerUserAdmin + ")" +
             " and s.created_date between DATE_ADD(CURDATE(), INTERVAL -?1 DAY)" +
-            " and addtime(CURDATE(), '23:59:59') and collection_id = ?2",
+            " and CURDATE() and collection_id = ?2",
             nativeQuery = true)
     long totalCountForAllCollectionsLastNumDaysByCollectionId(@Param("days") Integer days, @Param("collectionId") Long collectionId);
 
     @Query(value = "select count(s.id) from search_log s" +
             " where s.collection_id in (" + collectionsByOwnerUserAdmin + ")" +
-            " and s.created_date between DATE_ADD(CURDATE(), INTERVAL -?1 DAY) and addtime(CURDATE(), '23:59:59')",
+            " and s.created_date between DATE_ADD(CURDATE(), INTERVAL -?1 DAY) and CURDATE()",
             nativeQuery = true)
     long totalCountForAllCollectionsLastNumDays(@Param("days") Integer days);
 
@@ -66,8 +67,8 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
     @Query("select s from SearchLog s" +
             " where s.collectionId = :collectionId" +
             " and (s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-            " or s.responseType like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-            " or s.requestIp like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
+//            " or s.responseType like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
+//            " or s.requestIp like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
             " or s.docsFound like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
             " or s.elapsedTime like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
             " and s.createdDate between :startDate and :endDate")
@@ -76,12 +77,13 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
                                                                                     @Param("collectionId") Integer collectionId,
                                                                                     @Param("searchText") @Nullable String searchText,
                                                                                     Pageable pageable);
+
     @RestResource(path = "totalCountForAllCollectionsBetweenDatesByCollectionIdReport", rel = "customFindMethod")
     @Query("select s from SearchLog s" +
             " where s.collectionId = :collectionId" +
             " and (s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-            " or s.responseType like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-            " or s.requestIp like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
+//            " or s.responseType like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
+//            " or s.requestIp like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
             " or s.docsFound like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
             " or s.elapsedTime like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
             " and s.createdDate between :startDate and :endDate")
@@ -90,6 +92,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
                                                                                         @Param("collectionId") Integer collectionId,
                                                                                         @Param("searchText") @Nullable String searchText,
                                                                                         Sort sort);
+
     @Query(value = "select count(s.id) as count, s.site as site, s.collection_id as collectionId from search_log s inner join (" + collectionsByOwnerUserAdmin + ") cj on cj.id = s.collection_id group by s.site, s.collection_id order by count desc", nativeQuery = true)
     List<CountsByCollectionView> countsByCollection();
 
@@ -165,5 +168,9 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
                                             @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
                                             @Param("searchText") @Nullable String searchText);
 
+    @Query("SELECT DISTINCT s.query FROM SearchLog s")
+    Page<String> findDistinctQueries(Pageable pageable);
 
+    @Query("SELECT DISTINCT s.query FROM SearchLog s")
+    Streamable<String> streamDistinctQueries();
 }

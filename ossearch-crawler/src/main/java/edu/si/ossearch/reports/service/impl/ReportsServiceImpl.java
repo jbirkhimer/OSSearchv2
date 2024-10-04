@@ -10,6 +10,7 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,12 +60,43 @@ public class ReportsServiceImpl implements ReportsService {
         SolrQuery query = new SolrQuery();
 
         if (search.trim().isEmpty()) {
-            search = "*:*";
-        } else if (!search.trim().equalsIgnoreCase("*:*")) {
-            search = "url:\"" + search + "\" OR title:\"" + search + "\" OR type:\"" + search + "\"";
+            query.setQuery("*:*");
+        } else {
+            // Use edismax query parser
+            query.setParam("defType", "edismax");
+
+            // Separate URL-like queries from regular text queries
+            String urlLikePattern = "^(https?://|www\\.).*";
+            boolean isUrlLikeQuery = search.matches(urlLikePattern);
+
+            if (isUrlLikeQuery) {
+                // For URL-like queries, focus on the URL field with wildcards
+                query.setParam("qf", "url^10");
+                query.setQuery("url:*" + ClientUtils.escapeQueryChars(search) + "*");
+            } else {
+
+                // Set fields to search, with boosting for url and title
+                query.setParam("qf", "url^10 title^7");
+
+                // Enable wildcard searches
+                query.setParam("q.op", "OR");
+                query.setParam("mm", "2<-1 5<-2 6<90%");
+
+                // Enable fuzzy search
+                String fuzzySearch = search.replaceAll("\\s+", "~ ") + "~";
+                query.setQuery(fuzzySearch);
+
+                // Phrase boosting
+                query.setParam("pf", "url^10 title^7");
+                query.setParam("ps", "3");
+
+                // Exact matching
+                query.setParam("pf2", "url^50 title^20");
+                query.setParam("ps2", "0");
+            }
         }
-        query.setQuery(search);
-        query.addFilterQuery("collectionID:"+collectionId);
+
+        query.addFilterQuery("collectionID:" + collectionId);
         query.setFields("id,url,title,type");
 
         for (String field : sort.split(",")) {
@@ -92,50 +124,6 @@ public class ReportsServiceImpl implements ReportsService {
         answer.put("data", data);
         answer.put("recordsTotal", numfound);
         answer.put("recordsFiltered", numfound);
-
-        /*while (!done) {
-            query.setStart(cursorMark);
-            rsp = solrClient.query("search", solrQuery);
-            int nextCursorMark = cursorMark + solrQuery.getRows();
-            for (SolrDocument d : rsp.getResults()) {
-
-                JSONObject jo = new JSONObject(d.getFieldValue("content").toString());
-                JSONObject descriptiveNonRepeating = jo.getJSONObject("descriptiveNonRepeating");
-                JSONObject freetext = jo.getJSONObject("freetext");
-                String recordId = descriptiveNonRepeating.getString("record_ID");
-
-                String channel = null;
-                Iterator<Object> dsIt = freetext.getJSONArray("dataSource").iterator();
-                for (Iterator<Object> ds = dsIt; ds.hasNext(); ) {
-                    JSONObject o = (JSONObject) ds.next();
-                    if (o.getString("label").equals("YouTube Channel")) {
-                        channel = o.getString("content");
-                    }
-                }
-
-                String title = d.getFieldValue("title").toString();
-                Iterator<Object> nI = freetext.getJSONArray("notes").iterator();
-                int views = 0;
-                for (Iterator<Object> it = nI; it.hasNext(); ) {
-                    JSONObject o = (JSONObject) it.next();
-                    String label = String.valueOf(o.get("label"));
-                    if (label.equalsIgnoreCase("views")) {
-                        views = Integer.valueOf(String.valueOf(o.get("content")).replaceAll(",", ""));
-                        break;
-                    }
-                }
-
-                youTubeVideoList.add(new YouTubeVideo(recordId, channel, title, views));
-
-                log.info("doc {}/{}: {}, {}, {}, {}", count++, numfound, recordId, channel, title, views);
-
-            }
-            if (nextCursorMark >= numfound) {
-                done = true;
-            }
-            cursorMark = nextCursorMark;
-
-        }*/
 
         return answer;
     }

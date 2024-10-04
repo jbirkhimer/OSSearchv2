@@ -1145,7 +1145,7 @@ public class Crawler {
                     }
 
                     SegmentMerger segmentMerger = new SegmentMerger();
-                    segmentMerger.setConf(conf);
+                    segmentMerger.setConf(segMergeConf);
 
                     segmentMerger.merge(segmentsMergeDir, Arrays.asList(sgmt).toArray(new Path[0]), filter, normalize, 0);
 

@@ -75,16 +75,16 @@ export default {
         endDate: moment().utc().endOf('day').format()
       },
       tableOptions: {
-        order: [[6, "desc"]],
+        order: [[4, "desc"]],
         columns: [
           {label: 'Query', name: 'query', style: 'width: 15%'},
           // {label: 'Fields', name: 'fields'},
           // {label: 'Rows', name: 'numRows'},
           // {label: 'Start', name: 'start'},
           {label: 'Num Found', name: 'docsFound', style: 'width: 5%'},
-          {label: 'Type', name: 'responseType', style: 'width: 5%'},
+          // {label: 'Type', name: 'responseType', style: 'width: 5%'},
           {label: 'QTime (ms)', name: 'elapsedTime', style: 'width: 5%'},
-          {label: 'Request IP', name: 'requestIp', style: 'width: 5%'},
+          // {label: 'Request IP', name: 'requestIp', style: 'width: 5%'},
           {label: 'Errors', name: 'errors', style: 'width: 5%'},
           {label: 'Date', name: 'createdDate', style: 'width: 8%'},
           // {label: 'Actions', data: 'actions', class: 'text-center'},

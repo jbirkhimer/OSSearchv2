@@ -18,13 +18,13 @@
 
     <div class="btn-toolbar justify-content-between mb-3" role="toolbar" aria-label="Toolbar with button groups">
       <div class="btn-toolbar float-start" role="toolbar" aria-label="Toolbar with button groups">
-        <button type="button" class="btn btn-success me-2" data-bs-dismiss="modal" @click="crawlNow()">Crawl Now</button>
-        <button type="button" class="btn btn-warning me-2" data-bs-dismiss="modal" @click="pauseCrawl()">Pause</button>
-        <button type="button" class="btn btn-info me-2" data-bs-dismiss="modal" @click="resumeCrawl()">Resume</button>
-        <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="stopCrawl()">Stop</button>
+        <button type="button" class="btn btn-success me-2" @click="crawlNow()">Crawl Now</button>
+        <button type="button" class="btn btn-warning me-2" @click="pauseCrawl()">Pause</button>
+        <button type="button" class="btn btn-info me-2" @click="resumeCrawl()">Resume</button>
+        <button type="button" class="btn btn-danger" @click="stopCrawl()">Stop</button>
       </div>
       <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-<!--        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="crawlLogs()">Crawl Logs</button>-->
+<!--        <button type="button" class="btn btn-primary" @click="crawlLogs()">Crawl Logs</button>-->
         <router-link class="btn btn-primary" type="button" role="toolbar" aria-label="Toolbar with button groups" :to="{name: 'crawlLogs', params: { jobName: this.jobData.jobName, jobGroup: this.jobData.jobGroup }}">Crawl Logs</router-link>
       </div>
       <div v-if="isAdmin || isManager" class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
@@ -32,8 +32,8 @@
         <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#nutchRecrawlModal">ReCrawl</button>
       </div>
       <div class="btn-toolbar float-end" role="toolbar" aria-label="Toolbar with button groups">
-        <button type="button" class="btn btn-primary me-2" data-bs-dismiss="modal" @click="updateCrawlSchedule()">Update Schedule</button>
-        <button v-if="isAdmin" type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="deleteCrawlSchedule()">Delete Schedule</button>
+        <button type="button" class="btn btn-primary me-2" @click="updateCrawlSchedule()">Update Schedule</button>
+        <button v-if="isAdmin" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#nutchDeleteCrawlScheduleModal">Delete Schedule</button>
       </div>
     </div>
 
@@ -72,6 +72,25 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="recrawl()">Understood</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="deleteCrawlScheduleModal" tabindex="-1" aria-labelledby="deleteCrawlScheduleModal" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Delete Crawl Schedule Config <b>{{ jobData.collectionName }}</b> collection?</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+<!--            <h5>Recrawl <b>{{ jobData.collectionName }}</b> collection?</h5>-->
+            <p class="text-danger"><b>WARNING: This will permanently delete the crawl schedule and crawl configuration for this collection!</b></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="deleteCrawlSchedule()">Understood</button>
           </div>
         </div>
       </div>

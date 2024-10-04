@@ -19,13 +19,13 @@ public interface SearchLogInfo {
 
 //    Long getStart();
 
-    String getResponseType();
+//    String getResponseType();
 
     Long getDocsFound();
 
     Long getElapsedTime();
 
-    String getRequestIp();
+//    String getRequestIp();
 
     String getErrors();
 

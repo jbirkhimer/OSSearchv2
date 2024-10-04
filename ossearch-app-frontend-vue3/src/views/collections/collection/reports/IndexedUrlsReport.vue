@@ -19,9 +19,9 @@
                                                 :recordsFiltered="recordsFiltered" @updateOrder="updateOrder">
           <template v-slot:table-body>
             <tr v-for="(row, i) in data" :key="i">
-              <td class="d-sm-table-cell text-break text-sm-start" style="width: 40%;"><a :href="row['url']" target="_blank" class="link-primary">{{ row['url'] }}</a></td>
-              <td class="d-sm-table-cell text-break text-sm-start" style="width: 40%;">{{ row['title'] }}</td>
-              <td class="d-sm-table-cell text-nowrap text-sm-start">{{ row['type'].join(', ') }}</td>
+              <td class="d-sm-table-cell text-break text-sm-start" style="width: 45%;"><a :href="row['url']" target="_blank" class="link-primary">{{ row['url'] }}</a></td>
+              <td class="d-sm-table-cell text-break text-sm-start" style="width: 45%;">{{ row['title'] }}</td>
+<!--              <td class="d-sm-table-cell text-nowrap text-sm-start">{{ row['type'].join(', ') }}</td>-->
               <td class="d-sm-table-cell justify-content-evenly text-sm-center text-nowrap">
                 <router-link class="btn btn-sm link-primary p-0 m-1"
                              :to="{ name: 'urlReport', query: { url: row['url']}, params: {name: name}}" target="_blank">Details
@@ -85,7 +85,7 @@ export default {
         columns: [
           {label: 'URL', name: 'url'},
           {label: 'Title', name: 'title'},
-          {label: 'Type', name: 'type'},
+          // {label: 'Type', name: 'type'},
           {label: 'Actions', name: 'actions', class: 'text-center', sortable: false},
         ],
         lengthMenu: [

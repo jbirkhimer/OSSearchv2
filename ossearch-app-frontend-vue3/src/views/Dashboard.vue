@@ -55,13 +55,13 @@
         <div class="card bg-primary text-white">
           <div class="card-body d-flex flex-column">
             <h5 class="card-title text-uppercase">User's Searches</h5>
-            <span v-if="!loading" class="card-subtitle text-end">Last 30 days</span>
-            <div class="d-flex justify-content-center" v-if="loading">
+            <span v-if="!loadingSearchesCount" class="card-subtitle text-end">Last 30 days</span>
+            <div class="d-flex justify-content-center" v-if="loadingSearchesCount">
               <div class="spinner-border" role="status">
                 <span class="visually-hidden">Loading...</span>
               </div>
             </div>
-            <h2 v-if="!loading" class="card-text text-white text-end mt-auto">
+            <h2 v-if="!loadingSearchesCount" class="card-text text-white text-end mt-auto">
               <i class="fas fa-search float-start"></i>
               <span>{{ numberComma(searchesCount) }}</span>
             </h2>
@@ -274,6 +274,7 @@ export default {
   data() {
     return {
       loading: false,
+      loadingSearchesCount: false,
       error: null,
       scheduledCrawls: null,
       numberOfJobsExecuted: null,
@@ -329,6 +330,7 @@ export default {
   },
   async mounted() {
     this.loading = true
+    this.loadingSearchesCount = true
     await this.getScheduledCrawls()
     await this.getSchedulerStatus()
     await this.getCollections()
@@ -337,8 +339,11 @@ export default {
     // await this.getSolrCounts()
     await this.getSolrCollectionCounts()
     await this.getCrawlLogStats()
-    await this.getSearchLogCounts()
     this.loading = false
+
+    await this.getSearchLogCounts()
+    this.loadingSearchesCount = false
+
   },
   watch: {
     error: {
@@ -406,6 +411,7 @@ export default {
     async getSolrCollectionCounts() {
       await ServerStatusService.getSolrCollectionCounts()
           .then(response => {
+            console.log("getSolrCollectionCounts:", response.data)
             this.solrCounts = response.data.data;
             this.solrCount = response.data.totalCount;
             /*this.solrCount = this.solrCounts.reduce((accumulator, object) => {
