@@ -1,0 +1,41 @@
+# put this file in /etc/systemd/system/ as root
+# below paths assume solr installed in /opt/solr, SOLR_PID_DIR is /data
+# and that all configuration exists in /etc/default/solr.in.sh which is the case if previously installed as an init.d service
+# change port in pid file if differs
+# note that it is configured to auto restart solr if it fails (Restart=on-faliure)
+
+# to switch from systemv (init.d) to systemd, do the following after creating this file:
+# sudo systemctl daemon-reload
+# sudo service solr stop # if already running
+# sudo systemctl enable solr
+# systemctl start solr
+
+[Unit]
+Description=Apache SOLR
+ConditionPathExists=/opt/solr
+After=syslog.target network.target remote-fs.target nss-lookup.target systemd-journald-dev-log.socket
+Before=multi-user.target
+Conflicts=shutdown.target
+StartLimitIntervalSec=60
+
+[Service]
+User=solr
+LimitNOFILE=1048576
+LimitNPROC=1048576
+PIDFile=/run/solr/solr-8983.pid
+Environment=SOLR_INCLUDE=/etc/default/solr.in.sh
+Environment=RUNAS=solr
+Environment=SOLR_INSTALL_DIR=/opt/solr
+
+ExecStart=/opt/solr/bin/solr start
+ExecStop=/opt/solr/bin/solr stop
+
+Restart=on-failure
+RestartSec=5
+
+# Java will exit with 130 for SIGINT and 143 for SIGTERM
+# @see http://journal.thobe.org/2013/02/jvms-and-kill-signals.html
+SuccessExitStatus=130 143
+
+[Install]
+WantedBy=multi-user.target

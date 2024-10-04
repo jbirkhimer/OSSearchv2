@@ -1,0 +1,139 @@
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Jdf explanation
+# Comma-separated list
+#   If the token matches any of the words, then all the words in the list are
+#   substituted including the token.
+# Arrow-separated list (=>)
+#   If the token matches any word on the left of the =>, then the list on the
+#   right is substituted. The original token will not be included unless it is
+#   also in the list on the right.
+
+#-----------------------------------------------------------------------
+#some test synonym mappings unlikely to appear in real input text
+#aaa => aaaa
+#bbb => bbbb1 bbbb2
+#ccc => cccc1,cccc2
+#a\=>a => b\=>b
+#a\,a => b\,b
+#fooaaa,baraaa,bazaaa
+
+# Some synonym groups specific to this example
+#GB,gib,gigabyte,gigabytes
+#MB,mib,megabyte,megabytes
+#Television, Televisions, TV, TVs
+#notice we use "gib" instead of "GiB" so any WordDelimiterFilter coming
+#after us won't split it into two words.
+
+# Synonym mappings can be used for spelling correction too
+#pixima => pixma
+
+# NMNH entomology
+insect,insects,Insecta
+butterfly,butterflies => butterfly,butterflies,Lepidoptera
+moth,moths => moth,moths,Lepidoptera
+grasshopper,cricket,locust,grasshoppers,crickets,locusts => grasshopper,cricket,locust,grasshoppers,crickets,locusts,Orthoptera
+
+# NMNH fishes
+coelacanth,coelacanths => coelacanth,coelacanths,Sarcopterygii,Coelacanthiformes
+catfish,catfishes => catfish,catfishes,Siluriformes
+cod,codfish => cod,codfish,Gadus
+gar,garfish => gar,garfish,Lepisosteiformes
+sturgeon,sturgeons => sturgeon,sturgeons,Acipenseriformes
+pike,pikes => pike,pikes,Esociformes
+mackerel => mackerel,Scombridae
+barracuda,barracudas => barracuda,barracudas,Sphyraenidae
+flyingfish,flyingfishes => flyingfish,flyingfishes,Exocoetidae
+moray,morays => moray,morays,Muraenidae
+conger,congers => conger,congers,Congridae
+wrasse,wrasses => wrasse,wrasses,Labridae
+
+# Birds
+bird,birds => bird,birds,Aves
+duck,ducks => duck,ducks,Anatidae
+goose,geese => goose,geese,Anatidae
+crow,crows => crow,crows,Corvidae
+crane,cranes => crane,cranes,Gruidae
+rail,rails => rail,rails,Rallidae
+gull,seagull,gulls,seagulls => gulls,seagulls,gull,seagull,Larus,Rissa,Xema,Rhodostethia
+tern,terns => tern,terns,Sterna,Anous,Gygis,Chlidonias,Procelsterna
+quail => quail,Colinus,Callipepla,Coturnix,Oreortyx
+grouse => grouse,Lagopus,Tympanuchus,Dendragapus,Bonasa
+turkey,turkeys => turkey,turkeys,Meleagris
+peacock,peacocks => peacock,peacocks,Pavo
+hawk,eagle,hawks,eagles => hawk,eagle,hawks,eagles,Accipitridae,Pandionidae
+parrot,parrots => parrot,parakeet,conure,macaws,parrots,parakeets,conures,macaws,Psittacidae
+heron,egret,herons,egrets => heron,egret,herons,egrets,Ardeidae
+sandpiper,sandpipers => sandpiper,sandpipers,Scolopacidae
+plover,plovers => plover,plovers,Charadriidae
+pigeon,dove,pigeons,doves => pigeon,dove,pigeons,doves,Columbidae
+auk,guillemot,auks,guillemots => auk,guillemot,auks,guillemots,Alcidae
+finch,sparrow,finches,sparrows => finch,sparrow,finches,sparrows,Fringillidae,Ploceidae,Estrildidae
+swallow,martin,swallows,martins => swallow,martin,swallows,martins,Hirundinidae
+blackbird,oriole,grackle,blackbirds,orioles,grackles => blackbird,oriole,grackle,blackbirds,orioles,grackles,Icteridae
+trogon,quetzal,trogons,quetzals => trogon,quetzal,trogons,quetzals,Trogonidae
+gannet,booby,gannets,boobies => gannet,booby,gannets,boobies,Sulidae
+toucan,toucanet,toucans,toucanets => toucan,toucanet,toucans,toucanets,Ramphastidae
+cassowary,cassowaries => cassowary,cassowaries,Casuarius
+emu,emus => emu,emus,Dromaius
+
+# Mammals
+mammal,mammals => mammal,mammals,Mammalia
+narwhal,narwhale => narwhal,narwhale,Monodon
+carnivore,carnivores => carnivore,carnivores,Carnivora
+rodent,rodents => rodent,rodents,Rodentia
+horse,horses => horse,horses,Equus
+rhinocerus,rhinoceruses,rhinoceri => rhinocerus,rhinoceruses,rhinoceri,Rhinocerotidae
+elephant,elephants => elephant,elephants,Elephantidae
+cat,felid,cats,felids => cat,Felidae,felid,cats,felids
+dog,dogs => dog,dogs,Canis
+bat,bats => bat,bats,Chiroptera
+mouse,mice => mouse,mice,Cricetidae,Muridae,Heteromyidae,Nesomyidae
+rat,rats => rat,rats,Cricetidae,Muridae,Heteromyidae,Echimyidae,Dipodidae,Nesomyidae
+mongoose,mongoose,meerkat,meerkats => mongoose,mongoose,meerkat,meerkats,Herpestidae
+cow,cows,cattle => cow,cows,cattle,Bos
+sheep => sheep,Ovis
+reindeer,caribou => reindeer,caribou,Rangifer
+moose => moose,Alces
+pronghorn,pronghorns => pronghorn,pronghorns,Antilocapra
+camel,camels => camel,camels,Camelus
+llama,lama,llamas,lamas => llama,lama,llamas,lamas,Vicugna
+orangutan,orang-utan,orangutans,orang-utans => orangutan,orang-utanorangutans,orang-utans,Pongo
+opossum,possum,opossums,possums => opossum,possum,opossums,possums,Didelphidae,Pseudocheiridae,Burramyidae,Caenolestidae 
+kangaroo,kangaroos => kangaroo,kangaroos,Macropodidae,Potoroidae,Hypsiprymnodontidae
+glider,gliders => glider,gliders,Acrobatidae,Petauridae
+tapir,tapirs => tapir,tapirs,Tapirus
+zebra,zebras => zebra,zebras,burchellii,grevyi,quagga
+hedgehog,hedgehogs => hedgehog,hedgehogs,Erinaceidae
+
+# Herps
+reptile,reptiles => reptile,reptiles,Reptilia
+amphibian,amphibians => amphibian,amphibians,Amphibia
+turtle,turtles => turtle,turtles,Testudines
+tortoise,tortoises => tortoise,tortoises,Testudinidae
+frog,frogs => frog,frogs,Anura,anuran
+toad,toads => toad,toads,Bufonidae
+salamader,salamaders => salamander,salamaders,Caudata
+newt,newts => newt,newts,Caudata
+urodele,urodeles => urodele,urodeles,Caudata
+siren,sirens => siren,sirens,Sirenia,Sirenidae
+caecilian,caecilians => caecilian,caecilians,Gymnophiona
+
+# NMNH Botany
+algae => algae,Rhodophyta,Cyanophyta,Chlorophyta,Bacillariophyta,Phaeophyta,Charophyta,Xanthophyta,Chrysophyta
+dicot,dicots => dicot,dicots,Dicotyledonae
+monocot,monocots => monocot,monocots,Monocotyledonae
+legume,legumes,pea,peas,bean,beans => legume,legumes,pea,peas,bean,beans,Fabaceae
+
+# NMNH IZ
+mollusk,mollusc,mollusca

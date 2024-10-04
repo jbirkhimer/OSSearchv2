@@ -1,0 +1,777 @@
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Jdf explanation
+# Comma-separated list
+#   If the token matches any of the words, then all the words in the list are
+#   substituted including the token.
+# Arrow-separated list (=>)
+#   If the token matches any word on the left of the =>, then the list on the
+#   right is substituted. The original token will not be included unless it is
+#   also in the list on the right.
+
+#-----------------------------------------------------------------------
+#some test synonym mappings unlikely to appear in real input text
+#aaa => aaaa
+#bbb => bbbb1 bbbb2
+#ccc => cccc1,cccc2
+#a\=>a => b\=>b
+#a\,a => b\,b
+#fooaaa,baraaa,bazaaa
+
+# Some synonym groups specific to this example
+GB,gib,gigabyte,gigabytes
+MB,mib,megabyte,megabytes
+Television, Televisions, TV, TVs
+#notice we use "gib" instead of "GiB" so any WordDelimiterFilter coming
+#after us won't split it into two words.
+
+# Synonym mappings can be used for spelling correction too
+#pixima => pixma
+
+
+supernova => supernova,super,nova
+
+# General
+man,men
+woman,women
+
+# Smithsonian
+SI,Smithsonian
+Wright Brothers => Wright Brothers,Wilbur Wright,Orville Wright
+
+# NMNH entomology
+Thysanoptera,thysanopteran => Thysanoptera,thysanopteran,insect
+Phlaeothripidae,phlaeothripid => Phlaeothripidae,phlaeothripid,thrips,insect
+Thripidae,thripid => Thripidae,thripid,thrips,insect
+Phthiraptera,phthirapteran => Phthiraptera,phthirapteran,louse,lice,insect
+Odonata,odonate => Odonata,odonate,insect
+Libellulidae,libellulid => Libellulidae,libellulid,dragonfly,dragonflies,dragon fly,dragon flies,insect
+Gomphidae,gomphid => Gomphidae,gomphid,dragonfly,dragonflies,dragon fly,dragon flies,insect
+Aeshnidae,aeshnid => Aeshnidae,aeshnid,dragonfly,dragonflies,dragon fly,dragon flies,insect
+Corduliidae,corduliid => Corduliidae,corduliid,dragonfly,dragonflies,dragon fly,dragon flies,insect
+Coenagrionidae,coenagrionid => Coenagrionidae,coenagrionid,damselfly,damselflies,damsel fly,damsel flies,insect
+Calopterygidae,calopterygid => Calopterygidae,calopterygid,damselfly,damselflies,damsel fly,damsel flies,insect
+Lestidae,lestid => Lestidae,lestid,damselfly,damselflies,damsel fly,damsel flies,insect
+Lepidoptera,lepidopteran => Lepidoptera,lepidopteran,insect
+Geometridae,geometrid => Geometridae,geometrid,moth,insect
+Noctuidae,noctuid => Noctuidae,noctuid,moth,insect
+Pyralidae,pyralid => Pyralidae,pyralid,moth,insect
+Tortricidae,tortricid => Tortricidae,tortricid,moth,insect
+Arctiidae,arctiid => Arctiidae,arctiid,moth,insect
+Notodontidae,notodontid => Notodontidae,notodontid,moth,insect
+Diptera,dipteran => Diptera,dipteran,fly,flies,insect
+Limoniidae,limoniid => Limoniidae,limoniid,insect
+Tipulidae,tipulid => Tipulidae,tipulid,cranefly,craneflies,crane fly,crane flies,insect
+Tachinidae,tachinid => Tachinidae,tachinid,insect
+Ceratopogonidae,ceratopogonid => Ceratopogonidae,ceratopogonid,biting midge,biting midges,no-see-um,no-see-ums,insect
+Dolichopodidae,dolichopodid,insect
+Culicidae,culicid => Culicidae,culicid,mosquito,insect
+Hymenoptera,hymenopteran => Hymenoptera,hymenopteran,insect
+Ichneumonidae,ichneumonid => Ichneumonidae,ichneumonid,wasp,insect
+Eulophidae,eulophid => Eulophidae,eulophid,wasp,insect
+Braconidae,braconid => Braconidae,braconid,wasp,insect
+Sphecidae,sphecid => Sphecidae,sphecid,wasp,insect
+Vespidae,vespid => Vespidae,vespid,wasp,insect
+Apidae,apid => Apidae,apid,bee,bees,insect
+Formicidae,formicid => Formicidae,formicid,ant,insect
+Megachilidae,megachilid => Megachilidae,megachilid,bee,bees,insect
+Halictidae,halictid => Halictidae,halictid,bee,bees,sweat bee,sweat bees,insect
+Andrenidae,andrenid => Andrenidae,andrenid,bee,bees,insect
+Coleoptera,coleopteran => Coleoptera,coleopteran,beetle,beetles,insect
+Staphylinidae,staphylinid => Staphylinidae,staphylinid,rove beetle,rove beetles,insect
+Curculionidae,curculionid => Curculionidae,curculionid,weevil,insect
+Carabidae,carabid => Carabidae,carabid,insect
+Tenebrionidae,tenebrionid => Tenebrionidae,tenebrionid,darkling beetle,darkling beetles,insect
+Scarabaeidae,scarabaeid => Scarabaeidae,scarabaeid,scarab,scarabs,scarab beetle,scarab beetles,insect
+Chrysomelidae,chrysomelid => Chrysomelidae,chrysomelid,leaf beetle,leaf beetles,insect
+Buprestidae,buprestid => Buprestidae,buprestid,insect
+Coccinellidae,coccinellid => Coccinellidae,coccinellid,ladybug,ladybeetle,ladybeetles,ladybird,ladybird beetle,lady beetle,ladybird beetles,lady beetles,insect
+Hemiptera,hemipteran => Hemiptera,hemipteran,bug,insect
+Aphididae,aphidid => Aphididae,aphidid,aphid,insect
+Miridae,mirid => Miridae,mirid,insect
+Cicadellidae,cicadellid => Cicadellidae,cicadellid,leafhopper,leaf hopper,insect
+Tingidae,tingid => Tingidae,tingid,insect
+Psyllidae,psyllid => Psyllidae,psyllid,insect
+Siphonaptera,siphonapteran => Siphonaptera,siphonapteran,flea,fleas,insect
+Trichoptera,trichopteran => Trichoptera,trichopteran,caddisfly,caddisflies,insect
+Orthoptera,orthopteran => Orthoptera,orthopteran,insect
+Ephemeroptera,ephemeropteran => Ephemeroptera,ephemeropteran,mayfly,mayflies,may fly,may flies,insect
+
+# NMNH fishes
+Cephalaspidomorphi => Cephalaspidomorphi,fish,fishes
+Myxini => Myxini,hagfish,hagfishes,fish,fishes
+petromyzontiform,petromyzontiformes => petromyzontiform,petromyzontiformes,lamprey,fish,fishes
+Chondrichthyes,chondrichthyan => Chondrichthyes,chondrichthyan,fish,fishes
+Carcharhinidae,carcharhinid => Carcharhinidae,carcharhinid,shark,fish,fishes
+Scyliorhinidae,scyliorhinid => Scyliorhinidae,scyliorhinid,shark,fish,fishes
+Triakidae,triakid => Triakidae,triakid,shark,fish,fishes
+Sphyrnidae,sphyrnid => Sphyrnidae,sphyrnid,hammerhead,shark,fish,fishes
+Rhinobatidae,rhinobatid => Rhinobatidae,rhinobatid,guitarfish,guitarfishes,ray,fish,fishes
+Rajidae,rajid => Rajidae,rajid,ray,fish,fishes
+Dasyatidae,dasyatid => Dasyatidae,dasyatid,ray,fish,fishes
+Rajiformes,rajiform => Rajiformes,rajiform,ray,fish,fishes
+Torpediniformes,Torpediniform => Torpediniformes,Torpediniform,ray,fish,fishes
+Osteichthyes,Osteichthyan => Osteichthyes,Osteichthyan,boney fish,boney fishes,fish,fishes
+Actinopterygii,actinopterygian => Actinopterygii,actinopterygian,fish,fishes
+Clupeidae,clupeid => Clupeidae,clupeid,herring,fish,fishes
+Cyprinidae,cyprinid => Cyprinidae,cyprinid,minnow,fish,fishes
+Catostomidae,catostomid => Catostomidae,catostomid,sucker,fish,fishes
+Cobitidae,cobitid => Cobitidae,cobitid,loach,loaches,fish,fishes
+Balitoridae,balitorid => Balitoridae,balitorid,fish,fishes
+Gyrinocheilidae,gyrinocheilid => Gyrinocheilidae,gyrinocheilid,fish,fishes
+Characidae,characid => Characidae,characid,characin,fish,fishes
+Curimatidae,curimatid => Curimatidae,curimatid,fish,fishes
+Crenuchidae,crenuchid => Crenuchidae,crenuchid,fish,fishes
+Lebiasinidae,lebiasinid => Lebiasinidae,lebiasinid,fish,fishes
+Anostomidae,anostomid => Anostomidae,anostomid,fish,fishes
+Erythrinidae,erythrinid => Erythrinidae,erythrinid,fish,fishes
+Alestidae,alestid => Alestidae,alestid,fish,fishes
+Gasteropelecidae,gasteropelecid => Gasteropelecidae,gasteropelecid,fish,fishes
+Ictaluridae,ictalurid => Ictaluridae,ictalurid,catfish,catfishes,fish,fishes
+Loricariidae,loricariid => Loricariidae,loricariid,catfish,catfishes,fish,fishes
+Ariidae,ariid => Ariidae,ariid,catfish,catfishes,fish,fishes
+Heptapteridae,heptapterid => Heptapteridae,heptapterid,catfish,catfishes,fish,fishes
+Pimelodidae,pimelodid => Pimelodidae,pimelodid,catfish,catfishes,fish,fishes
+Callichthyidae,callichthyid => Callichthyidae,callichthyid,catfish,catfishes,fish,fishes
+Bagridae,bagrid => Bagridae,bagrid,catfish,catfishes,fish,fishes
+Doradidae,doradid => Doradidae,doradid,catfish,catfishes,fish,fishes
+Plotosidae,plotosid => Plotosidae,plotosid,catfish,catfishes,fish,fishes
+Muraenidae,muraenid => Muraenidae,muraenid,eel,fish,fishes
+Congridae,congrid => Congridae,congrid,eel,fish,fishes
+Ophichthidae,Ophichthid => Ophichthidae,Ophichthid,eel,fish,fishes
+Anguillidae,anguillid => Anguillidae,anguillid,eel,fish,fishes
+Chlopsidae,chlopsid => Chlopsidae,chlopsid,eel,fish,fishes
+Moringuidae,moringuid => Moringuidae,moringuid,eel,fish,fishes
+Synaphobranchidae,synaphobranchid => Synaphobranchidae,synaphobranchid,eel,fish,fishes
+Nemichthyidae,nemichthyid => Nemichthyidae,nemichthyid,eel,fish,fishes
+Serrivomeridae,serrivomerid => Serrivomeridae,serrivomerid,eel,fish,fishes
+Nettastomatidae,nettastomatid => Nettastomatidae,nettastomatid,eel,fish,fishes
+Paralichthyidae,paralichthyid => Paralichthyidae,paralichthyid,flounder,fish,fishes
+Pleuronectidae,pleuronectid => Pleuronectidae,pleuronectid,flounder,fish,fishes
+Bothidae,bothid => Bothidae,bothid,flounder,fish,fishes
+Cynoglossidae,cynoglossid => Cynoglossidae,cynoglossid,flounder,fish,fishes
+Achinidae,achinid => Achinidae,achinid,flounder,fish,fishes
+Soleidae,soleid => Soleidae,soleid,flounder,fish,fishes
+cottidae,cottid => cottidae,cottid,fish,fishes
+Scorpaenidae,scorpaenid => Scorpaenidae,scorpaenid,scorpion fish,scorpion fishes,fish,fishes
+Triglidae,triglid => Triglidae,triglid,sea robin,sea robins,fish,fishes
+Platycephalidae,platycephalid => Platycephalidae,platycephalid,fish,fishes
+Liparidae,liparid => Liparidae,liparid,snailfish,snailfishes,fish,fishes
+Agonidae,agonid => Agonidae,agonid,fish,fishes
+Myctophidae,myctophid => Myctophidae,myctophid,fish,fishes
+Stomiidae,stomiid => Stomiidae,stomiid,fish,fishes
+Sternoptychidae,sternoptychid => Sternoptychidae,sternoptychid,fish,fishes
+Gonostomatidae,gonostomatid => Gonostomatidae,gonostomatid,fish,fishes
+Poeciliidae,poeciliid => Poeciliidae,poeciliid,fish,fishes
+Fundulidae,fundulid => Fundulidae,fundulid,fish,fishes
+Cyprinodontidae,cyprinodontid => Cyprinodontidae,cyprinodontid,fish,fishes
+Salmonidae,salmonid => Salmonidae,salmonid,fish,fishes
+Coregonidae,coregonid => Coregonidae,coregonid,whitefish,whitefishes,fish,fishes
+Cichlidae,cichlid => Cichlidae,cichlid,fish,fishes
+Lutjanidae,lutjanid => Lutjanidae,lutjanid,snapper,fish,fishes
+Scombridae,scombrid => Scombridae,scombrid,fish,fishes
+Engraulidae,engraulid => Engraulidae,engraulid,anchovy,anchovies,fish,fishes
+Sphyraenidae,sphyraenid => Sphyraenidae,sphyraenid,barracuda,fish,fishes
+Exocoetidae,exocoetid => Exocoetidae,exocoetid,flying fish,flying fishes,fish,fishes
+Gobiidae,gobiid => Gobiidae,gobiid,goby,gobies,fish,fishes
+Pomacentridae,pomacentrid => Pomacentridae,pomacentrid,fish,fishes
+Labridae,labrid => Labridae,labrid,fish,fishes
+Apogonidae,apogonid => Apogonidae,apogonid,fish,fishes
+Blenniidae,blenniid => Blenniidae,blenniid,fish,fishes
+Centrarchidae,centrarchid => Centrarchidae,centrarchid,fish,fishes
+Serranidae,serranid => Serranidae,serranid,fish,fishes
+Acanthuridae,acanthurid => Acanthuridae,acanthurid,fish,fishes
+Scaridae,scarid => Scaridae,scarid,fish,fishes
+Carangidae,carangid => Carangidae,carangid,fish,fishes
+Tripterygiidae,tripterygiid => Tripterygiidae,tripterygiid,fish,fishes
+Eleotridae,eleotrid => Eleotridae,eleotrid,fish,fishes
+Haemulidae,haemulid => Haemulidae,haemulid,fish,fishes
+Sparidae,sparid => Sparidae,sparid,fish,fishes
+Pseudochromidae,pseudochromid => Pseudochromidae,pseudochromid,fish,fishes
+Sciaenidae,sciaenid => Sciaenidae,sciaenid,fish,fishes
+Chaetodontidae,chaetodontid => Chaetodontidae,chaetodontid,fish,fishes
+Labrisomidae,labrisomid => Labrisomidae,labrisomid,fish,fishes
+Lethrinidae,lethrinid => Lethrinidae,lethrinid,fish,fishes
+Siganidae,siganid => Siganidae,siganid,fish,fishes
+Mullidae,mullid => Mullidae,mullid,fish,fishes
+Nemipteridae,nemipterid => Nemipteridae,nemipterid,fish,fishes
+Zoarcidae,zoarcid => Zoarcidae,zoarcid,fish,fishes
+Chaenopsidae,chaenopsid => Chaenopsidae,chaenopsid,fish,fishes
+Nototheniidae,nototheniid => Nototheniidae,nototheniid,fish,fishes
+Callionymidae,callionymid => Callionymidae,callionymid,fish,fishes
+Stichaeidae,stichaeid => Stichaeidae,stichaeid,fish,fishes
+Terapontidae,terapontid => Terapontidae,terapontid,fish,fishes
+Echeneidae,echeneid => Echeneidae,echeneid,fish,fishes
+Mugilidae,mugilid => Mugilidae,mugilid,fish,fishes
+Gempylidae,gempylid => Gempylidae,gempylid,fish,fishes
+Acropomatidae,acropomatid => Acropomatidae,acropomatid,fish,fishes
+Ambassidae,ambassid => Ambassidae,ambassid,fish,fishes
+Plesiopidae,plesiopid => Plesiopidae,plesiopid,fish,fishes
+Priacanthidae,priacanthid => Priacanthidae,priacanthid,fish,fishes
+Embiotocidae,embiotocid => Embiotocidae,embiotocid,fish,fishes
+Ephippidae,ephippid => Ephippidae,ephippid,fish,fishes
+Uranoscopidae,uranoscopid => Uranoscopidae,uranoscopid,fish,fishes
+Pholidae,pholid => Pholidae,pholid,fish,fishes
+Pinguipedidae,pinguipedid => Pinguipedidae,pinguipedid,fish,fishes
+Centropomidae,centropomid => Centropomidae,centropomid,fish,fishes
+Channidae,channid => Channidae,channid,fish,fishes
+Osphronemidae,osphronemid => Osphronemidae,osphronemid,fish,fishes
+Sarcopterygii,sarcopterygian => Sarcopterygii,sarcopterygian,fish,fishes
+
+# Birds
+Anatidae,anatid => Anatidae,anatid,bird
+Corvidae,corvid => Corvidae,corvid,bird
+Gruidae,gruid => Gruidae,gruid,crane,bird
+Rallidae,rallid => Rallidae,rallid,bird
+Picidae,picid => Picidae,picid,wood pecker,woodpecker,bird
+Trochilidae,trochilid => Trochilidae,trochilid,humming bird,humming birds,hummingbird,bird
+Phasianidae,phasianid => Phasianidae,phasianid,pheasant,bird
+Troglodytidae,troglodytid => Troglodytidae,troglodytid,wren,bird
+Accipitridae,accipitrid => Accipitridae,accipitrid,bird
+Turdidae,turdid => Turdidae,turdid,thrush,thrushes,bird
+Psittacidae,psittacid => Psittacidae,psittacid,bird
+Strigidae,strigid => Strigidae,strigid,owl,bird
+Tytonidae,tytonid => Tytonidae,tytonid,owl,bird
+Cuculidae,cuculid => Cuculidae,cuculid,cuckoo,bird
+Ardeidae,ardeid => Ardeidae,ardeid,bird
+Scolopacidae,scolopacid => Scolopacidae,scolopacid,bird
+Charadriidae,charadriid => Charadriidae,charadriid,bird
+Alcedinidae,alcedinid => Alcedinidae,alcedinid,kingisher,bird
+Falconidae,falconid => Falconidae,falconid,falcon,bird
+Columbidae,columbid => Columbidae,columbid,bird
+Alcidae,alcid => Alcidae,alcid,auk,bird
+Fringillidae,fringillid => Fringillidae,fringillid,finch,finches,bird
+Ploceidae,ploceid => Ploceidae,ploceid,finch,finches,bird
+Estrildidae,estrildid => Estrildidae,estrildid,finch,finches,bird
+Sittidae,sittid => Sittidae,sittid,nuthatch,nuthatches,nut hatch,nut hatches,bird
+Hirundinidae,hirundinid => Hirundinidae,hirundinid,swallow,bird
+Icteridae,icterid => Icteridae,icterid,bird
+Trogonidae,trogonid => Trogonidae,trogonid,trogon,bird
+Podicipedidae,podicipedid => Podicipedidae,podicipedid,grebe,grebes,bird
+Bombycillidae,bombycillid => Bombycillidae,bombycillid,waxwing,bird
+Phalacrocoracidae,phalacrocoracid => Phalacrocoracidae,phalacrocoracid,cormorant,bird
+Sulidae,sulid => Sulidae,sulid,bird
+Ramphastidae,ramphastid => Ramphastidae,ramphastid,toucan,bird
+Laniidae,laniid => Laniidae,laniid,shrike,bird
+Cotingidae,cotingid => Cotingidae,cotingid,cotinga,bird
+Bucerotidae,bucerotid => Bucerotidae,bucerotid,hornbill,bird
+Sturnidae,sturnid => Sturnidae,sturnid,starling,bird
+Alaudidae,alaudid => Alaudidae,alaudid,lark,bird
+Gaviidae,gaviid => Gaviidae,gaviid,loon,bird
+Spheniscidae,spheniscid => Spheniscidae,spheniscid,penguin,bird
+Diomedidae,diomedid => Diomedidae,diomedid,albatross,albatrosses,bird
+Pelecanidae,pelecanid => Pelecanidae,pelecanid,pelican,bird
+Ciconiidae,ciconiid => Ciconiidae,ciconiid,stork,bird
+Aramidae,aramid => Aramidae,aramid,limpkin,bird
+Struthionidae,struthionid => Struthionidae,struthionid,ostrich,ostriches,bird
+Rheidae,rheid => Rheidae,rheid,rhea,rheas,bird
+Apterygidae,apterygid => Apterygidae,apterygid,kiwi,bird
+Dromaiidae,dromaiid => Dromaiidae,dromaiid,emu,emus,bird
+Casuariidae,casuariid => Casuariidae,casuariid,cassowary,cassowaries,bird
+
+# Mammals
+Cetacea,cetacean => Cetacea,cetacean,whales,whales,mammal
+Felidae,felid => Felidae,felid,mammal
+Canidae,canid => Canidae,canid,mammal
+Cricetidae,cricetid => Cricetidae,cricetid,mammal
+Muridae,murid => Muridae,murid,mammal
+Heteromyidae,heteromyid => Heteromyidae,heteromyid,mammal
+Nesomyidae,nesomyid => Nesomyidae,nesomyid,mammal
+Echimyidae,echimyid => Echimyidae,echimyid,mammal
+Dipodidae,dipodid => Dipodidae,dipodid,mammal
+Geomyidae,geomyid => Geomyidae,geomyid,gopher,mammal
+Sciuridae,sciurid => Sciuridae,sciurid,squirrel,mammal
+Erethizontidae,erethizontid => Erethizontidae,erethizontid,porcupine,mammal
+Histricidae,histricid => Histricidae,histricid,porcupine,mammal
+Castoridae,castorid => Castoridae,castorid,beaver,mammal
+Mustelidae,mustelid => Mustelidae,mustelid,weasel,mammal
+Ursidae,ursid =>Ursidae,ursid,bear,mammal
+Procyonidae,procyonid => Procyonidae,procyonid,raccoon,mammal
+Mephitidae,mephitid => Mephitidae,mephitid,skunk,mammal
+Otariidae,otariid => Otariidae,otariid,sea lion,mammal
+Phocidae,phocid => Phocidae,phocid,seal,mammal
+Odobenidae,odobenid => Odobenidae,odobenid,walrus,walruses,mammal
+Herpestidae,herpestid => Herpestidae,herpestid,mammal
+Hyaenidae,hyaenid => Hyaenidae,hyaenid,hyaena,mammal
+Ailuridae,ailurid => Ailuridae,ailurid,panda,pandas,mammal
+Soricidae,soricid => Soricidae,soricid,shrew,mammal
+Talpidae,talpid => Talpidae,talpid,mole,moles,mammal
+Leporidae,leporid => Leporidae,leporid,rabbit,hare,hares,mammal
+Bovidae,bovid => Bovidae,bovid,mammal
+Cervidae,cervid => Cervidae,cervid,deer,mammal
+Suidae,suid => Suidae,suid,pig,hog,boar,mammal
+Tayassuidae,tayassuid => Tayassuidae,tayassuid,peccary,peccaries,mammal
+Camelidae,camelid => Camelidae,camelid,mammal
+Giraffidae,giraffid => Giraffidae,giraffid,giraffe,mammal
+Lemuridae,lemurid => Lemuridae,lemurid,lemur,mammal
+Indridae,indrid => Indridae,indrid,indri,indris,lemur,mammal
+Daubentoniidae,daubentoniid => Daubentoniidae,daubentoniid,aye-aye,aye aye,lemur,mammal
+Lepilemuridae,lepilemurid => Lepilemuridae,lepilemurid,lemur,mammal
+Lorisidae,lorisid => Lorisidae,lorisid,loris,lemur,mammal
+Cebidae,cebid => Cebidae,cebid,marmoset,monkey,mammal
+Hylobatidae,hylobatid => Hylobatidae,hylobatid,gibbon,ape,mammal
+Cercopithecidae,cercopithecid=> Cercopithecidae,cercopithecid,monkey,mammal
+Atelidae,atelid => Atelidae,atelid,monkey,mammal
+Aotidae,aotid => Aotidae,aotid,monkey,owl monkey,night monkey,mammal
+Pitheciidae,pitheciid => Pitheciidae,pitheciid,monkey,mammal
+Hominidae,hominid => Hominidae,hominid,ape,mammal
+Didelphidae,didelphid => Didelphidae,didelphid,opossum,marsupial,mammal
+Caenolestidae,caenolestid => Caenolestidae,caenolestid,marsupial,mammal
+Pseudocheiridae,pseudocheirid =>Pseudocheiridae,pseudocheirid,marsupial,mammal
+Burramyidae,burramyid => Burramyidae,burramyid,marsupial,mammal
+Macropodidae,macropodid => Macropodidae,macropodid,marsupial,mammal
+Potoroidae,potoroid => Potoroidae,potoroid,marsupial,mammal
+Hypsiprymnodontidae,hypsiprymnodontid => Hypsiprymnodontidae,hypsiprymnodontid,marsupial,mammal
+Phalangeridae,phalangerid => Phalangeridae,phalangerid,phalanger,honey glider,marsupial,mammal
+Peramelidae,peramelid => Peramelidae,peramelid,bandicoot,marsupial,mammal
+Vombatidae,vombatid => Vombatidae,vombatid,wombat,marsupial,mammal
+Phascolarctidae,phascolarctid => Phascolarctidae,phascolarctid,koala,koalas,marsupial,mammal
+Acrobatidae,acrobatid => Acrobatidae,acrobatid,marsupial,mammal
+Petauridae,petaurid => Petauridae,petaurid,marsupial,mammal
+Erinaceidae,erinaceid => Erinaceidae,erinaceid,mammal
+Myrmecophagidae,myrmecophagid => Myrmecophagidae,myrmecophagid,anteater,mammal
+Cyclopedidae,cyclopedid => Cyclopedidae,cyclopedid,anteater,mammal
+Bradypodidae,bradypodid => Bradypodidae,bradypodid,sloth,mammal
+Megalonychidae,megalonychid => Megalonychidae,megalonychid,sloth,mammal
+Dasypodidae,dasypodid => Dasypodidae,dasypodid,armadillo,armadilloes,mammal
+Trichechidae,trichechid => Trichechidae,trichechid,manatee,manatees,mammal
+Dugongidae,dugongid => Dugongidae,dugongid,dugong,mammal
+Hyracoidea,hyracoid => Hyracoidea,hyracoid,hyrax,hyraxes,mammal
+Pholidota => Pholidota,pangolin,mammal
+Tubulidentata => Tubulidentata,aardvark,aardvark,mammal
+Ornithorhynchidae,ornithorhynchid => Ornithorhynchidae,ornithorhynchid,duck-billed platypus,platypus,mammal
+Tachyglossidae,tachyglossid => Tachyglossidae,tachyglossid,echidna,echidnas,mammal
+
+# Herps
+Bufonidae,bufonid => Bufonidae,bufonid,toad,amphibian
+Sirenidae,sirenid => Sirenidae,sirenid,siren,amphibian
+Testudinidae,testudinid => Testudinidae,testudinid,tortoise,tortoises,reptile
+Scincidae,scincid => Scincidae,scincid,skink,lizard,reptile
+Chamaeleonidae,chamaeleonid => Chamaeleonidae,chamaeleonid,chameleon,lizard,reptile
+Teiidae,teiid => Teiidae,teiid,lizard,reptile
+Agamidae,agamid => Agamidae,agamid,lizard,reptile
+Lacertidae,lacertid => Lacertidae,lacertid,lizard,reptile
+Diploglossidae,diploglossid => Diploglossidae,diploglossid,lizard,reptile
+Gekkoninae => Gekkoninae,gecko,lizard,reptile
+Sphaerodactylinae => Sphaerodactylinae,gecko,lizard,reptile
+Phyllodactylinae => Phyllodactylinae,gecko,lizard,reptile
+Boidae,boid => Boidae,boid,boa,boas,snake,reptile
+Pythonidae,pythonid => Pythonidae,pythonid,python,snake,reptile
+Colubridae,colubrid => Colubridae,colubrid,snake,reptile
+Viperidae,viperid => Viperidae,viperid,viper,snake,reptile
+Elapidae,elapid => Elapidae,elapid,snake,reptile
+Leptotyphlopidae,leptotyphlopid => Leptotyphlopidae,leptotyphlopid,snake,reptile
+Alligatoridae,alligatorid => Alligatoridae,alligatorid,alligator,reptile
+Crocodylidae,crocodylid => Crocodylidae,crocodylid,crocodile,reptile
+Iguaninae => Iguaninae,lizard,reptile
+Polychrotinae => Polychrotinae,lizard,reptile
+Phrynosomatinae => Phrynosomatinae,lizard,reptile
+Tropidurinae => Tropidurinae,lizard,reptile
+Gymnophthalmidae => Gymnophthalmidae,lizard,reptile
+Hoplocercinae => Hoplocercinae,lizard,reptile
+Phrynosoma,horned toad,horny toad,horned lizard,horned toads,horny toads,horned lizards => Phrynosoma,horned lizard,horned lizards,horned toad,horned toads,horny toad,horny toads,lizard,reptile
+Sphenodon => Sphenodon,tuatara,tuataras,reptile
+Anolis => Anolis,anole,anoles,lizard,reptile
+Crotalus,Crotalidae,crotalid => Crotalus,Crotalidae,crotalid,rattlesnake,snake,reptile
+
+# NMNH Anthropology
+archeology,archaeology
+
+# NMNH Botany
+protist,protists,Protista
+fungus,funguses,fungi
+Plantae => Plantae,plant
+rhodophyte,rhodophytes,Rhodophyta => rhodophyte,rhodophytes,Rhodophyta,alga,algae,plant
+cyanophyte,cyanophytes,Cyanophyta => cyanophyte,cyanophytes,Cyanophyta,alga,algae,plant
+chlorophyte,chlorophytes,Chlorophyta => chlorophyte,chlorophytes,Chlorophyta,alga,algae,plant
+phaeophyte,phaeophytes,Phaeophyta => phaeophyte,phaeophytes,Phaeophyta,alga,algae,plant
+charophyte,charophytes,Charophyta => charophyte,charophytes,Charophyta,alga,algae,plant
+xanthophyte,xanthophytes,Xanthophyta => xanthophyte,xanthophytes,Xanthophyta,alga,algae,plant
+hepatophyte,hepatophytes,Hepatophyta => hepatophyte,hepatophytes,Hepatophyta,liverwort,plant
+chrysophyte,chrysophytes,Chrysophyta => chrysophyte,chrysophytes,Chrysophytaalga,algae,plant
+pyrrhophyte,pyrrhophytes,Pyrrhophyta => pyrrhophyte,pyrrhophytes,Pyrrhophyta,dinoflagellate,dinoflagellates
+bacillariophyte,bacillariophytes,Bacillariophyta => bacillariophyte,bacillariophytes,Bacillariophyta,diatom,plant
+pteridophyte,pteridophytes,Pteridophyta,Pteridophytae => pteridophyte,pteridophytes,Pteridophyta,Pteridophytae,fern,plant
+Orchidales => Orchidales,orchid,plant
+Asterales => Asterales,aster,asters,plant
+Liliaceae => Liliaceae,lily,lilies,plant
+Poaceae => Poaceae,grass,grasses,plant
+Compositae => Compositae,composites,plant
+Cactaceae => Cactaceae,cactus,cactuses,cacti,plant
+Commelinaceae => Commelinaceae,spiderwort,plant
+Arecaceae => Arecaceae,palm,plant
+Cyperaceae => Cyperaceae,sedge,sedges,plant
+Begoniaceae => Begoniaceae,begonia,begonias,plant
+
+# NMNH IZ
+Arthropoda,arthropod
+Ostracoda,ostracod => Ostracoda,ostracod,Arthropoda,arthropod
+Amphipoda,amphipod => Amphipoda,amphipod,Arthropoda,arthropod
+Isopoda,isopod => Isopoda,isopod,Arthropoda,arthropod
+cumacean,Cumacea => cumacean,Cumacea,Arthropoda,arthropod
+stomatopod,Stomatopoda => stomatopod,Stomatopoda,Arthropoda,arthropod
+Cyclopoida,cyclopoid => Cyclopoida,cyclopoid,copepod,Arthropoda,arthropod
+Monstrilloida,montstrilloid => Monstrilloida,montstrilloid,copepod,Arthropoda,arthropod
+Mormonilloida,mormonilloid => Mormonilloida,mormonilloid,copepod,Arthropoda,arthropod
+calanoid,Calanoida => calanoid,Calanoida,copepod,Arthropoda,arthropod
+siphonostomatoid,Siphonostomatoida => siphonostomatoid,Siphonostomatoida,copepod,Arthropoda,arthropod
+poecilostomatoid,Poecilostomatoida => poecilostomatoid,Poecilostomatoida,copepod,Arthropoda,arthropod
+harpacticoid,Harpacticoida => harpacticoid,Harpacticoida,copepod,Arthropoda,arthropod
+penaeid,Penaeidae => penaeid,Penaeidae,shrimp,Arthropoda,arthropod
+sergestid,Sergestidae => sergestid,Sergestidae,shrimp,Arthropoda,arthropod
+pandalid,Pandalidae => pandalid,Pandalidae,shrimp,Arthropoda,arthropod
+hippolytid,Hippolytidae => hippolytid,Hippolytidae,shrimp,Arthropoda,arthropod
+palaemonid,Palaemonidae => palaemonid,Palaemonidae,shrimp,Arthropoda,arthropod
+oplophorid,Oplophoridae => oplophorid,Oplophoridae,shrimp,Arthropoda,arthropod
+crangonid,Crangonidae => crangonid,Crangonidae,shrimp,Arthropoda,arthropod
+solenocerid,Solenoceridae => solenocerid,Solenoceridae,shrimp,Arthropoda,arthropod
+benthesicymid,Benthesicymidae => benthesicymid,Benthesicymidae,shrimp,Arthropoda,arthropod
+aristeid,Aristeidae => aristeid,Aristeidae,shrimp,Arthropoda,arthropod
+alpheid,Alpheidae => alpheid,Alpheidae,shrimp,Arthropoda,arthropod
+cambarid,Cambaridae => cambarid,Cambaridae,crayfish,crayfishes,Arthropoda,arthropod
+astacid,Astacidae => astacid,Astacidae,crayfish,crayfishes,Arthropoda,arthropod
+parastacid,Parastacidae => parastacid,Parastacidae,crayfish,crayfishes,Arthropoda,arthropod
+majid,Majidae => majid,Majidae,crab,Arthropoda,arthropod
+portunid,Portunidae => portunid,Portunidae,swimming crab,swimming crabs,crab,Arthropoda,arthropod
+xanthid,Xanthidae => xanthid,Xanthidae,crab,Arthropoda,arthropod
+cancrid,Cancridae => cancrid,Cancridae,crab,Arthropoda,arthropod
+pilumnid,Pilumnidae => pilumnid,Pilumnidae,crab,Arthropoda,arthropod
+ocypodid,Ocypodidae => ocypodid,Ocypodidae,crab,Arthropoda,arthropod
+grapsid,Grapsidae => grapsid,Grapsidae,crab,Arthropoda,arthropod
+trapeziids,Trapeziidae => trapeziids,Trapeziidae,crab,Arthropoda,arthropod
+raninid,Raninidae => raninid,Raninidae,crab,Arthropoda,arthropod
+cryptochirid,Cryptochiridae => cryptochirid,Cryptochiridae,crab,Arthropoda,arthropod
+pagurid,Paguridae => pagurid,Paguridae,crab,Arthropoda,arthropod
+diogenid,Diogenidae => diogenid,Diogenidae,crab,Arthropoda,arthropod
+pylochelid,Pylochelidae => pylochelid,Pylochelidae,crab,Arthropoda,arthropod
+porcellanid,Porcellanidae => porcellanid,Porcellanidae,crab,Arthropoda,arthropod
+lithodid,Lithodidae => lithodid,Lithodidae,crab,Arthropoda,arthropod
+hapalogastrid,Hapalogastridae => hapalogastrid,Hapalogastridae,crab,Arthropoda,arthropod
+chirostylid,Chirostylidae => chirostylid,Chirostylidae,crab,Arthropoda,arthropod
+aeglid,Aeglidae => aeglid,Aeglidae,crab,Arthropoda,arthropod
+balanid,Balanidae => balanid,Balanidae,barnacle,barnacles,Arthropoda,arthropod
+trypetesid,Trypetesidae => trypetesid,Trypetesidae,barnacle,barnacles,Arthropoda,arthropod
+pyrgomatid,Pyrgomatidae => pyrgomatid,Pyrgomatidae,barnacle,barnacles,Arthropoda,arthropod
+bathylasmatid,Bathylasmatidae => bathylasmatid,Bathylasmatidae,barnacle,barnacles,Arthropoda,arthropod
+eolepadid,Eolepadidae => eolepadid,Eolepadidae,barnacle,barnacles,Arthropoda,arthropod
+Trilobita,trilobite,trilobites => Trilobita,trilobite,trilobites,Arthropoda,arthropod
+Gastopoda,gastropod => Gastopoda,gastropod,snail,mollusc,mollusca
+Pelecypoda,pelecypod => Pelecypoda,pelecypod,mollusc,mollusca
+bivalve,bivalves,Bivalvia => bivalve,bivalves,Bivalvia,mollusc,mollusca
+Cephalopoda,cephalopod => Cephalopoda,cephalopod,mollusc,mollusca
+sepiid,Sepiidae => sepiid,Sepiidae,cuttlefish,cuttlefishes,Cephalopoda,cephalopod,mollusc,mollusca
+sepiadariid,Sepiadariidae => sepiadariid,Sepiadariidae,cuttlefish,cuttlefishes,Cephalopoda,cephalopod,mollusc,mollusca
+enoploteuthid,Enoploteuthidae => enoploteuthid,Enoploteuthidae,squid,Cephalopoda,cephalopod,mollusc,mollusca
+cranchiid,Cranchiidae => cranchiid,Cranchiidae,squid,Cephalopoda,cephalopod,mollusc,mollusca
+loliginid,Loliginidae => loliginid,Loliginidae,squid,Cephalopoda,cephalopod,mollusc,mollusca
+ommastrephid,Ommastrephidae => ommastrephid,Ommastrephidae,squid,Cephalopoda,cephalopod,mollusc,mollusca
+onychoteuthid,Onychoteuthidae => onychoteuthid,Onychoteuthidae,squid,Cephalopoda,cephalopod,mollusc,mollusca
+histioteuthid,Histioteuthidae => histioteuthid,Histioteuthidae,squid,Cephalopoda,cephalopod,mollusc,mollusca
+mastigoteuthid,Mastigoteuthidae => mastigoteuthid,Mastigoteuthidae,squid,Cephalopoda,cephalopod,mollusc,mollusca
+bathyteuthid,Bathyteuthidae => bathyteuthid,Bathyteuthidae,squid,Cephalopoda,cephalopod,mollusc,mollusca
+chtenopterygid,Chtenopterygidae => chtenopterygid,Chtenopterygidae,squid,Cephalopoda,cephalopod,mollusc,mollusca
+chiroteuthid,Chiroteuthidae => chiroteuthid,Chiroteuthidae,squid,Cephalopoda,cephalopod,mollusc,mollusca
+architeuthid,architeuthida,Architeuthidae => architeuthid,architeuthida,Architeuthidae,giant squid,squid,Cephalopoda,cephalopod,mollusc,mollusca
+octopoteuthid,Octopoteuthidae => octopoteuthid,Octopoteuthidae,squid,Cephalopoda,cephalopod,mollusc,mollusca
+octopodid,Octopodidae => octopodid,Octopodidae,octopus,octopuses,octopi,octopod,Cephalopoda,cephalopod,mollusc,mollusca
+bolitaenid,Bolitaenidae => bolitaenid,Bolitaenidae,octopus,octopuses,octopi,octopod,Cephalopoda,cephalopod,mollusc,mollusca
+argonautid,Argonautidae => argonautid,Argonautidae,octopus,octopuses,octopi,octopod,Cephalopoda,cephalopod,mollusc,mollusca
+tremoctopodid,Tremoctopodidae => tremoctopodid,Tremoctopodidae,octopus,octopuses,octopi,octopod,Cephalopoda,cephalopod,mollusc,mollusca
+alloposid,Alloposidae => alloposid,Alloposidae,octopus,octopuses,octopi,octopod,Cephalopoda,cephalopod,mollusc,mollusca
+opisthoteuthid,Opisthoteuthidae => opisthoteuthid,Opisthoteuthidae,octopus,octopuses,octopi,octopod,Cephalopoda,cephalopod,mollusc,mollusca
+ocythoid,Ocythoidae => ocythoid,Ocythoidae,octopus,octopuses,octopi,octopod,Cephalopoda,cephalopod,mollusc,mollusca
+stauroteuthid,Stauroteuthidae => stauroteuthid,Stauroteuthidae,octopi,octopod,Cephalopoda,cephalopod,mollusc,mollusca
+cirroteuthid,Cirroteuthidae => cirroteuthid,Cirroteuthidae,octopi,octopod,Cephalopoda,cephalopod,mollusc,mollusca
+amphitretid,Amphitretidae => amphitretid,Amphitretidae,octopi,octopod,Cephalopoda,cephalopod,mollusc,mollusca
+nautilid,Nautilidae => nautilid,Nautilidae,nautilus,nautiluses,Cephalopoda,cephalopod,mollusc,mollusca
+scaphopod,Scaphopoda => scaphopod,Scaphopoda,tusk shell,mollusc,mollusca
+annelid,Annelida => annelid,Annelida,worm
+polychaete,polychaetes,Polychaeta => polychaete,polychaetes,Polychaeta,worm
+oligochaete,oligochaetes,Oligochaeta => oligochaete,oligochaetes,Oligochaeta,worm
+hirudinean,Hirudinea => hirudinean,Hirudinea,leech,leeches
+Asteroidea,asteroid => Asteroidea,asteroid,sea star,starfish,echinoderm,echinodermata
+Ophiuroidea,ophiuroid => Ophiuroidea,ophiuroid,brittle star,echinoderm,echinodermata
+Echinoidea,echinoid => Echinoidea,echinoid,echinoderm,echinodermata
+Holothuroidea,holothuroid,holothurean => Holothuroidea,holothuroid,holothurean,sea cucumber,echinoderm,echinodermata
+Crinoidea,crinoid => Crinoidea,crinoid,sea lily,sea lilies,feather star,echinoderm,echinodermata
+bryozoa,bryozoan
+nematode,nematodes,Nematoda
+caryophylliid,Caryophylliidae => caryophylliid,Caryophylliidae,coral,cnidaria,cnidarian
+faviid,Faviidae => faviid,Faviidae,coral,cnidaria,cnidarian
+acroporid,Acroporidae => acroporid,Acroporidae,coral,cnidaria,cnidarian
+dendrophylliid,Dendrophylliidae => dendrophylliid,Dendrophylliidae,coral,cnidaria,cnidarian
+poritid,Poritidae => poritid,Poritidae,coral,cnidaria,cnidarian
+flabellid,Flabellidae => flabellid,Flabellidae,coral,cnidaria,cnidarian
+pocilloporid,Pocilloporidae => pocilloporid,Pocilloporidae,coral,cnidaria,cnidarian
+agariciid,Agariciidae => agariciid,Agariciidae,coral,cnidaria,cnidarian
+fungiid,Fungiidae => fungiid,Fungiidae,coral,cnidaria,cnidarian
+oculinid,Oculinidae => oculinid,Oculinidae,coral,cnidaria,cnidarian
+Porifera,poriferan => Porifera,poriferan,sponge,sponges
+
+# NAA
+Navaho,Navajo,Navahos,Navajos
+
+# History
+World War I,WW I,Great War,World War\, 1914-1918,WWI
+World War II,WW II,World War\, 1939-1945,WWII
+
+# Asia
+sri lanka => sri lanka,asia
+new guinea => new guinea,asia
+papua new guinea => papua new guinea,asia,oceania,pacific
+united arab emirates => united arab emirates,asia
+Afghanistan => Afghanistan,asia
+Armenia => Armenia,asia
+Azerbaijan => Azerbaijan,asia
+Bahrain => Bahrain,asia
+Bangladesh => Bangladesh,asia
+Bhutan => Bhutan,asia
+Brunei => Brunei,asia
+Burma => Burma,asia
+Cambodia => Cambodia,asia
+China => China,asia
+Cyprus => Cyprus,asia
+Timor => Timor,asia
+India => India,asia
+Indonesia => Indonesia,asia
+Iran => Iran,asia
+Iraq => Iraq,asia
+Israel => Israel,asia
+Japan => Japan,asia
+Jordan => Jordan,asia
+Kazakhstan => Kazakhstan,asia
+Korea => Korea,asia
+Kuwait => Kuwait,asia
+Kyrgyzstan => Kyrgyzstan,asia
+Laos => Laos,asia
+Lebanon => Lebanon,asia
+Malaysia => Malaysia,asia
+Maldives => Maldives,asia
+Mongolia => Mongolia,asia
+Myanmar => Myanmar,asia
+Burma => Burma,asia
+Nepal => Nepal,asia
+Oman => Oman,asia
+Pakistan => Pakistan,asia
+Palestine => Palestine,asia
+Philippines => Philippines,asia,oceania,pacific
+Qatar => Qatar,asia
+Russia => Russia,asia,europe
+Singapore => Singapore,asia
+Korea => Korea,asia
+Ceylon => Ceylon,asia
+Syria => Syria,asia
+Taiwan => Taiwan,asia
+Tajikistan => Tajikistan,asia
+Thailand => Thailand,asia
+Turkey => Turkey,asia
+Turkmenistan => Turkmenistan,asia
+Uzbekistan=> Uzbekistan,asia
+Vietnam => Vietnam,asia
+Yemen => Yemen,asia
+Siberia => Siberia,asia
+
+# North America
+Aruba => Aruba,south america,north america,caribbean
+Antigua => Antigua,north america,caribbean
+Barbuda => Barbuda,north america,caribbean
+Bahamas => Bahamas,north america,caribbean
+Barbados => Barbados,north america,caribbean
+Belize => Belize,north america,central america
+Bermuda => Bermuda,north america
+Canada => Canada,north america
+Cayman Islands => Cayman Islands,north america,caribbean
+Costa Rica => Costa Rica,north america,central america
+Cuba => Cuba,north america,caribbean
+Dominica => Dominica,north america,caribbean
+Dominican Republic => Dominican Republic,north america,caribbean
+El Salvador => El Salvador,north america,central america
+Greenland => Greenland,north america,europe
+Grenada => Grenada,north america,caribbean
+Guadeloupe => Guadeloupe,north america,caribbean
+Guatemala => Guatemala,north america,central america
+Haiti => Haiti,north america,caribbean
+Honduras => Honduras,north america,caribbean
+Jamaica => Jamaica,north america,caribbean
+Martinique => Martinique,north america,caribbean
+Mexico => Mexico,north america,central america
+Montserrat => Montserrat,north america,caribbean
+Netherlands Antilles => Netherlands Antilles,north america,caribbean
+Nicaragua => Nicaragua,north america,central america
+Panama => Panama,north america,central america,south america
+Puerto Rico => Puerto Rico,north america,caribbean
+Hispaniola => Hispaniola,north america,caribbean
+Saint Kitts and Nevis => Saint Kitts and Nevis,north america,caribbean
+Saint Lucia => Saint Lucia,north america,caribbean
+Saint Pierre and Miquelon => Saint Pierre and Miquelon,north america
+Saint Vincent and the Grenadines => Saint Vincent and the Grenadines,north america,caribbean
+Turks and Caicos  => Turks and Caicos,north america,caribbean
+United States => United States,north america
+United States of America => United States of America,north america
+USA => USA,north america
+Virgin Islands => Virgin Islands,north america,caribbean
+
+# South America
+Tobago => Tobago,south america,caribbean
+Trinidad => Trinidad,south america,caribbean
+Argentina => Argentina,south america
+Bolivia => Bolivia,south america
+Brazil => Brazil,south america
+Chile => Chile,south america
+Colombia => Colombia,south america
+Ecuador => Ecuador,south america
+French Guiana => French Guiana,south america
+French Guyana => French Guyana,south america
+Guyana => Guyana,south america
+Paraguay => Paraguay,south america
+Peru => Peru,south america
+Suriname => Suriname,south america
+Uruguay => Uruguay,south america
+Venezuela => Venezuela,south america
+
+# Africa
+Algeria => Algeria,africa
+Angola => Angola,africa
+Benin => Benin,africa
+Botswana => Botswana,africa
+Burkina Faso => Burkina Faso,africa
+Burundi => Burundi,africa
+Cameroon => Cameroon,africa
+Cape Verde => Cape Verde,africa
+Chad => Chad,africa
+Comoros => Comoros,africa
+Congo => Congo,africa
+Djibouti => Djibouti,africa
+Egypt => Egypt,africa
+Equatorial Guinea => Equatorial Guinea,africa
+Eritrea => Eritrea,africa
+Ethiopia => Ethiopia,africa
+Gabon => Gabon,africa
+Gambia => Gambia,africa
+Ghana => Ghana,africa
+Guinea => Guinea,africa
+Ivory Coast => Ivory Coast,africa
+Kenya => Kenya,africa
+Lesotho => Lesotho,africa
+Liberia => Liberia,africa
+Libya => Libya,africa
+Madagascar => Madagascar,africa
+Malagasy Republic => Malagasy Republic,africa
+Malawi => Malawi,africa
+Mali => Mali,africa
+Mauritania => Mauritania,africa
+Mauritius => Mauritius,africa
+Mayotte => Mayotte,africa
+Morocco => Morocco,africa
+Mozambique => Mozambique,africa
+Nambia => Nambia,africa
+Namibia => Namibia,africa
+Niger => Niger,africa
+Nigeria => Nigeria,africa
+Seychelles => Seychelles,africa
+Rhodesia => Rhodesia,africa
+Rwanda => Rwanda,africa
+Saint Helena => Saint Helena,africa
+Sao Tome and Principe => Sao Tome and Principe,africa
+Senegal => Senegal,africa
+Sierra Leone => Sierra Leone,africa
+Somalia => Somalia,africa
+Sudan => Sudan,africa
+Swaziland => Swaziland,africa
+Tanganyika => Tanganyika,africa
+Tanzania => Tanzania,africa
+Togo => Togo,africa
+Tunisia => Tunisia,africa
+Uganda => Uganda,africa
+Western Sahara => Western Sahara,africa
+Zaire => Zaire,africa
+Zambia => Zambia,africa
+Zimbabwe => Zimbabwe,africa
+
+# Europe
+Albania => Albania,europe
+Austria => Austria,europe
+Belgium => Belgium,europe
+Bosnia => Bosnia,europe
+Herzegovina => Herzegovina,europe
+Bulgaria => Bulgaria,europe
+Croatia => Croatia,europe
+Cyprus => Cyprus,europe,asia
+Czech => Czech,europe
+Czechoslovakia => Czechoslovakia,europe
+Denmark => Denmark,europe
+Estonia => Estonia,europe
+Finland => Finland,europe
+France => France,europe
+Germany => Germany,europe
+Gibraltar => Gibraltar,europe
+England => England,United Kingdom,europe
+Scotland => Scotland,United Kingdom,europe
+Wales => Wales,United Kingdom,europe
+Northern Ireland => Northern Ireland,United Kingdom,europe
+Guernsey => Guernsey,United Kingdom,europe
+Isle of Man => Isle of Man,United Kingdom,europe
+Greece => Greece,europe
+Hungary => Hungary,europe
+Iceland  => Iceland,europe
+Ireland  => Ireland,europe
+Italy => Italy,europe
+Latvia => Latvia,europe
+Liechtenstein => Liechtenstein,europe
+Lithuania => Lithuania,europe
+Luxembourg => Luxembourg,europe
+Macedonia => Macedonia,europe
+Malta => Malta,europe
+Moldova => Moldova,europe
+Monaco => Monaco,europe
+Montenegro => Montenegro,europe
+Netherlands => Netherlands,europe
+Norway => Norway,europe
+Poland => Poland,europe
+Portugal => Portugal,europe
+Romania => Romania,europe
+Serbia => Serbia,europe
+Slovakia => Slovakia,europe
+Slovenia => Slovenia,europe
+Spain => Spain,europe
+Sweden => Sweden,europe
+Switzerland => Switzerland,europe
+Ukraine => Ukraine,europe
+USSR => USSR,europe
+Union of Soviet Socialist Republics => Union of Soviet Socialist Republics,europe
+United Kingdom => United Kingdom,europe
+
+# Oceania, Pacific
+American Samoa => American Samoa,oceania,pacific
+Australia => Australia,oceania,pacific
+British Solomon Islands => British Solomon Islands,oceania,pacific
+Caroline Islands => Caroline Islands,oceania,pacific
+Cook Islands => Cook Islands,oceania,pacific
+East Timor => East Timor,oceania,pacific
+Fiji => Fiji,oceania,pacific
+Polynesia => Polynesia,oceania,pacific
+Guam => Guam,oceania,pacific
+Marianas Islands => Marianas Islands,oceania,pacific
+Marshall Islands => Marshall Islands,oceania,pacific
+Micronesia => Micronesia,oceania,pacific
+New Caledonia => New Caledonia,oceania,pacific
+New Guinea => New Guinea,oceania,pacific
+New Zealand => New Zealand,oceania,pacific
+Palau => Palau,oceania,pacific
+Samoa => Samoa,oceania,pacific
+Solomon Islands => Solomon Islands,oceania,pacific
+Tokelau => Tokelau,oceania,pacific
+Tonga => Tonga,oceania,pacific
+Tuvalu => Tuvalu,oceania,pacific
+Vanuatu => Vanuatu,oceania,pacific
+Hawaii => Hawaii,oceania,pacific
