@@ -123,8 +123,6 @@ public class MoreIndexingFilter implements IndexingFilter {
 //  private static Pattern charsetPattern = Pattern.compile("charset=\\s*([a-z][_\\-0-9a-z]*)", Pattern.CASE_INSENSITIVE);
 //  private static Pattern charsetPatternHTML5 = Pattern.compile("<meta\\s+charset\\s*=\\s*[\"']?([a-z][_\\-0-9a-z]*)[^>]*>", Pattern.CASE_INSENSITIVE);
 
-  private static String collectionIDs;
-
   public NutchDocument filter(NutchDocument doc, Parse parse, Text url,
       CrawlDatum datum, Inlinks inlinks) throws IndexingException {
 
@@ -338,6 +336,8 @@ public class MoreIndexingFilter implements IndexingFilter {
 
   private NutchDocument addCollectionID(NutchDocument doc, ParseData data, String url, CrawlDatum datum) {
 
+    String collectionIDs = conf.get("moreIndexingFilter.collectionIDs", "0");
+
     if (collectionIDs != null) {
       Map<String, Object> fieldModifier = new LinkedHashMap<>(1);
       fieldModifier.put("add", collectionIDs.split(","));
@@ -397,8 +397,6 @@ public class MoreIndexingFilter implements IndexingFilter {
         LOG.error("Failed to load resource: date-styles.txt");
       }
     }
-
-    collectionIDs = conf.get("moreIndexingFilter.collectionIDs", "0");
 
     /*parserImpl = getConf().get("parser.html.impl", "neko");
     utils = new DOMContentUtils(conf);
