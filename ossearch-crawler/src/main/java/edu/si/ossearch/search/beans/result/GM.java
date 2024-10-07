@@ -39,6 +39,18 @@ public class GM {
     String GL;
 
     /**
+     * Contains the Image URL of a KeyMatch result.
+     * Format: Text (URL)
+     *
+     * Parent: GM
+     * Subtags: none
+     * Attributes: none
+     */
+    @NonNull
+    @JsonProperty("GI")
+    String GI;
+
+    /**
      * Contains the description of a KeyMatch result.
      * Format: Text (HTML)
      *

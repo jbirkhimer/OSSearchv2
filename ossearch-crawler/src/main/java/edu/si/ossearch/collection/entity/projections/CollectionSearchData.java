@@ -61,6 +61,8 @@ public interface CollectionSearchData {
 
         String getUrlForMatch();
 
+        String getImgUrlForMatch();
+
         @JsonSerialize(converter = CreationTypeConverter.class)
         Keymatch.CreationType getCreationType();
     }

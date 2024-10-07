@@ -43,3 +43,23 @@ body {
 .keymatch_term_font{
   color: #2255aa;
 }
+
+.oss-keymatch-container {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.oss-keymatch-content {
+    flex: 1;
+}
+
+.oss-keymatch-image {
+    margin-left: 10px;
+}
+
+.oss-keymatch-thumbnail {
+    max-width: 150px;
+    max-height: 150px;
+    object-fit: cover;
+}

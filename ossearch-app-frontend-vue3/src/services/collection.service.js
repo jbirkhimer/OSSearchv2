@@ -47,6 +47,31 @@ class CollectionService {
     return api.delete(url);
   }
 
+  getKeymatches(collectionName, page, size, search, sortColumn, sortDirection) {
+    let url = `/keymatch/search/byCollection`;
+    const params = {
+      collectionName,
+      page: page - 1, // Spring Data REST uses 0-based page indexing
+      size,
+      sort: sortColumn ? `${sortColumn},${sortDirection}` : undefined,
+    };
+
+    if (search) {
+      url = `/keymatch/search/byCollectionAndSearchTerm`;
+      params.searchTerm = search;
+    }
+
+    return api.get(url, { params });
+  }
+
+  updateKeymatches(collectionId, keymatches) {
+    const url = `/collection/${collectionId}/keymatches`;
+    return api.put(url, keymatches, {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
+
 }
 
 export default new CollectionService();

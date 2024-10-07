@@ -892,15 +892,16 @@ public class SearchServiceImpl implements SearchService {
             String searchTerm = keymatch.getSearchTerm();
             Keymatch.KeymatchType keymatchType = keymatch.getKeymatchType();
             String urlForMatch = keymatch.getUrlForMatch();
+            String imgUrlForMatch = keymatch.getImgUrlForMatch();
 
             if (keymatchType == exact && q.equalsIgnoreCase(searchTerm)) {
-                GM gm = new GM(keymatch.getUrlForMatch(), Arrays.asList(keymatch.getTitleForMatch()), keymatchType.name());
+                GM gm = new GM(keymatch.getUrlForMatch(), keymatch.getImgUrlForMatch(), Arrays.asList(keymatch.getTitleForMatch()), keymatchType.name());
                 gmList.add(gm);
             } else if (keymatchType == phrase && StringUtils.containsIgnoreCase(q, searchTerm)) {
-                GM gm = new GM(keymatch.getUrlForMatch(), Arrays.asList(keymatch.getTitleForMatch()), keymatchType.name());
+                GM gm = new GM(keymatch.getUrlForMatch(), keymatch.getImgUrlForMatch(), Arrays.asList(keymatch.getTitleForMatch()), keymatchType.name());
                 gmList.add(gm);
             } else if (keymatchType == keyword && Arrays.asList(q.toLowerCase().split(" ")).contains(searchTerm.toLowerCase())) {
-                GM gm = new GM(keymatch.getUrlForMatch(), Arrays.asList(keymatch.getTitleForMatch()), keymatchType.name());
+                GM gm = new GM(keymatch.getUrlForMatch(), keymatch.getImgUrlForMatch(), Arrays.asList(keymatch.getTitleForMatch()), keymatchType.name());
                 gmList.add(gm);
 
                 //TODO: php code checks keymatch urlForMatch do we need too???

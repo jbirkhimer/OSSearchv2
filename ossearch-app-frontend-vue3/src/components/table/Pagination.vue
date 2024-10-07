@@ -19,7 +19,7 @@
     <li v-for="paginator in paginators" :key="paginator.value"
         :class="{ active: paginator.value === currentPage, disabled: !paginator.enable}" class="page-item">
       <a @click.prevent="setPage(paginator.value)" role="button" class="page-link btn-sm" :disabled="!paginator.enable">
-        <span>{{ paginator.value.toLocaleString() }}</span>
+        <span v-if="paginator.value">{{ paginator.value.toLocaleString() }}</span>
       </a>
     </li>
 

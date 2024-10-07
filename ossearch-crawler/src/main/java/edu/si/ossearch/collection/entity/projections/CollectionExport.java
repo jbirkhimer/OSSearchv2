@@ -75,6 +75,8 @@ public interface CollectionExport {
 
         String getUrlForMatch();
 
+        String getImgUrlForMatch();
+
         @JsonSerialize(converter = CreationTypeConverter.class)
         Keymatch.CreationType getCreationType();
 

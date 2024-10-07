@@ -71,6 +71,7 @@
     "vue3-popper": "^1.4.1",
     "vuedraggable": "^4.1.0",
     "vuex": "^4.1.0",
+    "xlsx": "^0.18.5",
     "yup": "^0.32.9"
   },
   "devDependencies": {

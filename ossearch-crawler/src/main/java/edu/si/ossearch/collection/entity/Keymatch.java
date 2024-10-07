@@ -50,6 +50,8 @@ public class Keymatch {
 
     private String urlForMatch;
 
+    private String imgUrlForMatch;
+
     @JsonSerialize(converter = CreationTypeConverter.class)
     @Enumerated(EnumType.STRING)
     private CreationType creationType;

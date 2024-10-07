@@ -484,7 +484,7 @@
                                     <overwrite>true</overwrite>
                                     <resources>
                                         <resource>
-                                            <directory>${project.parent.basedir}/ossearch-app-frontend-vue3/target/dist</directory>
+                                            <directory>${project.parent.basedir}/ossearch-app-frontend-vue3/target/ossearch</directory>
                                             <filtering>false</filtering>
                                             <!--<includes>
                                                 <include>static/</include>

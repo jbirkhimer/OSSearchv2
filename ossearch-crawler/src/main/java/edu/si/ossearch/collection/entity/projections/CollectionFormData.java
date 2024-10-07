@@ -90,6 +90,8 @@ public interface CollectionFormData {
 
         String getUrlForMatch();
 
+        String getImgUrlForMatch();
+
         @JsonSerialize(converter = CreationTypeConverter.class)
         Keymatch.CreationType getCreationType();
     }

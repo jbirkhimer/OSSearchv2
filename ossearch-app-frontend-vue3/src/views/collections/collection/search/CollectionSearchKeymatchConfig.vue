@@ -8,19 +8,22 @@
       <i class="fas fa-search me-1"></i>
       <b>Search Keymatch Configuration</b>
       <div class="float-end">
-        <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEditKeymatch = JSON.parse(JSON.stringify(collection)); isEditKeymatch = !isEditKeymatch;" v-if="!isEditKeymatch">Edit</button>
-        <button v-if="isEditKeymatch" class="btn btn-sm btn-success me-md-2" type="button" @click="saveKeymatches()">Save</button>
-        <button v-if="isEditKeymatch" class="btn btn-sm btn-danger float-end" type="button" @click="collection = beforeEditKeymatch; isEditKeymatch = false">Cancel</button>
+          <button v-if="!isEditing" class="btn btn-sm btn-primary" @click="startEditing">Edit</button>
+          <template v-else>
+            <button class="btn btn-sm btn-success me-2" @click="saveChanges">Save</button>
+            <button class="btn btn-sm btn-danger" @click="cancelEditing">Cancel</button>
+          </template>
       </div>
     </div>
     <div class="card-body">
       <div class="row g-3 mb-3">
         <div class="col-md-12">
-          <legend class="col-form-label">Keymatchs&nbsp;
+          <legend class="col-form-label">Keymatches&nbsp;
             <i class="fas fa-info-circle text-primary"></i>
           </legend>
           <div class="card card-body">
             <div class="form-text">
+              <!-- Keymatch description text -->
               <p>Keymatches enable you to force certain documents to the top of search results. When users search with a
                 term that you specify, the search appliance always presents the KeyMatch first. Users can navigate
                 immediately to the featured document and spend less time searching and viewing less relevant
@@ -41,7 +44,8 @@
                 <li><b>PhraseMatch:</b> A phrase that appears anywhere in query. For the phrase to match, all of the words must be present, the order of the words must be the same with no intervening words, and any hyphens in the query must be matched.</li>
                 <li><b>ExactMatch:</b> Phrase must exactly match the query.</li>
               </ul>
-              <div><b>URL for Match:</b> A description for URL for Match.</div>
+              <div><b>URL for Match:</b> A URL for Match.</div>
+              <div><b>Image URL for Match:</b> An image url for Match.</div>
             </div>
           </div>
         </div>
@@ -49,11 +53,10 @@
       <div class="row g-3">
         <div class="col-md-12">
           <Keymatch
-              :isEditing="isEditKeymatch"
-              :loading="loading"
-              :saving="saving"
-              :collectionId="collection.id"
-              v-model:keymatches="collection.keymatches"
+          ref="keymatchComponent"
+          :isEditing="isEditing"
+          :collectionName="name"
+          @update:keymatches="updateKeymatches"
           />
         </div>
       </div>
@@ -63,152 +66,67 @@
 </template>
 
 <script>
-import CollectionService from "../../../../services/collection.service";
-import Keymatch from "../../../../components/collections/Keymatch";
-import EventBus from "../../../../common/EventBus";
+import Keymatch from "@/components/collections/Keymatch";
+import EventBus from "@/common/EventBus";
 
 export default {
-  name: "CollectionSearchKeymatchConfig",
-  props: ['name', 'tabName'],
+  name: 'CollectionSearchKeymatchConfig',
   components: {
     Keymatch
   },
-  data() {
-    return {
-      loading: false,
-      saving: false,
-      error: null,
-      showJson: false,
-      collection: {id: '', keymatches: []},
-      collectionId: null,
-      isEditKeymatch: false,
-      beforeEditKeymatch: null,
+  props: {
+    name: {
+      type: String,
+      required: true
     }
   },
-  async mounted() {
-    this.loading = true
-    await this.getCollection()
-    this.loading = false
+  data() {
+    return {
+      isEditing: false,
+      originalKeymatches: []
+    };
   },
-  watch: {
-    error: {
-      deep: true,
-      handler: function () {
-        let content = (this.error.response && this.error.response.data && this.error.response.data.message) || this.error.message || this.error.toString();
-        if (this.error.response && this.error.response.status === 403) {
-          EventBus.dispatch("logout");
-        } else {
-          alert("ERROR: " + content)
-        }
+  methods: {
+    startEditing() {
+      this.isEditing = true;
+      this.originalKeymatches = JSON.parse(JSON.stringify(this.$refs.keymatchComponent.keymatches));
+    },
+    async saveChanges() {
+      try {
+        await this.$refs.keymatchComponent.saveKeymatches();
+        this.isEditing = false;
+      } catch (error) {
+        console.error('Error saving keymatches:', error);
+        // Handle error (e.g., show error message to user)
+      }
+    },
+    cancelEditing() {
+      this.isEditing = false;
+      this.$refs.keymatchComponent.resetKeymatches(this.originalKeymatches);
+    },
+    updateKeymatches(newKeymatches) {
+      // Handle any necessary updates in the parent component
+      console.log('Keymatches updated:', newKeymatches);
+    },
+    handleError(error) {
+      this.error = error;
+      const content = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
+      if (error.response && error.response.status === 403) {
+        EventBus.dispatch("logout");
+      } else {
+        alert("ERROR: " + content);
       }
     }
   },
-  methods: {
-    async getCollection() {
-      await CollectionService.getCollections('/collection/search/getCollectionByName', {name: this.name, projection: 'collectionFormData'})
-          .then(response => {
-            let data = response.data;
-            this.collection = data;
-            this.collectionId = this.collection.id
-            // console.log("data", data)
-          })
-          .catch(errors => {
-            //console.log(errors);
-            this.error = errors
-          });
-    },
-    async saveKeymatches() {
-      this.saving = true
-
-      let origKeymatches = []
-
-      await CollectionService.getCollections('/collection/'+this.collection.id+"/keymatches")
-          .then(response => {
-            let data = response.data;
-            data._embedded.keymatch.forEach(keymatch => {
-              origKeymatches.push(keymatch._links.self.href)
-            });
-            //console.log("origKeymatches", origKeymatches, "currentKeymatches", this.collection.keymatches)
-          })
-          .catch(errors => {
-            //console.log(errors);
-            this.error = errors
-          });
-
-      let keymatches = await this.updateKeymatches()
-
-      //console.log("(2) updated keymatches", keymatches)
-
-      let deleteKeymatches = origKeymatches.filter((keymatch) => !keymatches.includes(keymatch))
-
-      //console.log(">>> for delete keymatches", deleteKeymatches)
-
-      await this.deleteKeymatches(deleteKeymatches)
-
-      EventBus.dispatch('toast', {
-        type: 'success',
-        msg: 'Keymatch Config Updated!'
-      })
-
-      await this.getCollection()
-      this.saving = false
-      this.isEditKeymatch = false
-    },
-    async updateKeymatches() {
-      let keymatches = []
-      let promises = []
-
-      this.collection.keymatches.forEach(keymatch => {
-        //console.log("keymatch:", JSON.stringify(keymatch))
-        //let url = "/keymatch"
-        let body = keymatch
-
-        if (keymatch._links && keymatch.id) {
-          // url = keymatch._links.self.href
-          promises.push(CollectionService.updateCollection(keymatch._links.self.href, JSON.stringify(body)))
-        } else {
-          body.collection = this.collection._links.self.href
-          promises.push(CollectionService.addCollection('/keymatch', JSON.stringify(body)))
+  watch: {
+    error: {
+      handler: function(newError) {
+        if (newError) {
+          this.handleError(newError);
         }
-      })
-
-      await Promise.all(promises)
-          .then(results => {
-            results.forEach(response => {
-              let data = response.data;
-              let keymatch_link = data._links.self.href
-              //console.log("keymatch_link", keymatch_link)
-              keymatches.push(keymatch_link)
-            })
-          })
-          .catch(errors => {
-            //console.log(errors);
-            this.error = errors
-          })
-
-      //console.log("(1) return keymatches", keymatches)
-      return keymatches;
-    },
-    async deleteKeymatches(deleteKeymatches) {
-      let promises = []
-
-      deleteKeymatches.forEach(keymatch => {
-        console.log(">>> DELETE keymatch:", JSON.stringify(keymatch))
-        promises.push(CollectionService.deleteCollection(keymatch))
-      })
-
-      await Promise.all(promises)
-          .then(results => {
-            results.forEach(response => {
-              let data = response.data;
-              console.log("delete resp", data)
-            })
-          })
-          .catch(errors => {
-            //console.log(errors);
-            this.error = errors
-          })
-    },
+      },
+      deep: true
+    }
   }
 }
 </script>
