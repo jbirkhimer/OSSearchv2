@@ -52,8 +52,8 @@ spring:
     username: root
     password: root
     hikari:
-      maximum-pool-size: 15
-      minimum-idle: 5
+      maximum-pool-size: 8
+      minimum-idle: 1
       max-lifetime: 60000
       connection-timeout: 300000
       idle-timeout: 120000
@@ -71,7 +71,7 @@ spring:
         generate_statistics: false
 #        order_inserts: true
         jdbc:
-          batch_size: 5000
+          batch_size: 100
     open-in-view: false
 
   quartz:
@@ -177,4 +177,5 @@ logging:
     rollingpolicy:
       max-history: 100
       total-size-cap: 4GB
-
+  level:
+    edu.si.ossearch.search.service.impl.SearchServiceImpl: WARN

@@ -79,6 +79,7 @@
       </rename>
       <remove>
         <field source="segment"/>
+        <field source="cache"/>
       </remove>
     </mapping>
   </writer>
@@ -86,7 +87,7 @@
     <parameters>
       <param name="delete" value="true"/>
       <param name="path" value="./index_logs"/>
-      <!--<param name="path" value="/data/ossearch-crawler-data/index_logs"/>-->
+      <!--<param name="path" value="/data/edan-index-log"/>-->
       <param name="batchSize" value="5000"/>
     </parameters>
     <mapping>
