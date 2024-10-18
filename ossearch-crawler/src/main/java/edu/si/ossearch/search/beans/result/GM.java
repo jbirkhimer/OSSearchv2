@@ -46,7 +46,6 @@ public class GM {
      * Subtags: none
      * Attributes: none
      */
-    @NonNull
     @JsonProperty("GI")
     String GI;
 
