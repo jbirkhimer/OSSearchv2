@@ -5,6 +5,7 @@ import edu.si.ossearch.collection.repository.CollectionRepository;
 import edu.si.ossearch.scheduler.entity.CrawlLog;
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
 import edu.si.ossearch.scheduler.entity.JobState;
+import edu.si.ossearch.scheduler.entity.ServerResponse;
 import edu.si.ossearch.scheduler.job.CrawlCollectionJob;
 import edu.si.ossearch.scheduler.repository.CrawlLogRepository;
 import edu.si.ossearch.scheduler.repository.CrawlSchedulerJobInfoRepository;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,7 @@ import java.util.*;
 
 import static edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType.ADD_URLS;
 import static org.quartz.Trigger.TriggerState.PAUSED;
+import static org.springframework.http.ResponseEntity.status;
 
 /**
  * @author jbirkhimer
@@ -482,6 +485,29 @@ public class JobServiceImpl implements JobService {
             }
         });
         return answer;
+    }
+
+    @Override
+    public ResponseEntity<Boolean> shutdownCheck() {
+        try {
+            for (String groupName : scheduler.getJobGroupNames()) {
+
+                for (JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(groupName))) {
+
+                    String jobName = jobKey.getName();
+                    String jobGroup = jobKey.getGroup();
+
+                    if (this.isJobRunning(jobName, jobGroup)) {
+                        return status(HttpStatus.OK).body(false);
+                    }
+                }
+            }
+        } catch (SchedulerException e) {
+            log.error("SchedulerException while performing shutdown check. error message: {}", e.getMessage());
+            log.error(ExceptionUtils.getStackTrace(e));
+            return status(HttpStatus.OK).body(false);
+        }
+        return status(HttpStatus.OK).body(true);
     }
 
 }

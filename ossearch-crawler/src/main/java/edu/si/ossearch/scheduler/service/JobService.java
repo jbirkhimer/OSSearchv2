@@ -2,10 +2,12 @@ package edu.si.ossearch.scheduler.service;
 
 import edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo;
 import edu.si.ossearch.scheduler.entity.JobState;
+import edu.si.ossearch.scheduler.entity.ServerResponse;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.json.JSONArray;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerMetaData;
+import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
 import java.util.List;
@@ -48,4 +50,5 @@ public interface JobService {
     JSONArray getCrawlLogHistoryByUser() throws IOException, SolrServerException;
 
 
+    ResponseEntity<Boolean> shutdownCheck();
 }
