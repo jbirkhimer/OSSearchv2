@@ -1,5 +1,6 @@
 package edu.si.ossearch.scheduler.controller;
 
+import edu.si.ossearch.scheduler.service.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,9 +12,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.XML;
 import org.quartz.CronExpression;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
@@ -31,7 +34,7 @@ import static org.apache.commons.io.FileUtils.readFileToString;
 @Slf4j
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/scheduler/utils")
+@RequestMapping("/api/scheduler")
 @Tag(description = "Crawl Scheduler Utils", name = "Crawl Scheduler Utils")
 @SecurityRequirement(name = "bearerAuth")
 public class CrawlSchedulerUtilsController {
@@ -40,8 +43,11 @@ public class CrawlSchedulerUtilsController {
     @NonNull
     File nutchConfDir;
 
+    @Autowired
+    private JobService jobService;
+
     @Operation(summary = "Validate Quarts Cron expression", tags = "Crawl Scheduler Utils", responses = {@ApiResponse(content = @Content(mediaType = "application/json"))})
-    @GetMapping(value = "/validate", params = {"expr"})
+    @GetMapping(value = "/utils/validate", params = {"expr"})
     public String validateCronExpression(@RequestParam(name = "expr") String expression) {
         boolean isValid = CronExpression.isValidExpression(expression);
         log.info("cron expression {} isValid: {}", expression, isValid);
@@ -49,7 +55,7 @@ public class CrawlSchedulerUtilsController {
     }
 
     @Operation(summary = "Get the default Nutch properties from nutch-default.xml and nutch-site.xml", tags = "Crawl Scheduler Utils", responses = {@ApiResponse(content = @Content(mediaType = "application/json"))})
-    @GetMapping(value = "/nutch/properties")
+    @GetMapping(value = "/utils/nutch/properties")
     public ResponseEntity<String> getNutchProperties() throws IOException {
 
         Configuration conf = new Configuration(false);
@@ -114,5 +120,13 @@ public class CrawlSchedulerUtilsController {
                 break;
             }
         }
+    }
+
+    @Operation(summary = "shutdown check", responses = {@ApiResponse(content = @Content(mediaType = "text/plain"))})
+    @GetMapping(value = "shutdownCheck", produces = "text/plain")
+    @PreAuthorize("permitAll()")
+    @SecurityRequirement(name = "none")
+    public String shutdownCheck() {
+        return jobService.shutdownCheck().getBody().toString();
     }
 }
