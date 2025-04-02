@@ -317,7 +317,7 @@ public class JobServiceImpl implements JobService {
     @Override
     public boolean isJobRunning(String jobName, String jobGroup) {
 
-        log.info("Parameters received for checking job is running ? - jobKey: {}, jobGroup: {}", jobName, jobGroup);
+        log.debug("Parameters received for checking job is running ? - jobKey: {}, jobGroup: {}", jobName, jobGroup);
         try {
 
             List<JobExecutionContext> currentJobs = scheduler.getCurrentlyExecutingJobs();
@@ -339,7 +339,7 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public JobState getJobState(String jobName, String jobGroup) {
-        log.info("JobServiceImpl.getJobState()");
+        log.debug("JobServiceImpl.getJobState()");
 
         try {
             JobKey jobKey = new JobKey(jobName, jobGroup);
@@ -350,7 +350,7 @@ public class JobServiceImpl implements JobService {
             if (triggers != null && triggers.size() > 0) {
                 for (Trigger trigger : triggers) {
                     Trigger.TriggerState triggerState = scheduler.getTriggerState(trigger.getKey());
-                    log.info("trigger state: {}", triggerState);
+                    log.debug("trigger state: {}", triggerState);
                     return JobState.toJobState(triggerState);
                 }
             }
@@ -427,7 +427,7 @@ public class JobServiceImpl implements JobService {
                                     cronExpression = cronTrigger.getCronExpression();
                                 }
 
-                                log.info("key: {}, startTime: {}, nextFireTime: {}, lastFiredTime: {}, finalFiredTime: {}, cronExpression: {}", trigger.getKey(), startTime, nextFireTime, lastFiredTime, finalFiredTime, cronExpression);
+                                log.debug("key: {}, startTime: {}, nextFireTime: {}, lastFiredTime: {}, finalFiredTime: {}, cronExpression: {}", trigger.getKey(), startTime, nextFireTime, lastFiredTime, finalFiredTime, cronExpression);
                             }
                         }
 

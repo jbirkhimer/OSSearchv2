@@ -29,13 +29,13 @@ public class LoggingHandler {
     //and all method and function
     @Before("repository() && allMethod()")
     public void logBefore(JoinPoint joinPoint) {
-        log.info("Entering in Method :  " +
+        log.debug("Entering in Method :  " +
                 joinPoint + " at " + System.currentTimeMillis());
     }
 
     //After -> All method within resource annotated with @Repository annotation
     @AfterReturning(pointcut = "repository() && allMethod()")
     public void logAfter(JoinPoint joinPoint) {
-        log.info("Method Returned at : " + System.currentTimeMillis());
+        log.debug("Method Returned at : " + System.currentTimeMillis());
     }
 }
