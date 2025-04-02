@@ -1,6 +1,6 @@
 package edu.si.ossearch.security.models;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity(name = "refreshtoken")

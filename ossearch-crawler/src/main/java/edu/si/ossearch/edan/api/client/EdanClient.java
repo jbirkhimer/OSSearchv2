@@ -13,6 +13,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Mono;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -65,8 +66,8 @@ public class EdanClient {
      * @param queryString the query string
      * @return
      */
-    @SneakyThrows
-    public Map<String, String> getAuthContent(String queryString) {
+//    @SneakyThrows
+    public Map<String, String> getAuthContent(String queryString) throws UnsupportedEncodingException {
         Map<String, String> auth = new HashMap<>();
 
         auth.put("nonce", UUID.randomUUID().toString().replace("-", ""));
@@ -95,7 +96,7 @@ public class EdanClient {
      * @return
      * @throws EdanApiException
      */
-    public EdanResponse sendRequest(URI uri) {
+    public EdanResponse sendRequest(URI uri) throws UnsupportedEncodingException {
         WebClient webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .filter(logRequest())

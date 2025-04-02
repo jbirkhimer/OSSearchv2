@@ -58,6 +58,7 @@ spring:
       connection-timeout: 300000
       idle-timeout: 120000
       leak-detection-threshold: 300000
+      connection-test-query: SELECT 1
 
   # JPA drop and recreate tables, show sql in logs
   jpa:
@@ -66,7 +67,7 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect #org.hibernate.dialect.MySQL5InnoDBDialect
+        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: false
         generate_statistics: false
 #        order_inserts: true

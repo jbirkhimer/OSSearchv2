@@ -4,7 +4,7 @@ import edu.si.ossearch.OSSearchException;
 import edu.si.ossearch.search.beans.request.Paging;
 import edu.si.ossearch.search.beans.request.Query;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * @author jbirkhimer

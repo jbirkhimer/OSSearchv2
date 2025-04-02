@@ -7,7 +7,7 @@ RequiresMountsFor=/data
 Environment="PATH=/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"
 User=apache
 #ExecStart=@project.build.directory@/@project.build.finalName@.jar
-ExecStart=/usr/bin/java -cp @project.build.directory@/@project.build.finalName@.jar -Dloader.path=conf org.springframework.boot.loader.PropertiesLauncher
+ExecStart=/usr/bin/java -Djava.security.manager=allow -Dloader.path=conf -jar @project.build.directory@/@project.build.finalName@.jar
 
 WorkingDirectory=@project.build.directory@
 SuccessExitStatus=143

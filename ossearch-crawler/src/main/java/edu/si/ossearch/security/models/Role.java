@@ -2,7 +2,7 @@ package edu.si.ossearch.security.models;
 
 import lombok.Data;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 
 @Data

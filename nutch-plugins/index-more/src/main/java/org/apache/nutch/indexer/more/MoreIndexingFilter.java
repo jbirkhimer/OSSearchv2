@@ -19,6 +19,8 @@ package org.apache.nutch.indexer.more;
 //import org.apache.html.dom.HTMLDocumentImpl;
 //import org.apache.nutch.parse.Parser;
 //import org.apache.nutch.util.EncodingDetector;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,9 +56,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateUtils;
 
 import java.io.File;
 import java.net.URL;

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.context.request.ServletWebRequest;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;

@@ -10,7 +10,7 @@ import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -71,6 +71,7 @@ public class SearchLog implements Serializable {
     @Column(columnDefinition = "MEDIUMINT")
     private Integer elapsedTime;
 
+    @Column(columnDefinition = "TEXT")
     private String rawQuery;
 
 //    @Column(columnDefinition = "TEXT")
@@ -82,6 +83,8 @@ public class SearchLog implements Serializable {
 
 //    @Column(columnDefinition = "TEXT")
 //    private String solrQuery;
+
+    @Column(columnDefinition = "TEXT")
     private String errors;
 
     @CreationTimestamp

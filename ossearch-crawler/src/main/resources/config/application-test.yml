@@ -31,8 +31,8 @@ spring:
   # JPA drop and recreate tables, show sql in logs
   jpa:
     show-sql: false
-#    hibernate:
-#      ddl-auto: create-drop
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
@@ -47,6 +47,7 @@ spring:
       initialize-schema: never
 
   ldap:
+    base: dc=springframework,dc=org
     embedded:
       enabled: true
       ldif: classpath:config/test-server.ldif
@@ -73,6 +74,8 @@ ossearch:
   embedded-vuejs: true
   allowedOrigins: "http://0.0.0.0:3000,http://localhost:3000,http://127.0.0.1:3000,http://10.0.0.95:3000,http://jbirkhimer.myquotient.net:3000,http://ossearchv2:8080,http://0.0.0.0:8484,http://localhost:8484,http://127.0.0.1:8484,http://10.0.0.95:8484,http://jbirkhimer.myquotient.net:8484"
   jwt:
+    # key used to sign JWT tokens (should be secure and long)
+    secret: QsWTm12JcWz/ac0sSJOnl1Nf0dPizSZ/GJhO0hG0xAL43VpA393YoDtZT8rvl8QoqmGdrPJZq9lYs/6DwOHGYQ==
 #    #For Testing Refresh tokens
 #    expirationMs: 60000
 #    refreshExpirationMs: 120000

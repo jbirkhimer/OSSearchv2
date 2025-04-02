@@ -13,18 +13,20 @@ import org.springframework.core.Ordered;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.data.repository.query.SecurityEvaluationContextExtension;
 import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 import org.springframework.security.ldap.userdetails.UserDetailsContextMapper;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -35,13 +37,11 @@ import java.util.*;
 @Slf4j
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(
+@EnableMethodSecurity(
 		// securedEnabled = true,
 		// jsr250Enabled = true,
 		prePostEnabled = true)
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-	@Autowired
-	UserDetailsServiceImpl userDetailsService;
+public class WebSecurityConfig {
 
 	@Autowired
 	private AuthEntryPointJwt unauthorizedHandler;
@@ -76,46 +76,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		return new AuthTokenFilter();
 	}
 
-	@Override
-	public void configure(AuthenticationManagerBuilder auth) throws Exception {
-
-		if (embeddedLdap) {
-			log.warn(">>>> using embedded LDAP");
-			// authenticate using embedded ldap for testing
-			auth.ldapAuthentication()
-					.userDetailsContextMapper(userDetailsContextMapper())
-					.userDnPatterns("uid={0},ou=people")
-					.groupSearchBase("ou=groups")
-					.contextSource()
-					.url("ldap://localhost:8389/dc=springframework,dc=org")
-					.and()
-					.passwordCompare()
-					.passwordEncoder(PASSWORD_ENCODER)
-					.passwordAttribute("userPassword");
-		} else {
-			log.warn(">>>> using LDAP");
-			// authenticate using ldap bind
-			auth.ldapAuthentication()
-					.userDetailsContextMapper(userDetailsContextMapper())
-					.contextSource()
-					.url(ldapUrls).port(ldapPort).root(ldapBase)
-					.managerDn(ldapUsername)
-					.managerPassword(ldapPassword)
-					.and()
-					.userSearchFilter("(&(sAMAccountName={0}))")
-					.userSearchBase("OU=Smithsonian,DC=US,DC=SINET,DC=SI,DC=EDU")
-					.groupSearchBase("OU=Smithsonian,DC=US,DC=SINET,DC=SI,DC=EDU")
-					.groupSearchFilter("member={0}");
-		}
-
-		// fallback and authenticate using database
-		auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-	}
 
 	@Bean
-	@Override
-	public AuthenticationManager authenticationManagerBean() throws Exception {
-		return super.authenticationManagerBean();
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+		return authConfig.getAuthenticationManager();
 	}
 
 	@Bean
@@ -123,8 +87,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		return PASSWORD_ENCODER;
 	}
 
-	@Override
-	protected void configure(HttpSecurity http) throws Exception {
+	@Bean
+	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		List<String> AUTH_WHITELIST = new ArrayList<>();
 
 		String[] swagger = new String[]{
@@ -153,43 +117,40 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			AUTH_WHITELIST.addAll(Arrays.asList(vuejs));
 		}
 
-		if (securityEnabled) {
-			log.warn(">>>> security enabled");
-			log.warn(">>>> auth whitelist {}", AUTH_WHITELIST);
-			http.cors().and().csrf().disable()
-					.exceptionHandling()
-						.authenticationEntryPoint(unauthorizedHandler)
-					.and()
-						.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-					.and()
-						.authorizeRequests()
-							.antMatchers("/api/auth/**").permitAll()
-							.antMatchers("/api/reports/**").permitAll()
-							.antMatchers("/api/scheduler/shutdownCheck").permitAll()
-							.antMatchers("/api/**").authenticated()
-							.antMatchers(AUTH_WHITELIST.toArray(new String[AUTH_WHITELIST.size()])).permitAll()
-							.antMatchers("/**").permitAll()
-							.anyRequest().authenticated();
-		} else {
-			log.warn(">>>> security disabled");
-			log.warn(">>>> auth whitelist {}", AUTH_WHITELIST);
-			http.cors().and().csrf().disable()
-					.exceptionHandling()
-						.authenticationEntryPoint(unauthorizedHandler)
-					.and()
-						.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-					.and()
-						.authorizeRequests()
-							.antMatchers("/api/auth/**").permitAll()
-							.antMatchers("/api/reports/**").permitAll()
-							.antMatchers("/api/scheduler/shutdownCheck").permitAll()
-							.antMatchers("/api/**").permitAll()
-							.antMatchers(AUTH_WHITELIST.toArray(new String[AUTH_WHITELIST.size()])).permitAll()
-							.antMatchers("/**").permitAll()
-							.anyRequest().authenticated();
-		}
+        http
+            .cors(cors -> cors.configure(http))
+            .csrf(csrf -> csrf.disable())
+            .exceptionHandling(exceptionHandling ->
+                exceptionHandling.authenticationEntryPoint(unauthorizedHandler)
+            )
+            .sessionManagement(sessionManagement ->
+                sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+				.authorizeHttpRequests(auth -> {
+					if (securityEnabled) {
+						log.warn(">>>> security enabled");
+						log.warn(">>>> auth whitelist {}", AUTH_WHITELIST);
+						// Most specific rules first
+						auth.requestMatchers("/api/auth/**").permitAll()
+								.requestMatchers("/api/reports/**").permitAll()
+								.requestMatchers("/api/scheduler/shutdownCheck").permitAll()
+								// Protected API endpoints
+								.requestMatchers("/api/**").authenticated()
+								// Whitelist for Swagger, Vue.js, etc.
+								.requestMatchers(AUTH_WHITELIST.toArray(new String[0])).permitAll()
+								// Public static resources
+								.requestMatchers("/**").permitAll()
+								// Catch-all rule
+								.anyRequest().authenticated();
+					} else {
+						log.warn(">>>> security disabled");
+						log.warn(">>>> auth whitelist {}", AUTH_WHITELIST);
+						auth.anyRequest().permitAll();
+					}
+            })
+            .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
-		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+		return http.build();
 	}
 
 	/**
@@ -198,13 +159,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	 *
 	 * @return
 	 */
-	@Bean
-	public UserDetailsContextMapper userDetailsContextMapper() {
+	private UserDetailsContextMapper userDetailsContextMapper(UserDetailsService userDetailsService) {
 		return new LdapUserDetailsMapper() {
 			@Override
 			public UserDetails mapUserFromContext(DirContextOperations ctx, String username, Collection<? extends GrantedAuthority> authorities) {
-				UserDetails details = userDetailsService.loadUserByUsername(username);
-				return details;
+                return userDetailsService.loadUserByUsername(username);
 			}
 		};
 	}
@@ -231,4 +190,39 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	public SecurityEvaluationContextExtension securityEvaluationContextExtension() {
 		return new SecurityEvaluationContextExtension();
 	}
+
+    @Autowired
+    public void configureGlobal(AuthenticationManagerBuilder auth, UserDetailsService userDetailsService) throws Exception {
+        if (embeddedLdap) {
+            log.warn(">>>> using embedded LDAP");
+            // authenticate using embedded ldap for testing
+            auth.ldapAuthentication()
+					.userDetailsContextMapper(userDetailsContextMapper(userDetailsService))
+                    .userDnPatterns("uid={0},ou=people")
+                    .groupSearchBase("ou=groups")
+                    .contextSource()
+                    .url("ldap://localhost:8389/dc=springframework,dc=org")
+                    .and()
+                    .passwordCompare()
+                    .passwordEncoder(PASSWORD_ENCODER)
+                    .passwordAttribute("userPassword");
+        } else {
+            log.warn(">>>> using LDAP");
+            // authenticate using ldap bind
+            auth.ldapAuthentication()
+					.userDetailsContextMapper(userDetailsContextMapper(userDetailsService))
+                    .contextSource()
+                    .url(ldapUrls).port(ldapPort).root(ldapBase)
+                    .managerDn(ldapUsername)
+                    .managerPassword(ldapPassword)
+                    .and()
+                    .userSearchFilter("(&(sAMAccountName={0}))")
+                    .userSearchBase("OU=Smithsonian,DC=US,DC=SINET,DC=SI,DC=EDU")
+                    .groupSearchBase("OU=Smithsonian,DC=US,DC=SINET,DC=SI,DC=EDU")
+                    .groupSearchFilter("member={0}");
+		}
+
+        // fallback and authenticate using database
+		auth.userDetailsService(userDetailsService).passwordEncoder(PASSWORD_ENCODER);
+    }
 }

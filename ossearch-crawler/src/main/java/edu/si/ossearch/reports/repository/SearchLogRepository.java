@@ -69,8 +69,8 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             " and (s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
 //            " or s.responseType like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
 //            " or s.requestIp like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-            " or s.docsFound like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-            " or s.elapsedTime like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
+            " or cast(s.docsFound as string) like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
+            " or cast(s.elapsedTime as string) like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
             " and s.createdDate between :startDate and :endDate")
     Optional<Page<SearchLog>> totalCountForAllCollectionsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                                     @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
@@ -84,8 +84,8 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
             " and (s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
 //            " or s.responseType like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
 //            " or s.requestIp like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-            " or s.docsFound like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-            " or s.elapsedTime like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
+            " or cast(s.docsFound as string) like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
+            " or cast(s.elapsedTime as string) like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
             " and s.createdDate between :startDate and :endDate")
     Optional<List<SearchLogInfo>> totalCountForAllCollectionsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                                         @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,

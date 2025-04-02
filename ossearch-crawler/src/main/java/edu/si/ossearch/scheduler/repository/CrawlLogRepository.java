@@ -31,7 +31,17 @@ public interface CrawlLogRepository extends JpaRepository<CrawlLog, Long> {
 
     List<CrawlLog> getCrawlLogsByJobKeyEndsWith(@Param("jobName") String jobName);
 
-    @Operation(summary = "Get Latest CrawlLog stats")
+    /*@Operation(summary = "Get Latest CrawlLog stats")
     @Query(nativeQuery = true, value = "select * from crawl_log cl,(SELECT cl3.job_key, MAX(cl3.updated_date) as updated_date FROM crawl_log cl3 WHERE cl3.state = 'FINISHED' GROUP BY cl3.job_key) cl2 where cl.job_key = cl2.job_key and cl.updated_date = cl2.updated_date")
+    List<CrawlLog> getLatestCrawlLogStats();*/
+
+    @Operation(summary = "Get Latest CrawlLog stats")
+    @Query(nativeQuery = true, value =
+            "SELECT cl.* FROM " + CrawlLog.TABLE_NAME + " cl, " +
+                    "(SELECT cl3.job_key, MAX(cl3.updated_date) as updated_date " +
+                    "FROM " + CrawlLog.TABLE_NAME + " cl3 " +
+                    "WHERE cl3.state = 'FINISHED' " +
+                    "GROUP BY cl3.job_key) cl2 " +
+                    "WHERE cl.job_key = cl2.job_key AND cl.updated_date = cl2.updated_date")
     List<CrawlLog> getLatestCrawlLogStats();
 }
