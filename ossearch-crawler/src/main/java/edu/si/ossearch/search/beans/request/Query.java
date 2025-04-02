@@ -142,6 +142,11 @@ public class Query implements Serializable {
     //@Getter(AccessLevel.NONE)
     private String dirs; // Sub-path searching
 
+    @Schema(description = "Field-specific boost query parameter in format field:value^boost or field^boost. " +
+            "Negative boost prioritizes documents without the field/value, positive prioritizes with it. " +
+            "Multiple boosts can be comma-separated. Example: meta_cttype:_media^-10.0,title^5.0", example = "cttype:_media^-10.0,title:*^5.0")
+    private String boost;
+
     public Query(String query, String output) {
         this.q = query;
         this.output = output == null ? _DEFAULT_OUTPUT : output;

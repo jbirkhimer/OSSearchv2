@@ -230,6 +230,8 @@ public class SearchServiceImpl implements SearchService {
             solrQuery.add("hl.usePhraseHighlighter","true");
         }
 
+        processBoosts(solrQuery, query.getBoost());
+
         QueryResponse rsp;
         if (!edan) {
             try {
@@ -598,6 +600,74 @@ public class SearchServiceImpl implements SearchService {
         } else {
             q.setQ("*:*");
             solrQuery.setQuery("*:*");
+        }
+    }
+
+    /**
+     * Processes boost parameters and applies them to the provided SolrQuery object.
+     * The boost parameters are parsed and converted into Solr boost queries, which are then added
+     * to the query object. The method utilizes a mapping of meta tags to Solr fields to determine
+     * appropriate field mappings for boosting.
+     *
+     * @param solrQuery The SolrQuery object to which boost queries will be added.
+     * @param boostParam The encoded boost parameter string containing field-value pairs and
+     *                   their corresponding boost values. Format: "<field>:<value>^<boost>".
+     * @throws UnsupportedEncodingException If the boost parameter string cannot be URL-decoded.
+     * @throws OSSearchException If there is an error processing boost values or the provided
+     *                            boost parameter string has an invalid structure.
+     */
+    private void processBoosts(SolrQuery solrQuery, String boostParam) throws UnsupportedEncodingException, OSSearchException {
+        if (boostParam != null && !boostParam.isEmpty()) {
+            String decoded = URLDecoder.decode(boostParam, "UTF-8");
+            String[] boosts = decoded.split(",");
+
+            Map<String, String> metaTagMapping = searchMetaTagService.getMetaTagMapping();
+
+            for (String boost : boosts) {
+                String[] parts = boost.split("\\^");
+                if (parts.length == 2) {
+                    String fieldWithValue = parts[0];
+                    String fieldValue = null;
+                    String solrField;
+
+                    // Find the longest matching field from the mapping
+                    String matchedField = metaTagMapping.keySet().stream()
+                            .filter(fieldWithValue::startsWith)
+                            .max(Comparator.comparingInt(String::length))
+                            .orElse(null);
+
+                    if (matchedField != null) {
+                        solrField = metaTagMapping.get(matchedField);
+                        // Get value after the matched field if it exists
+                        fieldValue = fieldWithValue.substring(matchedField.length());
+                        if (fieldValue.startsWith(":")) {
+                            fieldValue = fieldValue.substring(1);
+                        }
+                    } else {
+                        solrField = fieldWithValue;
+                    }
+
+                    try {
+                        double boostValue = Math.exp(Math.abs(Double.parseDouble(parts[1])));
+                        String direction = parts[1].startsWith("-") ? "-" : "";
+
+                        String boostQuery;
+                        if (fieldValue != null && !fieldValue.isEmpty()) {
+                            boostQuery = direction.equals("-")
+                                    ? "(*:* -" + solrField + ":" + fieldValue + ")^" + String.format("%.1f", boostValue)
+                                    : "(" + solrField + ":" + fieldValue + ")^" + String.format("%.1f", boostValue);
+                        } else {
+                            boostQuery = direction.equals("-")
+                                    ? "(*:* -" + solrField + ":*)^" + String.format("%.1f", boostValue)
+                                    : "(" + solrField + ":*)^" + String.format("%.1f", boostValue);
+                        }
+                        solrQuery.add("bq", boostQuery);
+                        log.info("Applied boost: {}", boostQuery);
+                    } catch (NumberFormatException e) {
+                        throw new OSSearchException("Invalid boost value in: " + boost);
+                    }
+                }
+            }
         }
     }
 
