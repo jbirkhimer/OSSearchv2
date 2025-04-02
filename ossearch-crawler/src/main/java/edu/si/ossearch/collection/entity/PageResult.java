@@ -56,10 +56,10 @@ public class PageResult {
     @Column(columnDefinition = "TEXT")
     private String fullHtml;
 
-//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "collection_id", nullable = false)
-//    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-//    private Collection collection;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "collection_id", nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private Collection collection;
 
     //Createed and Updated Information
     @CreationTimestamp

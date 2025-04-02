@@ -27,7 +27,6 @@ import java.util.Set;
 @Table(name = Collection.TABLE_NAME, uniqueConstraints = {
         @UniqueConstraint(name = "UniqueCollectionName", columnNames = {"name"})
 })
-//@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Collection {
     public static final String TABLE_NAME = "collection";
 
@@ -109,8 +108,7 @@ public class Collection {
         }
     }
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "collection_id")
+    @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<PageResult> pageResults = new HashSet<>();
 
     //Collection Relationships
@@ -133,7 +131,7 @@ public class Collection {
     private CrawlConfig crawlConfig;
 
     //User Access Information
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     private User owner;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -144,12 +142,16 @@ public class Collection {
 
     @PrePersist
     public void addUsers() {
-        users.forEach(user -> user.getCollections().add(this));
+        if (users != null) {
+            users.forEach(user -> user.getCollections().add(this));
+        }
     }
 
     @PreRemove
     public void removeUsers() {
-        users.forEach(user -> user.getCollections().remove(this));
+        if (users != null) {
+            users.forEach(user -> user.getCollections().remove(this));
+        }
     }
 
     //Createed and Updated Information

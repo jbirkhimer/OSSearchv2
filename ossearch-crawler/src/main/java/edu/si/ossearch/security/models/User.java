@@ -80,12 +80,20 @@ public class User {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private Date lastLogin;
 
-//	@ManyToMany(fetch = FetchType.EAGER)
-//	@JoinTable(name = "user_collections",
-//			joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
-//			inverseJoinColumns = @JoinColumn(name = "collection_id", referencedColumnName = "id"))
-	@ManyToMany(mappedBy = "users", cascade = CascadeType.PERSIST)
+	@ManyToMany(mappedBy = "users")
 	private Set<Collection> collections = new HashSet<>();
+
+	@OneToMany(mappedBy = "owner")
+	private Set<Collection> ownedCollections = new HashSet<>();
+
+	@PreRemove
+	public void preRemove() {
+		// Remove this user from all collections where they're a member
+		collections.forEach(collection -> collection.getUsers().remove(this));
+
+		// Set owner to null for all collections this user owns
+		ownedCollections.forEach(collection -> collection.setOwner(null));
+	}
 
 	@CreationTimestamp
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

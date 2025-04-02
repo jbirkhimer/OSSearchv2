@@ -39,8 +39,9 @@ public class UrlExclusionPattern {
 //    @Id
 //    @GeneratedValue(strategy = GenerationType.IDENTITY)
 //    private long id;
-
+    @Column(nullable = false)
     private int orderId;
+
     @Column(columnDefinition = "TEXT")
     private String expression;
 

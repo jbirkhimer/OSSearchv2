@@ -82,7 +82,7 @@
         <div class="float-end">
           <button class="btn btn-sm btn-primary float-end" type="button" @click="beforeEdit = {...user}; isEditPassword = !isEditPassword" v-if="!isEditPassword">Edit</button>
           <button v-if="isEditPassword" class="btn btn-sm btn-success me-md-2" type="button" @click="savePassword()">Save</button>
-          <button v-if="isEditPassword" class="btn btn-sm btn-danger float-end" type="button" @click="user.password = beforeEdit; confirmPassword = ''; isEditPassword = false">Cancel</button>
+          <button v-if="isEditPassword" class="btn btn-sm btn-danger float-end" type="button" @click="cancelPasswordEdit">Cancel</button>
         </div>
       </div>
 
@@ -482,6 +482,12 @@ export default {
       }
       await this.updateUser('/users/'+this.user.id, body)
       this.isEditPassword = false
+    },
+    cancelPasswordEdit() {
+      this.user.password = '';
+      this.confirmPassword = '';
+      this.isEditPassword = false;
+      this.v$.$reset(); // Reset all validation states
     },
     async saveRolesPermissions() {
       // let url = '/users/'+this.user.id+'/roles'

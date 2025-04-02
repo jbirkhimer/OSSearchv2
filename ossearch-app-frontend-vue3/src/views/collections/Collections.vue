@@ -67,7 +67,7 @@
       </template>
       <template v-slot:button-action>
         <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
-                @click.prevent="deleteCollection(selectedCollection._links.self.href)">Delete
+                @click.prevent="deleteCollection('/collection/'+selectedCollection.id)">Delete
         </button>
       </template>
     </Modal>
@@ -130,7 +130,7 @@ export default {
           // {label: 'Crawdb path', name: 'crawDbPath'},
           {label: 'Managers', name: 'users'},
           {label: 'Crawl Schedule', name: 'crawlCronSchedule'},
-          {label: 'Created By', name: 'owner'},
+          {label: 'Owner', name: 'owner'},
           {label: 'Created Date', name: 'dateCreated'},
           {label: 'ID', name: 'id'},
           {label: 'Actions', name: 'Created', class: 'text-center'},
@@ -199,7 +199,7 @@ export default {
     },
     async deleteCollection(url) {
       let jobName = this.selectedCollection.name
-
+      console.log("deleteCollection url:", url)
       await CollectionService.deleteCollection(url)
         .then(response => {
           console.log("deleteCollection response:", response.data)
