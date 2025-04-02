@@ -45,6 +45,10 @@ spring:
       upload-enabled: false
       repositories:
         enabled: true
+      connection:
+        timeout: 10000
+      socket:
+        timeout: 60000
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

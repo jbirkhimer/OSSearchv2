@@ -19,6 +19,12 @@ public class SolrConfiguration {
     @Value("${spring.data.solr.slave}")
     private String hostSlave;
 
+    @Value("${spring.data.solr.connection.timeout:10000}") // default 10 seconds
+    private int solrConnectionTimeout;
+
+    @Value("${spring.data.solr.socket.timeout:60000}") // default 60 seconds
+    private int solrSocketTimeout;
+
     /*@Value("${spring.data.solr.zk-host}")
     private List<String> zkHost;
 
@@ -30,12 +36,18 @@ public class SolrConfiguration {
     @Primary
     @Bean("master")
     public SolrClient solrMasterClient() {
-        return new HttpSolrClient.Builder(hostMaster).build();
+        return new HttpSolrClient.Builder(hostMaster)
+                .withConnectionTimeout(solrConnectionTimeout)
+                .withSocketTimeout(solrSocketTimeout)
+                .build();
     }
 
     @Bean("slave")
     public SolrClient solrSlaveClient() {
-        return new HttpSolrClient.Builder(hostSlave).build();
+        return new HttpSolrClient.Builder(hostSlave)
+                .withConnectionTimeout(solrConnectionTimeout)
+                .withSocketTimeout(solrSocketTimeout)
+                .build();
     }
 
 }

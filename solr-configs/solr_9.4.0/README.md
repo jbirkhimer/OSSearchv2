@@ -73,16 +73,9 @@ sudo bash ./install_solr_service.sh solr-9.4.0.tgz -d /data/ossearch-data-share/
 ```bash
 SOLR_JAVA_MEM="-Xms1g -Xmx8g"
 SOLR_JETTY_HOST="0.0.0.0"
-SOLR_PID_DIR="/run/solr"
 
 # on follower only
 SOLR_OPTS="$SOLR_OPTS -Dsolr.disable.allowUrls=true" or SOLR_OPTS="$SOLR_OPTS -Dsolr.allowUrls=http://si-prodsolr01.si.edu:8983"
-
-# since we are using nfs for solr data the default pid file location will not work due to selinux issues
-# so create a dir for it
-sudo mkdir -p /run/solr
-sudo chown solr:solr /run/solr
-sudo chmod 755 /run/solr
 ```
 
 > When running Solr in non-cloud mode and if planning to do distributed search (using the "shards" parameter), the
@@ -109,31 +102,26 @@ Add Systemd service script `/etc/systemd/system/solr.service`
 # systemctl start solr
 
 [Unit]
-Description=Apache SOLR
+Description=Apache Solr
 ConditionPathExists=/opt/solr
 After=syslog.target network.target remote-fs.target nss-lookup.target systemd-journald-dev-log.socket
 Before=multi-user.target
 Conflicts=shutdown.target
-StartLimitIntervalSec=60
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 [Service]
+Type=forking
 User=solr
-LimitNOFILE=1048576
-LimitNPROC=1048576
-PIDFile=/run/solr/solr-8983.pid
 Environment=SOLR_INCLUDE=/etc/default/solr.in.sh
-Environment=RUNAS=solr
-Environment=SOLR_INSTALL_DIR=/opt/solr
-
 ExecStart=/opt/solr/bin/solr start
 ExecStop=/opt/solr/bin/solr stop
-
 Restart=on-failure
-RestartSec=5
-
-# Java will exit with 130 for SIGINT and 143 for SIGTERM
-# @see http://journal.thobe.org/2013/02/jvms-and-kill-signals.html
-SuccessExitStatus=130 143
+RestartSec=3s
+TimeoutSec=180s
+PrivateTmp=true
+LimitNOFILE=1048576
+LimitNPROC=1048576
 
 [Install]
 WantedBy=multi-user.target
