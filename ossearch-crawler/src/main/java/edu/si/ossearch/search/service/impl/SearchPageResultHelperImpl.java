@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-import org.thymeleaf.spring5.SpringTemplateEngine;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.ITemplateResolver;
@@ -190,23 +190,16 @@ public class SearchPageResultHelperImpl implements SearchPageResultHelperService
     }
 
     private static String generateMessage(String query, int currentPage, long numFound, int pageSize) {
-        String message = "Your search, " + query + " - did not match any documents.";
-        if (numFound > 0) {
-            int start = (currentPage - 1) * pageSize + 1;
-            int end = (int) numFound;
-
-            if (pageSize < numFound) {
-                end = pageSize * currentPage;
-                if (end > numFound) {
-                    end = (int) numFound;
-                }
-            }
-
-            //message = "About " + numFound + " results - ( showing " + start + " to " + end + " of " + numFound + " )";
-            message = "About " + numFound + " results - ( " + end + " / " + numFound + " )";
+        if (numFound == 0) {
+            return "Your search, " + query + " - did not match any documents.";
         }
-        return message;
+
+        int start = (currentPage - 1) * pageSize + 1;
+        int end = Math.min((currentPage * pageSize), (int) numFound);
+
+        return "Showing results " + start + "-" + end + " of " + numFound;
     }
+
 
     public String generatePaginationTemplate(Query query, int currentPage, int startIndex, long numFound, int pageSize, TemplateEngine templateEngine) {
 

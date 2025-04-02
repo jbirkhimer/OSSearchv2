@@ -1,4 +1,4 @@
-<div class="oss-pagination">
+<!--<div class="oss-pagination">
     <span th:if="${pagination.currentPage} > 1" class="oss-pagination-prev-link">
         <a th:href="@{~/search(q=${query}, client=${client}, site=${site}, proxystylesheet=${proxystylesheet}, getfields=${getfields}, num=${num}, start=(((${pagination.currentPage}-1) * ${num}) - ${num}), edan=${edan} )}">Prev</a>
     </span>
@@ -14,4 +14,41 @@
     <span th:if="${pagination.currentPage} < ${pagination.totalPages}" class="oss-pagination-next-link">
         <a th:href="@{~/search(q=${query}, client=${client}, site=${site}, proxystylesheet=${proxystylesheet}, getfields=${getfields}, num=${num}, start=( ( (${pagination.currentPage}-1) * ${num} ) + (${num}) ), edan=${edan} )}">Next</a>
     </span>
+</div>-->
+<!-- search-pagination.html -->
+<div class="mb-4">
+    <nav aria-label="Search results pagination">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:if="${pagination.currentPage} > 1">
+                <a class="page-link"
+                   th:href="@{~/search(q=${query}, client=${client}, site=${site},
+                   proxystylesheet=${proxystylesheet}, getfields=${getfields},
+                   num=${num}, start=(((${pagination.currentPage}-1) * ${num}) - ${num}),
+                   edan=${edan})}">Previous</a>
+            </li>
+
+            <th:block th:each="page,iter:${#numbers.sequence(pagination.start, pagination.end)}">
+                <li class="page-item" th:classappend="${pagination.currentPage == page ? 'active' : ''}">
+                    <span th:if="${pagination.currentPage == page}"
+                          class="page-link"
+                          th:text="${page}"></span>
+                    <a th:if="${pagination.currentPage != page}"
+                       class="page-link"
+                       th:href="@{~/search(q=${query}, client=${client}, site=${site},
+                       proxystylesheet=${proxystylesheet}, getfields=${getfields},
+                       num=${num}, start=((${page}-1) * ${num}), edan=${edan})}"
+                       th:text="${page}"></a>
+                </li>
+            </th:block>
+
+            <li class="page-item" th:if="${pagination.currentPage} < ${pagination.totalPages}">
+                <a class="page-link"
+                   th:href="@{~/search(q=${query}, client=${client}, site=${site},
+                   proxystylesheet=${proxystylesheet}, getfields=${getfields},
+                   num=${num}, start=(((${pagination.currentPage}-1) * ${num}) + (${num})),
+                   edan=${edan})}">Next</a>
+            </li>
+        </ul>
+    </nav>
 </div>
+

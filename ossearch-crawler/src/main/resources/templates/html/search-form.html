@@ -1,4 +1,4 @@
-<div id="oss-form-wrapper" xmlns:th="http://www.thymeleaf.org">
+<!--<div id="oss-form-wrapper" xmlns:th="http://www.thymeleaf.org">
     <form id="oss-form" th:action="${action}" th:method="${method}">
         <input type="text" name="q" th:value="${q}">
         <input type="hidden" name="client" th:value="${client}">
@@ -10,6 +10,29 @@
         <input type="hidden" name="num" th:value="${num}">
         <input type="hidden" name="start" th:value="0">
         <input type="hidden" name="edan" th:value="${edan}">
+        <input type="hidden" name="boost" th:value="${boost}">
         <input id="oss-search-button" value="search" name="oss-search-button" type="submit"/>
     </form>
+</div>-->
+<!-- search-form.html -->
+<div class="mb-4" xmlns:th="http://www.thymeleaf.org">
+    <form th:action="${action}" th:method="${method}" class="row g-3">
+        <div class="col-md-8">
+            <input type="text" class="form-control" name="q" th:value="${q}" placeholder="Enter your search query...">
+            <input type="hidden" name="client" th:value="${client}">
+            <input type="hidden" name="site" th:value="${site}">
+            <input type="hidden" name="proxystylesheet" th:value="${proxystylesheet}">
+            <input type="hidden" name="filter" value="0">
+            <input type="hidden" name="proxyreload" value="0">
+            <input type="hidden" name="getfields" th:value="${getfields}">
+            <input type="hidden" name="num" th:value="${num}">
+            <input type="hidden" name="start" th:value="0">
+            <input type="hidden" name="edan" th:value="${edan}">
+            <input type="hidden" name="boost" th:value="${boost}">
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
 </div>
+

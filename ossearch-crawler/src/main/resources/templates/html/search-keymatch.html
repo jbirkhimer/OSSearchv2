@@ -1,3 +1,4 @@
+<!--
 <div id="oss-keymatch-wrapper" xmlns:th="http://www.thymeleaf.org">
     <div th:each="key:${keymatch}" class='oss-keymatch-container'>
         <div class="oss-keymatch-content">
@@ -15,6 +16,30 @@
         </div>
         <div th:if="${key.GI != null and !key.GI.isEmpty()}" class="oss-keymatch-image">
             <img th:src="${key.GI}" alt="Thumbnail" class="oss-keymatch-thumbnail">
+        </div>
+    </div>
+</div>-->
+<!-- search-keymatch.html -->
+<div class="mb-4" xmlns:th="http://www.thymeleaf.org">
+    <div th:each="key:${keymatch}" class="card mb-3">
+        <div class="card-body d-flex">
+            <div class="flex-grow-1">
+                <h5 class="card-title">
+                    <a th:ctype="${key.type}" th:uhref="${key.GL}" th:text="${key.GD.get(0)}"
+                       class="text-decoration-none"></a>
+                </h5>
+                <p class="card-text text-muted small">
+                    <span th:text="${key.GL}"></span>
+                </p>
+                <div th:switch="${key.type}" class="badge bg-secondary">
+                    <span th:case="'keyword'">KeywordMatch</span>
+                    <span th:case="'phrase'">PhraseMatch</span>
+                    <span th:case="'exact'">ExactMatch</span>
+                </div>
+            </div>
+            <div th:if="${key.GI != null and !key.GI.isEmpty()}" class="ms-3">
+                <img th:src="${key.GI}" alt="Thumbnail" class="img-thumbnail" style="max-width: 150px;">
+            </div>
         </div>
     </div>
 </div>

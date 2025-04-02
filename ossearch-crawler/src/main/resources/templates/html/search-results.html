@@ -1,3 +1,4 @@
+<!--
 <div id="oss-result-wrapper" xmlns:th="http://www.thymeleaf.org">
     <div class="oss-result-message" th:text="${message}"></div>
     <div th:each="result:${results}" class='oss-result-set-container'>
@@ -9,9 +10,41 @@
         <div class="oss-result-url">
             <span th:utext="${result.url}"></span>
         </div>
-        <div class="oss-result-snippet"><span th:utext="${result.getOrDefault('content', 'No Content Found...')}"></span></div>
+        <div class="oss-result-snippet">
+            <span th:utext="${result.getOrDefault('content', 'No Content Found...')}"></span>
+        </div>
         <th:block th:each="field : ${result.keySet()}" th:if="${not #lists.contains({'title', 'url', 'content'}, field)}">
-            <div class="oss-result-snippet"><b th:utext="${ field + ': '}"></b><span th:utext="${result.getOrDefault(field, 'No Content Found...')}"/></div>
+            <div class="oss-result-snippet"><b th:utext="${ field + ': '}">
+                </b>
+                <span th:utext="${result.getOrDefault(field, 'No Content Found...')}"/>
+            </div>
         </th:block>
+    </div>
+</div>-->
+<!-- search-results.html -->
+<div class="mb-4" xmlns:th="http://www.thymeleaf.org">
+    <div class="text-muted small mb-3" th:text="${message}"></div>
+    <div class="row">
+        <div class="col-12">
+            <div th:each="result:${results}" class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a class="text-decoration-none" th:href="${result.url}"
+                           th:utext="${result.getOrDefault('title', 'No Title Found...')}"></a>
+                    </h5>
+                    <div class="text-success small mb-2">
+                        <span th:utext="${result.url}"></span>
+                    </div>
+                    <p class="card-text" th:utext="${result.getOrDefault('content', 'No Content Found...')}"></p>
+                    <th:block th:each="field : ${result.keySet()}"
+                              th:if="${not #lists.contains({'title', 'url', 'content'}, field)}">
+                        <div class="card-text">
+                            <strong th:utext="${field + ': '}"></strong>
+                            <span th:utext="${result.getOrDefault(field, 'No Content Found...')}"/>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

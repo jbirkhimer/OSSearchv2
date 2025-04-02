@@ -1,10 +1,11 @@
+<!--
 <!DOCTYPE html>
 <html lang="en">
 <head xmlns:th="http://www.thymeleaf.org">
     <meta charset="UTF-8">
     <title>Search</title>
     <meta content="width=device-width, initial-scale=1" name="viewport"/>
-    <!-- Bootstrap CSS -->
+    &lt;!&ndash; Bootstrap CSS &ndash;&gt;
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="/assets/custom/css/bootstrap-reset.css">
@@ -23,9 +24,28 @@
         <div th:replace="html/search-pagination"></div>
     </div>
 </div>
-<!-- Bootstrap Bundle with Popper -->
+&lt;!&ndash; Bootstrap Bundle with Popper &ndash;&gt;
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
         crossorigin="anonymous"></script>
+</body>
+</html>-->
+<!-- search-default-page-result.html -->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Search</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <div th:replace="html/search-form"></div>
+    <div th:replace="html/search-keymatch"></div>
+    <div th:replace="html/search-results"></div>
+    <div th:replace="html/search-pagination"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
