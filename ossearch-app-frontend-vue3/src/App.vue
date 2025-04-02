@@ -96,10 +96,21 @@ export default {
   },
   methods: {
     async logOut() {
-      await api.post("/auth/logout", {userId: this.$store.state.auth.user?.id});
-      this.$store.dispatch('auth/logout');
-      sessionStorage.setItem('redirectPath', this.$route.path);
-      await this.$router.push({path: '/login'});
+      try {
+        if (this.$store.state.auth.user?.id) {
+          await api.post("/auth/logout", {userId: this.$store.state.auth.user.id});
+        }
+        this.$store.dispatch('auth/logout');
+        const currentPath = this.$route.path;
+        if (currentPath !== '/login') {
+          sessionStorage.setItem('redirectPath', currentPath);
+        }
+        await this.$router.push('/login');
+      } catch (error) {
+        console.error('Logout error:', error);
+        // Still redirect to login even if the logout API call fails
+        await this.$router.push('/login');
+      }
     },
   }
 };

@@ -1,9 +1,10 @@
 import AuthService from '../services/auth.service';
+import router from '../router';
 
 const user = JSON.parse(localStorage.getItem('user'));
-const initialState = user
-    ? {status: {loggedIn: true}, user}
-    : {status: {loggedIn: false}, user: null};
+const initialState = user ?
+    {status: {loggedIn: true}, user} :
+    {status: {loggedIn: false}, user: null};
 
 export const auth = {
     namespaced: true,
@@ -14,6 +15,9 @@ export const auth = {
                 .then(
                     user => {
                         commit('loginSuccess', user);
+                        const redirectPath = sessionStorage.getItem('redirectPath') || '/';
+                        sessionStorage.removeItem('redirectPath');
+                        router.push(redirectPath);
                         return Promise.resolve(user);
                     },
                     error => {
@@ -25,6 +29,11 @@ export const auth = {
         logout({commit}) {
             AuthService.logout();
             commit('logout');
+            const currentPath = router.currentRoute.value.path;
+            if (currentPath !== '/login') {
+                sessionStorage.setItem('redirectPath', currentPath);
+            }
+            router.push('/login');
         },
         register({commit}, user) {
             return AuthService.register(user)
