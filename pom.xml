@@ -30,7 +30,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>21</java.version>
-        <revision>0.1.7-SNAPSHOT</revision>
+        <revision>0.1.8-SNAPSHOT</revision>
         <nutch.version>1.18</nutch.version>
         <hadoop.version>3.4.1</hadoop.version>
     </properties>
