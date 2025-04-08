@@ -6,6 +6,8 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import edu.si.ossearch.OSSearchException;
 import edu.si.ossearch.collection.entity.CrawlConfig;
+import edu.si.ossearch.collection.entity.URLNormalizerPattern;
+import edu.si.ossearch.collection.entity.UrlExclusionPattern;
 import edu.si.ossearch.collection.repository.CrawlConfigRepository;
 import edu.si.ossearch.nutch.NutchCrawldbUtils;
 import edu.si.ossearch.nutch.ParserChecker;
@@ -28,9 +30,12 @@ import org.apache.nutch.parse.ParseData;
 import org.apache.nutch.parse.ParseText;
 import org.apache.nutch.protocol.Content;
 import org.apache.nutch.segment.SegmentMerger;
+import org.apache.nutch.urlfilter.regex.RegexURLFilter;
 import org.apache.nutch.util.HadoopFSUtil;
 import org.apache.nutch.util.NutchConfiguration;
 import org.apache.solr.client.solrj.SolrClient;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.json.XML;
 import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +51,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Future;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static edu.si.ossearch.scheduler.entity.CrawlSchedulerJobInfo.JobType.ADD_URLS;
 import static org.apache.nutch.util.TableUtil.reverseUrl;
@@ -300,6 +307,7 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
         jobService.pauseJob(jobName, jobGroup);
 
         CrawlSchedulerJobInfo jobInfo = schedulerRepository.findByJobNameAndJobGroup(jobName, jobGroup);
+        CrawlConfig crawlConfig = crawlConfigRepository.getCrawlConfigByCollectionName(jobInfo.getCollectionName());
 
         if (jobInfo == null) {
             jobService.resumeJob(jobName, jobGroup);
@@ -307,24 +315,41 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
         }
 
         try {
+            Properties properties = new Properties();
+            properties.putAll(jobInfo.getNutchProperties());
 
-            Configuration conf = NutchConfiguration.create();
-            conf.set("hadoop.tmp.dir", "hadoop_tmp");
+            Configuration segMergeConf = NutchConfiguration.create(true, properties);
+            segMergeConf.set("hadoop.tmp.dir", "hadoop_tmp");
+
             Path crawlBaseDir = getCrawlBaseDir(jobInfo);
             Path dbDir = new Path(crawlBaseDir, "db");
-            Path segmentsDir = new Path(dbDir, "crawldb");
+            Path segmentsDir = new Path(dbDir, "segments");
             Path segmentsMergeDir = new Path(dbDir, "MERGEDsegments");
 
-            FileSystem fs = segmentsDir.getFileSystem(conf);
+            FileSystem fs = segmentsDir.getFileSystem(segMergeConf);
             FileStatus[] fstats = fs.listStatus(segmentsDir, HadoopFSUtil.getPassDirectoriesFilter(fs));
             Path[] sgmt = HadoopFSUtil.getPaths(fstats);
 
-            checkSegments(sgmt, conf);
+            checkSegments(sgmt, segMergeConf);
+
+            Map<String, String> segMergeArgs = jobInfo.getNutchStepArgs().getSegmentMerger();
+            boolean filter = Boolean.parseBoolean(segMergeArgs.getOrDefault("filter", "false"));
+            boolean normalize = Boolean.parseBoolean(segMergeArgs.getOrDefault("normalize", "false"));
+
+            if (filter || segMergeConf.getBoolean("segment.merger.filter", false)) {
+                Map<String, String> urlFilterRules = setupRegexUrlFilterRules(segMergeConf, crawlConfig);
+                segMergeConf.set("segment.merger.filter", urlFilterRules.getOrDefault("crawlUrlFilterRules", ""));
+            }
+
+            if (normalize || segMergeConf.getBoolean("segment.merger.normalizer", false)) {
+                Map<URLNormalizerPattern.Scope, JSONObject> scopedRegexUrlNormalizerRules = new HashMap<>();
+                setupRegexUrlNormalizerRules(segMergeConf, crawlConfig, scopedRegexUrlNormalizerRules);
+            }
 
             SegmentMerger segmentMerger = new SegmentMerger();
-            segmentMerger.setConf(conf);
+            segmentMerger.setConf(segMergeConf);
 
-            segmentMerger.merge(segmentsMergeDir, Arrays.asList(sgmt).toArray(new Path[0]), false, false, 0);
+            segmentMerger.merge(segmentsMergeDir, Arrays.asList(sgmt).toArray(new Path[0]), filter, normalize, 0);
 
             FileUtils.deleteDirectory(new File(segmentsDir.toString()));
             boolean movedSegMergeDir = new File(segmentsMergeDir.toString()).renameTo(new File(segmentsDir.toString()));
@@ -415,5 +440,189 @@ public class CrawlUtilsServiceImpl implements CrawlUtilsService {
     public Map<String, Object> urlNormalizerPatterns() {
         Configuration conf = NutchConfiguration.create();
         return XML.toJSONObject(conf.getConfResourceAsReader("regex-normalize.xml"), true).toMap();
+    }
+
+    private Map<String, String> setupRegexUrlFilterRules(Configuration conf, CrawlConfig crawlConfig) throws OSSearchException, Exception {
+
+        Set<String> rules = new LinkedHashSet<>();
+
+        String defaultFileRules = "regex-urlfilter.txt";
+        rules.addAll(readFileRules(conf.getConfResourceAsReader(defaultFileRules)));
+
+        log.debug("default regex urlfilter rules: {}", defaultFileRules);
+
+        String customFileRules = conf.get(RegexURLFilter.URLFILTER_REGEX_FILE);
+        rules.addAll(readFileRules(conf.getConfResourceAsReader(customFileRules)));
+
+        log.debug("custom file regex urlfilter rules: {}", customFileRules);
+
+        crawlConfig.getExcludeSiteUrls().forEach(rule -> {
+            rules.add("-^"+rule.trim()+"$");
+        });
+
+        Set<String> crawlRules = new LinkedHashSet<>();
+        Set<String> indexRules = new LinkedHashSet<>();
+
+        crawlRules.addAll(rules);
+        indexRules.addAll(rules);
+
+        crawlConfig.getUrlExclusionPatterns().forEach(urlExclusionPattern -> {
+            String rule = urlExclusionPattern.getExpression().trim();
+
+            if (urlExclusionPattern.getType() == UrlExclusionPattern.Type.contains) {
+                rule = "^.*"+ Pattern.quote(rule)+".*$";
+            }
+
+            if (urlExclusionPattern.getIgnoreCase()) {
+                rule = "(?i)"+rule+"(?-i)";
+            }
+
+            switch(urlExclusionPattern.getScope()) {
+                case index:
+                    indexRules.add("-"+rule);
+                    break;
+                case crawl:
+                    crawlRules.add("-"+rule);
+                    break;
+                case all:
+                    indexRules.add("-"+rule);
+                    crawlRules.add("-"+rule);
+                    break;
+            }
+        });
+
+        //accept anything else
+        indexRules.add("+.");
+        crawlRules.add("+.");
+
+        String crawlUrlFilterRules = crawlRules.stream().collect(Collectors.joining("\n"));
+        String indexUrlFilterRules = indexRules.stream().collect(Collectors.joining("\n"));
+
+        Map<String, String> urlFilterRules = new HashMap<>();
+        urlFilterRules.put("crawlUrlFilterRules", crawlUrlFilterRules);
+        urlFilterRules.put("indexUrlFilterRules", indexUrlFilterRules);
+
+        return urlFilterRules;
+    }
+
+    private void setupRegexUrlNormalizerRules(Configuration conf, CrawlConfig crawlConfig, Map<URLNormalizerPattern.Scope, JSONObject> scopedRegexUrlNormalizerRules) throws OSSearchException, Exception {
+
+        String defaultNormalizerFileRules = "regex-normalize.xml";
+        JSONObject defaultNormalizerRules = XML.toJSONObject(conf.getConfResourceAsReader(defaultNormalizerFileRules), true);
+        log.debug("default regex normalizer rules: {}", defaultNormalizerRules);
+
+        String customNormalizerFileRules = conf.get("urlnormalizer.regex.file");
+        JSONObject customNormalizerRules = XML.toJSONObject(conf.getConfResourceAsReader(customNormalizerFileRules), true);
+        log.debug("custom file regex normalizer rules: {}", customNormalizerFileRules);
+
+        Set<Map<String,String>> defaultRules = new HashSet<>();
+
+        Arrays.asList(defaultNormalizerRules, customNormalizerRules).forEach(fileRules -> {
+            if (fileRules.has("regex-normalize") && fileRules.get("regex-normalize") instanceof JSONObject) {
+                JSONObject regex_normalize = fileRules.getJSONObject("regex-normalize");
+                if (regex_normalize.has("regex") && regex_normalize.get("regex") instanceof JSONArray) {
+                    JSONArray regex = regex_normalize.getJSONArray("regex");
+                    regex.iterator().forEachRemaining(rule -> {
+                        if (rule instanceof JSONObject) {
+                            Map<String, String> ruleMap = new HashMap<>();
+                            JSONObject ruleJson = ((JSONObject) rule);
+                            ruleJson.keys().forEachRemaining(key -> {
+                                if (ruleJson.get(key) instanceof String) {
+                                    ruleMap.put(key, ruleJson.getString(key));
+                                }
+                            });
+                            defaultRules.add(ruleMap);
+                        }
+                    });
+                }
+            }
+        });
+
+        Set<URLNormalizerPattern> urlNormalizerPatterns = Optional.ofNullable(crawlConfig.getUrlNormalizerPatterns()).orElse(new HashSet<>());
+
+        //add any default normalizers rules from crawlconfig to the defaultRules
+        urlNormalizerPatterns.stream()
+                .forEach(urlNormalizerPattern -> {
+                    if (urlNormalizerPattern.getScope() == URLNormalizerPattern.Scope._default) {
+                        defaultRules.add(urlNormalizerPattern.getRule());
+                    }
+                });
+
+        //init map of scoped rules using the defaults
+        EnumSet.allOf(URLNormalizerPattern.Scope.class).forEach(scope -> {
+            JSONObject rules = new JSONObject();
+            JSONObject regex_normalize = new JSONObject();
+            regex_normalize.put("regex", new JSONArray(defaultRules));
+            rules.put("regex-normalize", regex_normalize);
+            scopedRegexUrlNormalizerRules.put(scope, rules);
+        });
+
+
+        //add any scoped normalizers rules from crawlconfig to the defaultRules
+        urlNormalizerPatterns.stream()
+                .forEach(urlNormalizerPattern -> {
+                    JSONObject rules = scopedRegexUrlNormalizerRules.get(urlNormalizerPattern.getScope());
+                    if (rules.has("regex-normalize") && rules.get("regex-normalize") instanceof JSONObject) {
+                        JSONObject regex_normalize = rules.getJSONObject("regex-normalize");
+                        if (regex_normalize.has("regex") && regex_normalize.get("regex") instanceof JSONArray) {
+                            JSONArray regex = regex_normalize.getJSONArray("regex");
+                            boolean exists = regex.toList().contains(urlNormalizerPattern.getRule());
+                            if (!exists) {
+                                regex.put(new JSONObject(urlNormalizerPattern.getRule()));
+                            }
+                        }
+                    }
+                });
+
+        String xml = XML.toString(scopedRegexUrlNormalizerRules.get(URLNormalizerPattern.Scope._default));
+        log.debug("default regex normalizer rules: {}", xml);
+
+        //set the default rules
+        conf.set("urlnormalizer.regex.rules", xml);
+    }
+
+    private void setURLNormalizerRegexRules(URLNormalizerPattern.Scope scope, Configuration conf, Map<URLNormalizerPattern.Scope, JSONObject> scopedRegexUrlNormalizerRules) {
+        String xml = XML.toString(scopedRegexUrlNormalizerRules.get(scope));
+        log.debug("regex normalizer scope: {}, rules: {}", scope, xml);
+
+        //set the default rules
+        conf.set("urlnormalizer.regex.rules", xml);
+    }
+
+    /**
+     * Read the specified file of rules.
+     *
+     * @param reader
+     *          is a reader of regular expressions rules.
+     * @return the corresponding {@RegexRule rules}.
+     */
+    private List<String> readFileRules(Reader reader) throws IOException,
+            IllegalArgumentException {
+
+        BufferedReader in = new BufferedReader(reader);
+        List<String> rules = new ArrayList<>();
+        String line;
+
+        while ((line = in.readLine()) != null) {
+            if (line.length() == 0) {
+                continue;
+            }
+            char first = line.charAt(0);
+            switch (first) {
+                case ' ':
+                case '\n':
+                case '#': // skip blank & comment lines
+                    continue;
+            }
+
+            //skip accept/reject anything else regex we will add that later
+            if (line.equals("+.") || line.equals("-.")) {
+                continue;
+            }
+
+            log.debug("Adding rule [" + line + "]");
+            rules.add(line);
+        }
+        return rules;
     }
 }

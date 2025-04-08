@@ -193,7 +193,7 @@ public class CrawlUtilsController {
     }
 
     @Operation(summary = "merge segments", responses = {
-            @ApiResponse(description = "Successful Operation", responseCode = "200", content = {@Content(mediaType = "application/csv"), @Content(mediaType = "application/json")})
+            @ApiResponse(description = "Successful Operation", responseCode = "200", content = {@Content(mediaType = "application/text"), @Content(mediaType = "application/json")})
     })
     @GetMapping(value = "/crawldb/mergeSegments")
     public ResponseEntity<Object> mergeSegments(@RequestParam(value = "jobName") String jobName,
