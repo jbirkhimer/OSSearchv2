@@ -14,7 +14,7 @@ spring:
       password: admin
 
   jmx:
-    enabled: false
+    enabled: true
 
   data:
     solr:
@@ -24,7 +24,7 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3309/si_search_db_test?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3309/si_search_db_dmz
     username: root
     password: root
 

@@ -52,7 +52,7 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://xxxxxxxxx:xxxxxxxxx/si_search_db_v2?createDatabaseIfNotExist=true
+    url: jdbc:mysql://xxxxxxxxx:xxxxxxxxx/si_search_db_v2
     username: root
     password: root
     hikari:
