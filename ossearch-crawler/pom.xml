@@ -18,7 +18,7 @@
 
     <properties>
         <passay.version>1.0</passay.version>
-        <spring-boot-admin.version>3.3.4</spring-boot-admin.version>
+        <spring-boot-admin.version>3.4.4</spring-boot-admin.version>
         <springdoc.version>2.6.0</springdoc.version>
         <jjwt.version>0.11.5</jjwt.version>
     </properties>

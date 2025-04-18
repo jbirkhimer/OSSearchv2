@@ -61,17 +61,17 @@ public class JwtUtils {
     }
 
     // Method using Subject::callAs as recommended in Java 23 Security Developer's Guide
-    public <T> T performActionAsSubject(Subject subject, Callable<T> action) throws Exception {
-        return Subject.callAs(subject, action);
-    }
-
-    // Example of how to use the new method
-    public String generateJwtTokenAsSubject(Subject subject, String username) throws Exception {
-        return performActionAsSubject(subject, () -> generateTokenFromUsername(username));
-    }
-
-    // Method to get the current Subject
-    public Subject getCurrentSubject() {
-        return Subject.current();
-    }
+//    public <T> T performActionAsSubject(Subject subject, Callable<T> action) throws Exception {
+//        return Subject.callAs(subject, action);
+//    }
+//
+//    // Example of how to use the new method
+//    public String generateJwtTokenAsSubject(Subject subject, String username) throws Exception {
+//        return performActionAsSubject(subject, () -> generateTokenFromUsername(username));
+//    }
+//
+//    // Method to get the current Subject
+//    public Subject getCurrentSubject() {
+//        return Subject.current();
+//    }
 }

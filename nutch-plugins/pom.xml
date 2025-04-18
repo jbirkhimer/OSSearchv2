@@ -68,7 +68,7 @@
                             <goal>wget</goal>
                         </goals>
                         <configuration>
-                            <url>http://artfiles.org/apache.org/nutch/1.18/apache-nutch-${nutch.version}-bin.zip</url>
+                            <url>https://archive.apache.org/dist/nutch/${nutch.version}/apache-nutch-${nutch.version}-bin.zip</url>
                             <unpack>true</unpack>
                             <outputDirectory>${project.build.directory}/apache-nutch-${nutch.version}-bin</outputDirectory>
                             <overwrite>false</overwrite>
@@ -81,7 +81,7 @@
                             <goal>wget</goal>
                         </goals>
                         <configuration>
-                            <url>http://artfiles.org/apache.org/nutch/1.18/apache-nutch-${nutch.version}-src.zip</url>
+                            <url>https://archive.apache.org/dist/nutch/${nutch.version}/apache-nutch-${nutch.version}-src.zip</url>
                             <unpack>true</unpack>
                             <outputDirectory>${project.build.directory}/apache-nutch-${nutch.version}-src</outputDirectory>
                             <overwrite>false</overwrite>

@@ -24,7 +24,7 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3309/si_search_db_dmz
+    url: jdbc:mysql://localhost:3309/si_search_db_dmz?createDatabaseIfNotExist=true
     username: root
     password: root
 

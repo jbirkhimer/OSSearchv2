@@ -2,40 +2,43 @@ version: "3.9"
 
 services:
 
-  nutch-hadoop:
-    container_name: ossearch-nutch-hadoop
-    image: ossearch-nutch-hadoop
-    build:
-      context: ./
-      dockerfile: ./Dockerfile-nutch-hadoop
-      args:
-        NUTCH_VERSION: 1.18
-        HADOOP_VERSION: 3.2.2
+  solr:
+    container_name: ossearch-solr-latest
+    image: solr:latest
     restart: always
-    depends_on:
-      - solr
+    environment:
+      - SOLR_OPTS=-XX:CompileCommand=exclude,com.github.benmanes.caffeine.cache.BoundedLocalCache::put -Dsolr.disable.allowUrls=true
     ports:
-      - 8088:8088
-      - 9870:9870
-      - 19888:19888
-      - 8042:8042
-      - 8188:8188
-      - 9868:9868
-      - 9864:9864
-      - 10002:10002
+      - 8983:8983
     networks:
       - ossearch
+#    command:
+#      - -c
+#      - solr-precreate
+#      - external-v1_FULL
+    volumes:
+      - ../data/mycores_solr_latest:/var/solr #sudo chown 8983:8983
 
-  solr:
-    container_name: ossearch-solr-hadoop
-    image: ossearch-solr-hadoop
-    command: bash -c "precreate-core external-v1 /ossearch-config; exec solr -f"
-    build:
-      context: ./solr
-      dockerfile: ./Dockerfile-solr
+  db:
+    container_name: ossearch-mysql-lower
+    image: mysql:8
     restart: always
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 26677
+        hard: 46677
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: si_search_db_dmz
+      MYSQL_USER: ossearch
+      MYSQL_PASSWORD: ossearch
+    command: --lower_case_table_names=1 --innodb-buffer-pool-size=200M
+    user: mysql
     ports:
-      - 8984:8983
+      - 3309:3306
+    volumes:
+      - ../data/mysql:/var/lib/mysql
     networks:
       - ossearch
 

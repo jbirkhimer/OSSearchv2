@@ -39,7 +39,7 @@ import javax.ws.rs.core.Response.Status;
 import java.util.HashMap;
 
 /**
- * The Reader endpoint enables a user to read sequence files, 
+ * The Reader endpoint enables a user to read sequence files,
  * nodes and links from the Nutch webgraph.
  * @author Sujen Shah
  *
@@ -53,7 +53,7 @@ public class ReaderResouce {
 
   /**
    * Read a sequence file
-   * @param readerConf 
+   * @param readerConf
    * @param nrows Number of rows to read. If not specified all rows will be read
    * @param start Specify a starting line number to read the file from
    * @param end The line number to read the file till
@@ -66,9 +66,9 @@ public class ReaderResouce {
 //  @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Read a sequence file", responses = {@ApiResponse(content = @Content(mediaType = "application/json"))})
   @PostMapping(value = "/sequence/read")
-  public Response seqRead(ReaderConfig readerConf, 
-      @DefaultValue("-1")@QueryParam("nrows") int nrows, 
-      @DefaultValue("-1")@QueryParam("start") int start, 
+  public Response seqRead(ReaderConfig readerConf,
+      @DefaultValue("-1")@QueryParam("nrows") int nrows,
+      @DefaultValue("-1")@QueryParam("start") int start,
       @QueryParam("end")int end, @QueryParam("count") boolean count) {
 
     NutchReader reader = new SequenceReader();
@@ -77,7 +77,7 @@ public class ReaderResouce {
   }
 
   /**
-   * Get Link Reader response schema 
+   * Get Link Reader response schema
    * @return JSON object specifying the schema of the responses returned by the Link Reader
    */
 //  @Path("/link")
@@ -89,7 +89,7 @@ public class ReaderResouce {
     HashMap<String, String> schema = new HashMap<>();
     schema.put("key_url","string");
     schema.put("timestamp", "int");
-    schema.put("score","float"); 
+    schema.put("score","float");
     schema.put("anchor","string");
     schema.put("linktype","string");
     schema.put("url","string");
@@ -97,7 +97,7 @@ public class ReaderResouce {
   }
 
   /**
-   * Read link object 
+   * Read link object
    * @param readerConf
    * @param nrows
    * @param start
@@ -111,9 +111,9 @@ public class ReaderResouce {
 //  @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Read link object", responses = {@ApiResponse(content = @Content(mediaType = "application/json"))})
   @PostMapping(value = "/link/read")
-  public Response linkRead(ReaderConfig readerConf, 
-      @DefaultValue("-1")@QueryParam("nrows") int nrows, 
-      @DefaultValue("-1")@QueryParam("start") int start, 
+  public Response linkRead(ReaderConfig readerConf,
+      @DefaultValue("-1")@QueryParam("nrows") int nrows,
+      @DefaultValue("-1")@QueryParam("start") int start,
       @QueryParam("end") int end, @QueryParam("count") boolean count) {
 
     NutchReader reader = new LinkReader();
@@ -135,8 +135,8 @@ public class ReaderResouce {
     schema.put("key_url","string");
     schema.put("num_inlinks", "int");
     schema.put("num_outlinks","int");
-    schema.put("inlink_score","float"); 
-    schema.put("outlink_score","float"); 
+    schema.put("inlink_score","float");
+    schema.put("outlink_score","float");
     schema.put("metadata","string");
     return Response.ok(schema).type(MediaType.APPLICATION_JSON).build();
   }
@@ -157,9 +157,9 @@ public class ReaderResouce {
 //  @Produces(MediaType.APPLICATION_JSON)
   @Operation(summary = "Read Node object as stored in the Nutch Webgraph", responses = {@ApiResponse(content = @Content(mediaType = "application/json"))})
   @PostMapping(value = "/node/read")
-  public Response nodeRead(ReaderConfig readerConf, 
-      @DefaultValue("-1")@QueryParam("nrows") int nrows, 
-      @DefaultValue("-1")@QueryParam("start") int start, 
+  public Response nodeRead(ReaderConfig readerConf,
+      @DefaultValue("-1")@QueryParam("nrows") int nrows,
+      @DefaultValue("-1")@QueryParam("start") int start,
       @QueryParam("end") int end, @QueryParam("count") boolean count) {
 
     NutchReader reader = new NodeReader();
@@ -168,7 +168,7 @@ public class ReaderResouce {
   }
 
 
-  private Response performRead(NutchReader reader, String path, 
+  private Response performRead(NutchReader reader, String path,
       int nrows, int start, int end, boolean count) {
     Object result;
     try{
