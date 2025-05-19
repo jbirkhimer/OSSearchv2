@@ -1,7 +1,6 @@
 spring:
   application:
     name: ossearch-crawler-test
-
   devtools:
     restart:
       additional-exclude: conf/**
@@ -70,7 +69,14 @@ management:
       enabled: false
 
 ossearch:
-  disable-searchlog-db-updates: true
+  # Search Log CSV Export Configuration
+  searchlog:
+    disable-db-updates: false
+    csv-export:
+      enabled: true
+      base-directory: ./search_log-backups
+      daily-compression-cron: "0 0 1 * * ?"  # Run at 1:00 AM every day
+      monthly-compression-cron: "0 0 2 2 * ?"  # Run at 2:00 AM on the 2nd day of each month
   embedded-vuejs: true
   allowedOrigins: "http://0.0.0.0:3000,http://localhost:3000,http://127.0.0.1:3000,http://10.0.0.95:3000,http://jbirkhimer.myquotient.net:3000,http://ossearchv2:8080,http://0.0.0.0:8484,http://localhost:8484,http://127.0.0.1:8484,http://10.0.0.95:8484,http://jbirkhimer.myquotient.net:8484"
   jwt:

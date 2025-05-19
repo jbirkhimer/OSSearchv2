@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
@@ -18,6 +19,7 @@ import org.springframework.data.rest.core.annotation.RestResource;
 import org.springframework.data.util.Streamable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.lang.Nullable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -67,8 +69,6 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
     @Query("select s from SearchLog s" +
             " where s.collectionId = :collectionId" +
             " and (s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-//            " or s.responseType like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-//            " or s.requestIp like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
             " or cast(s.docsFound as string) like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
             " or cast(s.elapsedTime as string) like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
             " and s.createdDate between :startDate and :endDate")
@@ -82,8 +82,6 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
     @Query("select s from SearchLog s" +
             " where s.collectionId = :collectionId" +
             " and (s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-//            " or s.responseType like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-//            " or s.requestIp like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
             " or cast(s.docsFound as string) like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
             " or cast(s.elapsedTime as string) like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
             " and s.createdDate between :startDate and :endDate")
@@ -173,4 +171,15 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
 
     @Query("SELECT DISTINCT s.query FROM SearchLog s")
     Streamable<String> streamDistinctQueries();
+
+    /**
+     * Truncate the search_log table
+     * This operation removes all data from the table
+     * Not exposed as a REST endpoint for security reasons
+     */
+    @Modifying
+    @Transactional
+    @RestResource(exported = false)
+    @Query(value = "TRUNCATE TABLE search_log", nativeQuery = true)
+    void truncateTable();
 }

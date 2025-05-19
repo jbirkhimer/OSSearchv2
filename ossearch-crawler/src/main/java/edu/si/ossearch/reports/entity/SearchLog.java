@@ -2,6 +2,7 @@ package edu.si.ossearch.reports.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.si.ossearch.reports.entity.listeners.SearchLogEntityListener;
 import edu.si.ossearch.search.beans.request.Query;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.Date;
 @NoArgsConstructor
 @ToString
 @Entity
+@EntityListeners(SearchLogEntityListener.class)
 @Table(name = "search_log")
 public class SearchLog implements Serializable {
 
@@ -38,27 +40,7 @@ public class SearchLog implements Serializable {
     @Column(columnDefinition = "VARCHAR(50)")
     private String site;
 
-//    @Column(columnDefinition = "VARCHAR(50)")
-//    private String client;
-
     private String query;
-
-//    @Column(columnDefinition = "VARCHAR(50)")
-//    private String fields;
-
-//    @Column(columnDefinition = "TINYINT")
-//    @Column(columnDefinition = "MEDIUMINT")
-//    private Integer numRows;
-
-//    @Column(columnDefinition = "MEDIUMINT")
-//    private Integer start;
-
-//    @JsonProperty(value = "responseType")
-//    @Column(columnDefinition = "VARCHAR(50)")
-//    private String responseType;
-
-//    @Column(columnDefinition = "MEDIUMINT")
-//    private Integer pageNumber;
 
     @JsonProperty(value = "docsFound")
     @Column(columnDefinition = "INT")
@@ -74,16 +56,6 @@ public class SearchLog implements Serializable {
     @Column(columnDefinition = "TEXT")
     private String rawQuery;
 
-//    @Column(columnDefinition = "TEXT")
-//    private String headers;
-
-//    @JsonProperty(value = "requestIp")
-//    @Column(columnDefinition = "VARCHAR(50)")
-//    private String requestIp;
-
-//    @Column(columnDefinition = "TEXT")
-//    private String solrQuery;
-
     @Column(columnDefinition = "TEXT")
     private String errors;
 
@@ -98,11 +70,6 @@ public class SearchLog implements Serializable {
 
     public SearchLog(Query query) {
         this.site = query.getSite();
-//        this.client = query.getClient();
         this.query = query.getQ();
-//        this.fields = query.getGetfields();
-//        this.numRows = query.getNum();
-//        this.start = query.getStart();
-//        this.responseType = query.getOutput();
     }
 }

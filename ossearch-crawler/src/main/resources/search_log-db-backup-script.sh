@@ -30,7 +30,7 @@ BACKUP_FILE="${BACKUP_DIR}/${TABLE_NAME}_backup_${DATE}.sql.gz"
 # Backup records up to the cutoff date
 echo "Backing up records from ${TABLE_NAME} up to ${CUTOFF_DATE}..."
 mysqldump --host=${DB_HOST} --port=${DB_PORT} --user=${DB_USER} --password=${DB_PASS} ${DB_NAME} ${TABLE_NAME} \
-  --no-create-info --where="created_date < '${CUTOFF_DATE}'" | gzip > ${BACKUP_FILE}
+  --no-create-info --skip-add-drop-table --complete-insert --where="created_date < '${CUTOFF_DATE}'" | gzip > ${BACKUP_FILE}
 
 # Check if backup was successful
 if [ $? -eq 0 ] && [ -s ${BACKUP_FILE} ]; then

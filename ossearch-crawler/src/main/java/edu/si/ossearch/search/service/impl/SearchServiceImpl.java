@@ -74,7 +74,7 @@ public class SearchServiceImpl implements SearchService {
     @NonNull
     String solrCollection;
 
-    @Value(value = "${ossearch.disable-searchlog-db-updates}")
+    @Value(value = "${ossearch.searchlog.disable-db-updates}")
     @NonNull
     boolean disableSearchLogDbUpdates;
 
@@ -139,9 +139,7 @@ public class SearchServiceImpl implements SearchService {
 
         //log and save request to db
         SearchLog searchLog = new SearchLog(query);
-//        searchLog.setRequestIp(RequestUtils.getRemoteIP());
         searchLog.setRawQuery(RequestUtils.getRawQueryString());
-        //searchLog.setHeaders(new JSONObject(RequestUtils.getHeaders()).toString());
 
         Optional<Collection> optionalCollection = collectionRepository.getByName(query.getSite());
 
@@ -261,7 +259,6 @@ public class SearchServiceImpl implements SearchService {
                 MultiValueMap<String, String> edanRequest = EdanUtils.getMultiValueMap(solrQuery, useHighlighting);
                 URI uri = edanClient.getURI(edanRequest);
                 log.info("search request edan query: {}", uri.getQuery());
-                //searchLog.setSolrQuery(uri.getQuery());
                 EdanResponse edanResponse = edanClient.sendRequest(uri);
                 List<String> fieldsFilter = Arrays.asList(solrQuery.getFields().split(","));
                 //Collections.addAll(fieldsFilter, solrQuery.getFacetFields());
