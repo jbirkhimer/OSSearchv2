@@ -63,7 +63,7 @@
             </div>
             <h2 v-if="!loadingSearchesCount" class="card-text text-white text-end mt-auto">
               <i class="fas fa-search float-start"></i>
-              <span>{{ numberComma(searchesCount) }}</span>
+              <span>{{ numberComma(searchesCount.totalSearchCount) }}</span>
             </h2>
           </div>
           <div class="card-footer d-flex align-items-center justify-content-between">
@@ -447,7 +447,7 @@ export default {
           })
     },
     async getSearchLogCounts() {
-      await SearchLogService.get("/searchlog/search/totalCountForAllCollectionsLastNumDays", {days: 30})
+      await SearchLogService.get("/search-stats/last-30-days")
           .then(response => {
             this.searchesCount = response.data
           }).catch(errors => {

@@ -19,7 +19,7 @@
     <properties>
         <passay.version>1.0</passay.version>
         <spring-boot-admin.version>3.4.4</spring-boot-admin.version>
-        <springdoc.version>2.6.0</springdoc.version>
+        <springdoc.version>2.8.6</springdoc.version>
         <jjwt.version>0.11.5</jjwt.version>
     </properties>
 
@@ -391,10 +391,6 @@
         <!-- Messaging and Serialization                    -->
         <!-- Kafka and Jackson for data processing          -->
         <!-- ============================================== -->
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>

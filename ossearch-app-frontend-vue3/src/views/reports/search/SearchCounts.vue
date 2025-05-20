@@ -1,6 +1,5 @@
 <template>
   <div class="container-fluid px-4">
-<!--    <h1 class="mt-4">Search Reports</h1>-->
     <Breadcrumb/>
 
     <div class="card mb-4">
@@ -23,8 +22,10 @@
             <strong>Loading</strong>
           </div>
         </div>
-        <Chart id="mainChart" type="line" height="400" :series="chartSeries" :options="chartOptionsMain"/>
-        <Chart id="selectionChart" type="area" height="200" :series="chartSeries" :options="chartOptionsSelection" @legendClick="chartEvent"/>
+        <Chart id="mainChart" type="line" height="400" :series="chartSeries" :options="chartOptionsMain"
+               @selection="handleMainChartSelection" @dataPointSelection="handleDataPointSelection"/>
+        <Chart id="selectionChart" type="area" height="200" :series="chartSeries" :options="chartOptionsSelection"
+               @legendClick="handleLegendClick" @selection="handleSelectionChartSelection"/>
       </div>
     </div>
   </div>
@@ -55,28 +56,47 @@ export default {
       picker: {},
       apiParams: {
         // startDate: moment('2019-03-01').utc().startOf('day').format(),
-        startDate: moment().subtract(1, 'years').utc().startOf('day').format(),
-        endDate: moment().utc().endOf('day').format()
+        startDate: moment().subtract(1, 'years').utc().startOf('day').format('YYYY-MM-DD'),
+        endDate: moment().utc().endOf('day').format('YYYY-MM-DD')
       },
-      chartSeries: [{name: 'siarchives', data: []}],
+      chartSeries: [],
+      hiddenSeries: new Set(), // Track which series are hidden
       chartOptionsMain: {
         chart: {
           id: 'mainChart',
           type: 'line',
-          height: 400,
+          height: 450,
           toolbar: {
-            autoSelected: 'pan',
-            show: false
+            autoSelected: 'zoom',
+            show: true,
+            tools: {
+              download: true,
+              selection: true,
+              zoom: true,
+              zoomin: true,
+              zoomout: true,
+              pan: true,
+              reset: true
+            }
           },
+          zoom: {
+            enabled: true,
+            type: 'x'
+          },
+          selection: {
+            enabled: true,
+            type: 'x'
+          }
         },
         legend: {
-          show: false
+          show: false // Hide legend in main chart
         },
         theme: {
           palette: 'palette1' // upto palette10
         },
         stroke: {
-          width: 3
+          width: 3,
+          curve: 'smooth'
         },
         dataLabels: {
           enabled: false
@@ -91,7 +111,26 @@ export default {
           type: 'datetime'
         },
         yaxis: {
-          forceNiceScale: true
+          logarithmic: true,
+          forceNiceScale: true,
+          labels: {
+            formatter: function(val) {
+              if (val === 0) return 0;
+              if (val < 10) return val.toFixed(1);
+              return val.toFixed(0);
+            }
+          },
+          title: {
+            text: 'Search Count (log scale)'
+          }
+        },
+        tooltip: {
+          shared: true,
+          y: {
+            formatter: function(val) {
+              return val.toLocaleString();
+            }
+          }
         },
         noData: {
           text: 'Loading...'
@@ -107,17 +146,18 @@ export default {
             enabled: true,
             autoScaleYaxis: true
           },
-          /*selection: {
+          selection: {
             enabled: true,
-            xaxis: this.rangeSelection
-          },*/
-          // events: {
-          //   legendClick: function(chartContext, seriesIndex, config) {
-          //     let value = {chartContext: chartContext, seriesIndex: seriesIndex, config: config}
-          //     this.chartEvent(value)
-          //     // console.log("chartContext", chartContext, "seriesIndex", seriesIndex, "config", config)
-          //   }
-          // }
+            type: 'x'
+          }
+        },
+        legend: {
+          show: true,
+          position: 'bottom',
+          horizontalAlign: 'center',
+          onItemClick: {
+            toggleDataSeries: false // Disable built-in toggle
+          }
         },
         theme: {
           palette: 'palette1' // upto palette10
@@ -136,8 +176,25 @@ export default {
           }
         },
         yaxis: {
+          logarithmic: true,
+          forceNiceScale: true,
           tickAmount: 3,
-          forceNiceScale: true
+          labels: {
+            formatter: function(val) {
+              if (val === 0) return 0;
+              if (val < 1000) return val;
+              if (val < 1000000) return (val/1000).toFixed(1) + 'K';
+              return (val/1000000).toFixed(1) + 'M';
+            }
+          }
+        },
+        tooltip: {
+          shared: true,
+          y: {
+            formatter: function(val) {
+              return val.toLocaleString();
+            }
+          }
         },
         noData: {
           text: 'Loading...'
@@ -152,40 +209,34 @@ export default {
   },
   computed: {
     rangeSelection() {
-      //const seriesMax = Math.max(...this.chartSeries.map(series => Math.max(...series.data.map(o => o[0]))))
-
-      const xaxis = {
-        min: moment(this.endDate).subtract(1, 'months').toDate().getTime(),
-        max: moment(this.endDate).toDate().getTime()
+      if (!this.chartSeries.length || !this.chartSeries[0].data.length) {
+        return {
+          min: moment(this.endDate).subtract(1, 'months').toDate().getTime(),
+          max: moment(this.endDate).toDate().getTime()
+        }
       }
 
-      let seriesMax = Math.max(...this.chartSeries[0].data.map(o => o[0]))
-      let seriesMin = Math.min(...this.chartSeries[0].data.map(o => o[0]))
+      // Find the min and max dates across all series
+      let allDates = this.chartSeries.flatMap(series => series.data.map(point => point[0]))
+      let seriesMax = Math.max(...allDates)
+      let seriesMin = Math.min(...allDates)
 
-      xaxis.max = seriesMax
-      xaxis.min = seriesMin
+      let xaxis = {
+        max: seriesMax,
+        min: seriesMin
+      }
 
-      // console.log("startDate", this.startDate.toISOString(), "endDate", this.endDate.toISOString(), "seriesMax", seriesMax)
-      // console.log("diff years", this.endDate.diff(this.startDate, 'years'))
-      // console.log("diff months", this.endDate.diff(this.startDate, 'months'))
-      // console.log("diff weeks", this.endDate.diff(this.startDate, 'weeks'))
-      // console.log("diff days", this.endDate.diff(this.startDate, 'days'))
-
+      // Adjust min based on the date range
       if (moment(seriesMax).diff(moment(seriesMin), 'years') > 1) {
         xaxis.min = moment(seriesMax).subtract(1, 'years').toDate().getTime()
-        console.log("years", xaxis.min)
       } else if (moment(seriesMax).diff(moment(seriesMin), 'months') > 1) {
         xaxis.min = moment(seriesMax).subtract(3, 'months').toDate().getTime()
-        console.log("months", xaxis.min)
       } else if (moment(seriesMax).diff(moment(seriesMin), 'weeks') > 1) {
         xaxis.min = moment(seriesMax).subtract(2, 'weeks').toDate().getTime()
-        console.log("weeks", moment.unix(xaxis.min/1000).toISOString())
       } else if (moment(seriesMax).diff(moment(seriesMin), 'days') > 1) {
         xaxis.min = moment(seriesMax).subtract(1, 'days').toDate().getTime()
-        console.log("days", xaxis.min)
       }
 
-      //console.log("xaxis", xaxis)
       return xaxis
     }
   },
@@ -206,6 +257,12 @@ export default {
         }
         this.chartOptionsSelection = chartOptionsSelection
 
+        let chartOptionsMain = _.cloneDeep(this.chartOptionsMain)
+        chartOptionsMain.chart.selection = {
+          enabled: true,
+          type: 'x'
+        }
+
         let duration = moment.duration(this.endDate.diff(this.startDate))
         let msg = []
         if (duration.years()) {
@@ -218,9 +275,6 @@ export default {
           msg.push(duration.days() + " days")
         }
 
-        // console.log("msg >>>>>>>>>>>>>>>>>>>", msg.join(","))
-
-        let chartOptionsMain = _.cloneDeep(this.chartOptionsMain)
         chartOptionsMain.title = {
           text: 'Daily Search Counts',
           align: 'center'
@@ -232,57 +286,58 @@ export default {
         this.chartOptionsMain = chartOptionsMain
       }
     }
-    // tableOptions: {
-    //   deep: true,
-    //   handler: async function () {
-    //     console.log(">>> order", this.tableOptions.order)
-    //     this.loading = true
-    //     await this.getSearchLogs()
-    //     this.loading = false
-    //   }
-    // },
   },
   methods: {
     async getSearchLogs() {
       let params = this.getParams()
       let chartSeries = []
-      let datasets = []
-      await SearchLogService.get("/searchlog/search/searchLogChartData", params)
-          .then(response => {
-            // console.log("searchLogChartData", JSON.stringify(response.data, null, 2))
-            Object.keys(response.data).forEach(site => {
-              // console.log("searchLogChartData site:", site, "data:", JSON.stringify(response.data[site], null, 2))
-              if (['siarchives','sil'].includes(site)) {
-                datasets.push({
-                  label: site,
-                  data: response.data[site],
-                })
 
-                let data = []
-                response.data[site].forEach(row => {
-                  // console.log("row", row)
-                  data.push([moment(row.date).toDate().getTime(),
-                    row.count])
-                })
+      try {
+        const response = await SearchLogService.get("/searchlogsummary/search/findByDateRange", params)
 
-                let series = {
-                  name: site,
-                  data: data,
-                }
-                chartSeries.push(series)
-              }
-            })
-          }).catch(errors => {
-            //console.log(errors);
-            this.error = errors
-          });
+        if (!response.data || !response.data._embedded || !response.data._embedded.searchlogsummary) {
+          console.error("Unexpected response format:", response.data)
+          this.error = "Unexpected API response format"
+          return
+        }
 
-      if (chartSeries && chartSeries.length) {
+        // Group by site
+        const summariesBySite = _.groupBy(response.data._embedded.searchlogsummary, 'site')
+
+        // Create series for each site
+        Object.entries(summariesBySite).forEach(([site, entries]) => {
+          if (!site) {
+            return // Skip entries with no site
+          }
+
+          // Sort entries by date
+          const sortedEntries = _.sortBy(entries, 'logDate')
+
+          // Transform data for chart
+          const data = sortedEntries.map(entry => [
+            moment(entry.logDate).toDate().getTime(),
+            entry.searchCount || 0.1 // Ensure minimum value for log scale
+          ])
+
+          chartSeries.push({
+            name: site,
+            data: data
+          })
+        })
+
+      } catch (error) {
+        console.error("Error fetching search logs:", error)
+        this.error = error
+      }
+
+      // Update chart series
+      if (chartSeries.length) {
         this.chartSeries = chartSeries
+        this.hiddenSeries = new Set() // Reset hidden series
       } else {
-        this.chartSeries = [{name: this.name, data: []}]
+        this.chartSeries = []
 
-        let nodata = {
+        const nodata = {
           text: 'No Data'
         }
 
@@ -296,27 +351,64 @@ export default {
       }
     },
     updatePicker(picker) {
-      // console.log("updatePicker")
       this.apiParams = {
-        startDate: picker.startDate.utc().startOf('day').format(),
-        endDate: picker.endDate.utc().endOf('day').format()
+        startDate: picker.startDate.utc().startOf('day').format('YYYY-MM-DD'),
+        endDate: picker.endDate.utc().endOf('day').format('YYYY-MM-DD')
       }
       this.startDate = picker.startDate.utc().startOf('day')
       this.endDate = picker.endDate.utc().endOf('day')
     },
     getParams() {
-      let params = {
-        projection: 'searchLogChart',
+      return {
         startDate: this.apiParams.startDate,
         endDate: this.apiParams.endDate,
       }
-
-      return params
     },
-    chartEvent(value) {
-      console.log("chart event", value)
+    // Handle legend click in selection chart
+    handleLegendClick(_chartContext, seriesIndex) {
+      // Get the series name
+      const seriesName = this.chartSeries[seriesIndex].name;
+
+      // Toggle visibility state in our tracking set
+      if (this.hiddenSeries.has(seriesName)) {
+        this.hiddenSeries.delete(seriesName);
+
+        // Show the series in both charts
+        window.ApexCharts.exec('mainChart', 'showSeries', seriesName);
+        window.ApexCharts.exec('selectionChart', 'showSeries', seriesName);
+      } else {
+        this.hiddenSeries.add(seriesName);
+
+        // Hide the series in both charts
+        window.ApexCharts.exec('mainChart', 'hideSeries', seriesName);
+        window.ApexCharts.exec('selectionChart', 'hideSeries', seriesName);
+      }
+    },
+    // Handle selection on the main chart
+    handleMainChartSelection(_chartContext, { xaxis }) {
+      if (xaxis && xaxis.min && xaxis.max) {
+        // Update selection chart to match
+        window.ApexCharts.exec('selectionChart', 'updateOptions', {
+          chart: {
+            selection: {
+              xaxis: {
+                min: xaxis.min,
+                max: xaxis.max
+              }
+            }
+          }
+        });
+      }
+    },
+    // Handle selection on the selection chart
+    handleSelectionChartSelection() {
+      // Already handled by brush feature
+    },
+    // Handle data point clicks
+    handleDataPointSelection(_event, _chartContext, config) {
+      console.log("Data point selected:", config.dataPointIndex, config.seriesIndex);
     }
-}
+  }
 }
 </script>
 

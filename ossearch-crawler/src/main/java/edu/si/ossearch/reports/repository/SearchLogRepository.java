@@ -68,9 +68,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
     @RestResource(path = "totalCountForAllCollectionsBetweenDatesByCollectionId", rel = "customFindMethod")
     @Query("select s from SearchLog s" +
             " where s.collectionId = :collectionId" +
-            " and (s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-            " or cast(s.docsFound as string) like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-            " or cast(s.elapsedTime as string) like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
+            " and s.query like CONCAT('%', :#{#searchText == null ? '' : escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
             " and s.createdDate between :startDate and :endDate")
     Optional<Page<SearchLog>> totalCountForAllCollectionsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                                     @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
@@ -79,11 +77,9 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
                                                                                     Pageable pageable);
 
     @RestResource(path = "totalCountForAllCollectionsBetweenDatesByCollectionIdReport", rel = "customFindMethod")
-    @Query("select s from SearchLog s" +
+    @Query("select s.query, s.docsFound, s.elapsedTime, s.errors, s.createdDate from SearchLog s" +
             " where s.collectionId = :collectionId" +
-            " and (s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-            " or cast(s.docsFound as string) like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
-            " or cast(s.elapsedTime as string) like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
+            " and s.query like CONCAT('%', :#{#searchText == null ? '' : escape(#searchText)} , '%') escape :#{escapeCharacter()}" +
             " and s.createdDate between :startDate and :endDate")
     Optional<List<SearchLogInfo>> totalCountForAllCollectionsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                                         @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
@@ -109,7 +105,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
     @RestResource(path = "keywordsBetweenDatesByCollectionId", rel = "customFindMethod")
     @Query(value = "select s from SearchLog s" +
             " where s.collectionId = :collectionId" +
-            " and (:searchText is null or s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
+            " and (:searchText is null or s.query like CONCAT('%', :#{#searchText == null ? '' : escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
             " and s.createdDate between :startDate and :endDate")
     Optional<Page<SearchLog>> keywordsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                  @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
@@ -119,7 +115,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
     @RestResource(path = "keywordsBetweenDatesByCollectionIdReport", rel = "customFindMethod")
     @Query(value = "select s from SearchLog s" +
             " where s.collectionId = :collectionId" +
-            " and (:searchText is null or s.query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
+            " and (:searchText is null or s.query like CONCAT('%', :#{#searchText == null ? '' : escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
             " and s.createdDate between :startDate and :endDate")
     Optional<List<SearchLogKeywordsView>> keywordsBetweenDatesByCollectionId(@Param("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
                                                                  @Param("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") Date endDate,
@@ -129,14 +125,14 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
 
     @Query(value = "select query, count(query) as wordCount, concat(date_format(min(created_date), '%Y-%m-%d'), ' - ', date_format(max(created_date), '%Y-%m-%d')) as dateRange from search_log" +
             " where collection_id = :collectionId" +
-            " and (:searchText is null or query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
+            " and (:searchText is null or query like CONCAT('%', :#{#searchText == null ? '' : escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
             " and created_date between :startDate and :endDate" +
             " group by query",
             countQuery = "select count(sc.query) from (" +
                     " select query, count(query)" +
                     " from search_log" +
                     " where collection_id = :collectionId" +
-                    " and (:searchText is null or query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
+                    " and (:searchText is null or query like CONCAT('%', :#{#searchText == null ? '' : escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
                     " and created_date between :startDate and :endDate" +
                     " group by query) sc",
             nativeQuery = true)
@@ -157,7 +153,7 @@ public interface SearchLogRepository extends JpaRepository<SearchLog, Long> {
     @Query("SELECT new edu.si.ossearch.reports.entity.projections.SearchLogChart(DATE(createdDate), count(query), site)" +
             " FROM SearchLog" +
             " WHERE collectionId in :collectionIds" +
-            " and (:searchText is null or query like CONCAT('%', :#{escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
+            " and (:searchText is null or query like CONCAT('%', :#{#searchText == null ? '' : escape(#searchText)} , '%') escape :#{escapeCharacter()})" +
             " and createdDate between :startDate and :endDate" +
             " GROUP BY YEAR(createdDate), MONTHNAME(createdDate), DATE(createdDate), site" +
             " ORDER BY site, DATE(createdDate)")

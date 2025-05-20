@@ -24,7 +24,11 @@ import java.util.Date;
 @ToString
 @Entity
 @EntityListeners(SearchLogEntityListener.class)
-@Table(name = "search_log")
+@Table(name = "search_log",
+        indexes = {
+                @Index(name = "idx_collection_created_date", columnList = "collection_id,created_date")
+        }
+)
 public class SearchLog implements Serializable {
 
     private static final long serialVersionUID = -7272242479560896738L;
