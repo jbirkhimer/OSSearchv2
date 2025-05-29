@@ -18,14 +18,14 @@
         </li>
         <div class="collapse" id="collapseSearch">
           <ul class="nav flex-column mb-auto ms-4">
-            <router-link class="nav-link" to="/search/counts">
+            <router-link class="nav-link" to="/search-stats/counts">
               <i class="fas fa-chart-line me-2"></i>
               Counts
             </router-link>
-            <router-link class="nav-link" to="/search/urls">
+<!--            <router-link class="nav-link" to="/search-stats/urls">
               <i class="fas fa-link me-2"></i>
               Available URL's
-            </router-link>
+            </router-link>-->
           </ul>
         </div>
 

@@ -314,8 +314,8 @@ const routes = [
     component: Reports
   },
   {
-    path: '/search',
-    name: 'search',
+    path: '/search-stats',
+    name: 'search-stats',
     children: [
       {
         path: 'counts',
