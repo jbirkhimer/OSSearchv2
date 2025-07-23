@@ -138,8 +138,9 @@ export default {
             this.json = response.data
             this.db_status = this.json.components?.db?.status
             this.ldap = this.json.components?.ldap?.status
-            this.solr_master = this.json.components?.solr?.components?.master?.status
-            this.solr_slave = this.json.components?.solr?.components?.slave?.status
+            this.solr_master = this.json.components?.solr?.details['master.status']
+            this.solr_slave = this.json.components?.solr?.details['slave.status']
+            console.log(this.json)
           }
       )
     },

@@ -88,7 +88,7 @@
               <span class="visually-hidden">Loading...</span>
             </div>
           </div>
-          <h2 v-if="!loading" class="card-text text-white text-end mt-auto"><span>{{ searchesCount.searchCount.toLocaleString() }}</span></h2>
+          <h2 v-if="!loading" class="card-text text-white text-end mt-auto"><span>{{ numberComma(searchesCount.searchCount) }}</span></h2>
         </div>
         <div class="card-footer d-flex align-items-center justify-content-between">
           <router-link class="small text-white stretched-link" :to="{name: 'searchReport', params: {tabName: 'searchReport'}}">View Details</router-link>
