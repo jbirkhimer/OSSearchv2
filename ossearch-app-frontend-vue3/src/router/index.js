@@ -282,25 +282,25 @@ const routes = [
     props: true
   },
   {
-    path: '/scheduler/logs/scheduled_crawl',
+    path: '/scheduler/history/scheduled_crawl',
     redirect: {
       name: 'crawlScheduler'
     }
   },
   {
-    path: '/scheduler/logs',
+    path: '/scheduler/history',
     redirect: {
       name: 'crawlScheduler'
     }
   },
   {
-    path: '/scheduler/logs/:jobName',
+    path: '/scheduler/history/:jobName',
     name: 'crawlLogs',
     component: CrawlLogs,
     children: [
       {
         // CrawlSteps will be rendered inside CrawlLogs's <router-view>
-        // when /scheduler/logs/:jobGroup.:jobName/:jobId is matched
+        // when /scheduler/history/:jobGroup.:jobName/:jobId is matched
         path: ':jobId',
         name: 'crawlSteps',
         component: CrawlSteps,

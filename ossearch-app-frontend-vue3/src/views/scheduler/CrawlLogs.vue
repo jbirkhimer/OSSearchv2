@@ -18,7 +18,7 @@
 
   <div class="container-fluid px-4">
     <!--    <h1 class="mt-4">{{ jobData.jobName }}</h1>-->
-    <h1 class="mt-4">Crawl Logs for {{ $route.params.jobName }}</h1>
+    <h1 class="mt-4">Crawl History for {{ $route.params.jobName }}</h1>
     <Breadcrumb/>
     <!--    <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="createCrawlSchedule()">Create
         </button>-->
@@ -27,7 +27,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        <b>Crawl Logs</b>
+        <b>Crawl History</b>
       </div>
       <div class="card-body">
         <Datatable :loading="loading"

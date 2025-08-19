@@ -43,11 +43,11 @@ export default {
         },
         {
           q: "Is it possible to confirm that the crawler is using the sitemap.xml files, and following every link in the sitemap?",
-          a: "You can check the Crawl Logs > Step Logs history to see if the \" SITEMAP\" or \" SITEMAPS_FROM_HOSTDB\" step is listed. There will be a row with \" Step\" column value of \" SITEMAP\" or \" SITEMAPS_FROM_HOSTDB\" at round 1 or at the beginning of every round depending on what is configured. If sitemap processing is done all urls listed in the sitemap are added to the crawlDb for crawling."
+          a: "You can check the Crawl History > Step history to see if the \" SITEMAP\" or \" SITEMAPS_FROM_HOSTDB\" step is listed. There will be a row with \" Step\" column value of \" SITEMAP\" or \" SITEMAPS_FROM_HOSTDB\" at round 1 or at the beginning of every round depending on what is configured. If sitemap processing is done all urls listed in the sitemap are added to the crawlDb for crawling."
         },
         {
           q: "Is it possible to get a timestamp of when the sitemap.xml files were crawled, just in case this predates updates made to those sitemaps?",
-          a: "You can check the Crawl Logs > Step Logs history to see if the \" SITEMAP\" or \" SITEMAPS_FROM_HOSTDB\" step is listed and see the time that step was run. There will be a row with \" Step\" column value of \" SITEMAP\" or \" SITEMAPS_FROM_HOSTDB\" at round 1 or at the beginning of every round depending on what is configured."
+          a: "You can check the Crawl History > Step history to see if the \" SITEMAP\" or \" SITEMAPS_FROM_HOSTDB\" step is listed and see the time that step was run. There will be a row with \" Step\" column value of \" SITEMAP\" or \" SITEMAPS_FROM_HOSTDB\" at round 1 or at the beginning of every round depending on what is configured."
         },
         {
           q: "Is it possible to get a spreadsheet report that shows all of the URLs crawled, along with the last crawl date for each of those URLs?",

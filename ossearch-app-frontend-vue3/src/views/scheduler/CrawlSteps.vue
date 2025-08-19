@@ -12,7 +12,7 @@
   </template>
 
 <!--  <div v-if="!loading" class="container-fluid px-4">-->
-    <h3>step logs jobId: {{ $route.params.jobId }}</h3>
+    <h3>Step History jobId: {{ $route.params.jobId }}</h3>
 
 <!--    <div class="accordion" id="accordionSteps">
       <template v-for="(step, i) in crawlStepLogs" :key="step">
@@ -37,7 +37,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <i class="fas fa-info-circle me-1"></i>
-        <b>Crawl Step Logs</b>
+        <b>Crawl Step History</b>
       </div>
       <div class="card-body">
         <Datatable :loading="loading"

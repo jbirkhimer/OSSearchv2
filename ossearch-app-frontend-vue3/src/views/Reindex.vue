@@ -64,7 +64,7 @@
               <tr>
                 <th>Collection</th>
                 <th>Reindex Status</th>
-                <th>View Logs</th>
+                <th>View History</th>
               </tr>
             </thead>
             <tbody>

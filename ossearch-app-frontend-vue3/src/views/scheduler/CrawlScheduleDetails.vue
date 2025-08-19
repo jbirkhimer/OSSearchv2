@@ -25,7 +25,7 @@
       </div>
       <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
 <!--        <button type="button" class="btn btn-primary" @click="crawlLogs()">Crawl Logs</button>-->
-        <router-link class="btn btn-primary" type="button" role="toolbar" aria-label="Toolbar with button groups" :to="{name: 'crawlLogs', params: { jobName: this.jobData.jobName, jobGroup: this.jobData.jobGroup }}">Crawl Logs</router-link>
+        <router-link class="btn btn-primary" type="button" role="toolbar" aria-label="Toolbar with button groups" :to="{name: 'crawlLogs', params: { jobName: this.jobData.jobName, jobGroup: this.jobData.jobGroup }}">Crawl History</router-link>
       </div>
       <div v-if="isAdmin || isManager" class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
         <button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#nutchReindexlModal">ReIndex</button>

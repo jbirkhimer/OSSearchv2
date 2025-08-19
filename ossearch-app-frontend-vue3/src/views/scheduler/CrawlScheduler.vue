@@ -188,7 +188,7 @@ export default {
             // { label: 'Id', name: 'id'},
             // { label: 'Job Id', name: 'jobId'},
             { label: 'Control', name: 'control', class: 'text-center'},
-            { label: 'Logs', name: 'logs', class: 'text-center'},
+            { label: 'History', name: 'logs', class: 'text-center'},
             { label: 'Collection', name: 'jobName'},
             { label: 'Job Group', name: 'groupName'},
             { label: 'Crawling Schedule', name: 'cronExpression'},
