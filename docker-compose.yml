@@ -17,7 +17,7 @@ services:
 #      - solr-precreate
 #      - external-v1_FULL
     volumes:
-      - ../data/mycores_solr_latest:/var/solr #sudo chown 8983:8983
+      - ./data/mycores_solr_latest:/var/solr #sudo chown 8983:8983
 
   db:
     container_name: ossearch-mysql-lower
@@ -38,7 +38,7 @@ services:
     ports:
       - 3309:3306
     volumes:
-      - ../data/mysql:/var/lib/mysql
+      - ./data/mysql:/var/lib/mysql
     networks:
       - ossearch
 
