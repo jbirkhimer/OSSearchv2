@@ -22,7 +22,6 @@
         <module>nutch-plugins</module>
         <module>ossearch-app-frontend-vue3</module>
         <module>ossearch-crawler</module>
-        <module>nutch-kafka-consumer</module>
     </modules>
 
     <properties>
