@@ -30,7 +30,7 @@ Each parameter has the form `<param name="<name>" value="<value>"/>` and the par
 
 Parameter Name | Description | Default value
 --|--|--
-type | Specifies the [SolrClient](https://lucene.apache.org/solr/5_5_0/solr-solrj/org/apache/solr/client/solrj/SolrClient.html) implementation to use. This is a string value of one of the following **cloud** or **http**. The values represent [CloudSolrServer](https://lucene.apache.org/solr/5_5_0/solr-solrj/org/apache/solr/client/solrj/impl/CloudSolrServer.html) or [HttpSolrServer](https://lucene.apache.org/solr/5_5_0/solr-solrj/org/apache/solr/client/solrj/impl/HttpSolrServer.html) respectively. | http
+type | Specifies the [SolrClient](https://solr.apache.org/docs/9_4_0/solrj/org/apache/solr/client/solrj/SolrClient.html) implementation to use. This is a string value of one of the following **cloud** or **http**. The values represent [CloudSolrClient](https://solr.apache.org/docs/9_4_0/solrj/org/apache/solr/client/solrj/impl/CloudSolrClient.html) or [HttpSolrClient](https://solr.apache.org/docs/9_4_0/solrj/org/apache/solr/client/solrj/impl/HttpSolrClient.html) respectively. | http
 url | Defines the fully qualified URL of Solr into which data should be indexed. Multiple URL can be provided using comma as a delimiter. When the value of type property is **cloud**, the URL should not include any collections or cores; just the root Solr path. | http://localhost:8983/solr/nutch
 collection | The collection used in requests. Only used when the value of type property is **cloud**. |  
 weight.field | Field's name where the weight of the documents will be written. If it is empty no field will be used. |  

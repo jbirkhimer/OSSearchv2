@@ -94,7 +94,7 @@
                 <executions>
                     <execution>
                         <id>copy-dist</id>
-                        <phase>generate-resources</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>

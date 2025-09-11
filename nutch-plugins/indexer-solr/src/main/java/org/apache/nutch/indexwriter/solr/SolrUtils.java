@@ -16,47 +16,36 @@
  */
 package org.apache.nutch.indexwriter.solr;
 
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.Http2SolrClient;
 
 import java.util.List;
 
 public class SolrUtils {
 
   static CloudSolrClient getCloudSolrClient(List<String> urls) {
-    CloudSolrClient sc = new CloudSolrClient.Builder(urls)
-        .withParallelUpdates(true).build();
-    sc.connect();
-    return sc;
+    return new CloudSolrClient.Builder(urls)
+        .withParallelUpdates(true)
+        .build();
   }
 
   static CloudSolrClient getCloudSolrClient(List<String> urls, String username,
       String password) {
-    // Building http client
-    CredentialsProvider provider = new BasicCredentialsProvider();
-    UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(
-        username, password);
-    provider.setCredentials(AuthScope.ANY, credentials);
+    // Create Http2SolrClient builder with authentication
+    Http2SolrClient.Builder http2ClientBuilder = new Http2SolrClient.Builder()
+        .withBasicAuthCredentials(username, password);
 
-    HttpClient client = HttpClientBuilder.create()
-        .setDefaultCredentialsProvider(provider).build();
-
-    // Building the client
-    CloudSolrClient sc = new CloudSolrClient.Builder(urls)
-        .withParallelUpdates(true).withHttpClient(client).build();
-    sc.connect();
-    return sc;
+    // Build CloudSolrClient with the authenticated HTTP client
+    return new CloudSolrClient.Builder(urls)
+        .withParallelUpdates(true)
+        .withInternalClientBuilder(http2ClientBuilder)
+        .build();
   }
 
   static SolrClient getHttpSolrClient(String url) {
-    return new HttpSolrClient.Builder(url).build();
+    // Use Http2SolrClient for better performance
+    return new Http2SolrClient.Builder(url).build();
   }
 
   static String stripNonCharCodepoints(String input) {

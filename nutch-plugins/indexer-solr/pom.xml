@@ -39,7 +39,7 @@
                     <artifactId>slf4j-api</artifactId>
                 </exclusion>
             </exclusions>
-            <version>8.5.1</version>
+            <version>9.4.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -63,6 +63,71 @@
                 <configuration>
                     <outputDirectory>${project.basedir}/../target/plugins/${project.artifactId}</outputDirectory>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-solr-dependency</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.solr</groupId>
+                                    <artifactId>solr-solrj</artifactId>
+                                    <version>9.4.0</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.basedir}/../target/plugins/${project.artifactId}</outputDirectory>
+                                    <destFileName>solr-solrj-9.4.0.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-custom-plugin-files</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <echo message="Copying custom plugin files for ${project.artifactId}"/>
+                                <mkdir dir="${project.basedir}/../target/plugins/${project.artifactId}"/>
+
+                                <!-- Copy custom plugin files -->
+                                <copy file="${project.basedir}/plugin.xml"
+                                      todir="${project.basedir}/../target/plugins/${project.artifactId}"
+                                      overwrite="true"/>
+                                <copy file="${project.basedir}/README.md"
+                                      todir="${project.basedir}/../target/plugins/${project.artifactId}"
+                                      overwrite="true"/>
+
+                                <!-- Remove old solr-solrj JAR files -->
+                                <delete>
+                                    <fileset dir="${project.basedir}/../target/plugins/${project.artifactId}"
+                                             includes="solr-solrj-*.jar"
+                                             excludes="solr-solrj-9.4.0.jar"/>
+                                </delete>
+
+                                <echo message="Custom plugin files copied and old solr-solrj JARs removed"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
 
