@@ -49,6 +49,14 @@
                 <artifactId>lucene-analyzers-common</artifactId>
                 <version>6.4.1</version>
             </dependency>
+            <!-- Override Spring Boot's Jetty 12.x with Jetty 10.0.17 for Solr compatibility -->
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-bom</artifactId>
+                <version>10.0.17</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -94,7 +102,7 @@
                 <executions>
                     <execution>
                         <id>copy-dist</id>
-                        <phase>package</phase>
+                        <phase>process-resources</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
@@ -104,6 +112,10 @@
                             <resources>
                                 <resource>
                                     <directory>${project.build.directory}/apache-nutch-${nutch.version}-bin/apache-nutch-${nutch.version}/plugins</directory>
+                                    <!-- Exclude the default indexer-solr - we'll use our custom one -->
+                                    <excludes>
+                                        <exclude>indexer-solr/**</exclude>
+                                    </excludes>
                                 </resource>
                             </resources>
                         </configuration>

@@ -25,6 +25,7 @@
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
+            <version>9.4.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.commons</groupId>
@@ -39,17 +40,6 @@
                     <artifactId>slf4j-api</artifactId>
                 </exclusion>
             </exclusions>
-            <version>9.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpmime</artifactId>
-            <version>4.5.10</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>4.4.12</version>
         </dependency>
     </dependencies>
 
@@ -70,23 +60,18 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-solr-dependency</id>
-                        <phase>install</phase>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>copy</goal>
+                            <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.apache.solr</groupId>
-                                    <artifactId>solr-solrj</artifactId>
-                                    <version>9.4.0</version>
-                                    <type>jar</type>
-                                    <overWrite>true</overWrite>
                                     <outputDirectory>${project.basedir}/../target/plugins/${project.artifactId}</outputDirectory>
-                                    <destFileName>solr-solrj-9.4.0.jar</destFileName>
-                                </artifactItem>
-                            </artifactItems>
+                            <includeScope>runtime</includeScope>
+                            <excludeScope>provided</excludeScope>
+                            <overWriteReleases>true</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
                         </configuration>
                     </execution>
                 </executions>
@@ -106,7 +91,6 @@
                         <configuration>
                             <target>
                                 <echo message="Copying custom plugin files for ${project.artifactId}"/>
-                                <mkdir dir="${project.basedir}/../target/plugins/${project.artifactId}"/>
 
                                 <!-- Copy custom plugin files -->
                                 <copy file="${project.basedir}/plugin.xml"
@@ -114,16 +98,10 @@
                                       overwrite="true"/>
                                 <copy file="${project.basedir}/README.md"
                                       todir="${project.basedir}/../target/plugins/${project.artifactId}"
-                                      overwrite="true"/>
+                                      overwrite="true"
+                                      failonerror="false"/>
 
-                                <!-- Remove old solr-solrj JAR files -->
-                                <delete>
-                                    <fileset dir="${project.basedir}/../target/plugins/${project.artifactId}"
-                                             includes="solr-solrj-*.jar"
-                                             excludes="solr-solrj-9.4.0.jar"/>
-                                </delete>
-
-                                <echo message="Custom plugin files copied and old solr-solrj JARs removed"/>
+                                <echo message="Custom plugin files copied"/>
                             </target>
                         </configuration>
                     </execution>
