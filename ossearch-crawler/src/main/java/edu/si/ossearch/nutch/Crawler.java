@@ -1149,8 +1149,14 @@ public class Crawler {
 
                     segmentMerger.merge(segmentsMergeDir, Arrays.asList(sgmt).toArray(new Path[0]), filter, normalize, 0);
 
-                    FileUtils.deleteDirectory(new File(segmentsDir.toString()));
-                    boolean movedSegMergeDir = new File(segmentsMergeDir.toString()).renameTo(new File(segmentsDir.toString()));
+                    // Wait for MapReduce cleanup to complete
+                    Thread.sleep(3000);
+
+                    // Use Hadoop FileSystem API with retry logic
+                    deleteDirectoryWithRetry(fs, segmentsDir, 3);
+
+                    // Use Hadoop FileSystem API for rename
+                    boolean movedSegMergeDir = fs.rename(segmentsMergeDir, segmentsDir);
 
                     if (movedSegMergeDir == false) {
                         throw new OSSearchException("Failed to move segmentMergeDir: " + segmentsMergeDir + "!");
@@ -1238,6 +1244,48 @@ public class Crawler {
             log.info("STOPPING {}", RECRAWL);
             updateCrawlStepLogStopped(crawlStepLog);
         }
+    }
+
+    /**
+     * Delete directory with retry logic to handle NFS caching and MapReduce cleanup race conditions.
+     *
+     * @param fs FileSystem instance
+     * @param directory Path to directory to delete
+     * @param maxRetries Maximum number of retry attempts
+     * @throws IOException if deletion fails after all retries
+     * @throws InterruptedException if thread sleep is interrupted
+     */
+    private void deleteDirectoryWithRetry(FileSystem fs, Path directory, int maxRetries)
+            throws IOException, InterruptedException {
+        int retryCount = 0;
+        IOException lastException = null;
+
+        while (retryCount < maxRetries) {
+            try {
+                if (fs.exists(directory)) {
+                    boolean deleted = fs.delete(directory, true); // recursive=true
+                    if (deleted) {
+                        log.info("Successfully deleted directory: {}", directory);
+                        return;
+                    } else {
+                        log.warn("Directory deletion returned false: {}", directory);
+                    }
+                } else {
+                    log.info("Directory does not exist (already deleted?): {}", directory);
+                    return;
+                }
+            } catch (IOException e) {
+                lastException = e;
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    long waitTime = 2000L * retryCount; // Exponential backoff: 2s, 4s, 6s
+                    log.warn("Failed to delete directory (attempt {}/{}): {}. Retrying in {}ms", retryCount, maxRetries, directory, waitTime, e);
+                    Thread.sleep(waitTime);
+                }
+            }
+        }
+
+        throw new IOException("Failed to delete directory after " + maxRetries + " attempts: " + directory, lastException);
     }
 
     /**
