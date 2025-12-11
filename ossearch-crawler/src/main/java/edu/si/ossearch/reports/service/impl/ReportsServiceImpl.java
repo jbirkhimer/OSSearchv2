@@ -118,7 +118,7 @@ public class ReportsServiceImpl implements ReportsService {
 
         long numfound = rsp.getResults().getNumFound();
 
-        JSONArray data = new JSONObject(rsp.jsonStr()).getJSONArray("response");
+        JSONArray data = new JSONObject(rsp.jsonStr()).getJSONObject("response").getJSONArray("docs");
 
         JSONObject answer = new JSONObject();
         answer.put("data", data);
@@ -144,7 +144,7 @@ public class ReportsServiceImpl implements ReportsService {
         long numfound = rsp.getResults().getNumFound();
 
         log.info("solr result: {}", rsp.toString());
-        JSONArray data = new JSONObject(rsp.jsonStr()).getJSONArray("response");
+        JSONArray data = new JSONObject(rsp.jsonStr()).getJSONObject("response").getJSONArray("docs");
 
         JSONObject answer = new JSONObject();
         answer.put("data", data);
